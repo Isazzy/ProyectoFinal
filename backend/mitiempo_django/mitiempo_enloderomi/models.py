@@ -158,8 +158,8 @@ class Usuarios(models.Model):
     nombre_usuario = models.CharField(max_length=100)
     apellido_usuario = models.CharField(max_length=100)
     usuario = models.CharField(max_length=100)
-    contrasenia = models.CharField(max_length=255)
-    rol_usuario = models.CharField(max_length=8)
+    contrasena = models.CharField(max_length=255)
+    rol_usuario = models.CharField(max_length=50)
 
     class Meta:
         managed = False

@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Cajas
+from .models import Usuarios
 
 
 # Register your models here.
-admin.site.register(Cajas)
+admin.site.register(Usuarios)
 
