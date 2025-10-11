@@ -1,24 +1,59 @@
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Login from "./components/Login/Login"; 
+import Nosotros from "./pages/Nosotros";
+import Servicios from "./pages/Servicios";
+import TurnosFlow from "./pages/Turnos/TurnosFlow";
+import DashboardCliente from "./pages/Cliente/DashboardCliente";
+import Perfil from "./pages/Cliente/PerfilCliente";
+import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
+import ServiciosAdmin from "./pages/Admin/ServiciosAdmin";
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import { getUsuario } from './api/Usuarios';
-import Login from './componentes/Login/Login';
-import UsForm from "./componentes/Usuarios/UsFrom"
-import UsList from "./componentes/Usuarios/UsList"
-
-
-function App() {
+export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/usuarios" element={<UsList />} />
-        <Route path="/crear-usuario" element={<UsForm />} />
-        <Route path="/editar-usuario/:id" element={<UsForm />} />
-      </Routes>
+      <Header />
+      <div style={{ marginTop: 20 }}>
+        <Routes>
+          <Route path="/" element={<Nosotros />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/servicios" element={<Servicios />} />
+          <Route path="/Login" element={<Login />} /> 
+          <Route
+            path="/turnos"
+            element={
+              <PrivateRoute role="cliente">
+                <TurnosFlow />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <PrivateRoute role="cliente">
+                <Perfil />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/perfil_cliente"
+            element={
+              <PrivateRoute role="cliente">
+                <DashboardCliente />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/servicios"
+            element={
+              <PrivateRoute role="admin">
+                <ServiciosAdmin />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </div>
     </Router>
   );
 }
-
-export default App;

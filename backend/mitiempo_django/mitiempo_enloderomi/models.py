@@ -1,16 +1,48 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 
+# -------------------------
+# Custom User + Profile
+# -------------------------
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+
+    ROLE_CHOICES = [
+        ('admin', 'Administrador'),
+        ('empleado', 'Empleado'),
+        ('cliente', 'Cliente'),
+    ]
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='cliente')
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __str__(self):
+        return f"{self.username} ({self.role})"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    telefono = models.CharField(max_length=30, blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Perfil de {self.user.email}"
+
+
+User = get_user_model()
+
+# -------------------------
+# Modelos del sistema
+# -------------------------
 
 class Cajas(models.Model):
     id_caja = models.AutoField(primary_key=True)
-    id_usuario = models.ForeignKey('Usuarios', models.DO_NOTHING, db_column='id_usuario')
+    id_usuario = models.ForeignKey(User, models.DO_NOTHING, db_column='id_usuario', null=True, blank=True)
+
     fech_hrs_ape = models.DateTimeField()
     fech_hrs_cie = models.DateTimeField(blank=True, null=True)
     monto_ini = models.DecimalField(max_digits=10, decimal_places=2)
@@ -20,7 +52,7 @@ class Cajas(models.Model):
     estado_caja = models.IntegerField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'cajas'
 
 
@@ -28,11 +60,11 @@ class Clientes(models.Model):
     id_cli = models.AutoField(primary_key=True)
     nombre_cli = models.CharField(max_length=50)
     apellido_cli = models.CharField(max_length=50)
-    correo_cli = models.CharField(max_length=255)
+    correo_cli = models.EmailField(max_length=255)
     telefono_cli = models.CharField(max_length=30, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'clientes'
 
 
@@ -45,7 +77,7 @@ class Compras(models.Model):
     estado = models.CharField(max_length=9)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'compras'
 
 
@@ -58,21 +90,25 @@ class DetCompras(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'det_compras'
+
+          
 
 
 class DetVentas(models.Model):
     id_det_venta = models.AutoField(primary_key=True)
     id_venta = models.ForeignKey('Ventas', models.DO_NOTHING, db_column='id_venta')
     id_prod = models.ForeignKey('Productos', models.DO_NOTHING, db_column='id_prod', blank=True, null=True)
-    id_serv = models.ForeignKey('Servicios', models.DO_NOTHING, db_column='id_serv', blank=True, null=True)
+    id_serv = models.ForeignKey('turnos.Servicios', on_delete=models.DO_NOTHING, db_column='id_serv',blank=True, null=True)
+
+    #id_serv = models.ForeignKey('Servicios', models.DO_NOTHING, db_column='id_serv', blank=True, null=True)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     cantidad_venta = models.IntegerField()
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'det_ventas'
 
 
@@ -88,7 +124,7 @@ class Productos(models.Model):
     tipo_prod = models.CharField(max_length=50)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'productos'
 
 
@@ -99,7 +135,7 @@ class ProductosXProveedores(models.Model):
     id_compra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_compra')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'productos_x_proveedores'
 
 
@@ -112,58 +148,13 @@ class Proveedores(models.Model):
     direccion = models.CharField(max_length=150, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'proveedores'
 
 
-class Servicios(models.Model):
-    id_serv = models.AutoField(primary_key=True)
-    tipo_serv = models.CharField(max_length=100)
-    nombre_serv = models.CharField(max_length=100)
-    precio_serv = models.DecimalField(max_digits=9, decimal_places=0)
-    duracion_serv = models.TimeField(blank=True, null=True)
-    disponible_serv = models.IntegerField(blank=True, null=True)
-    descripcion_serv = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'servicios'
 
 
-class Turnos(models.Model):
-    id_turno = models.AutoField(primary_key=True)
-    id_cli = models.ForeignKey(Clientes, models.DO_NOTHING, db_column='id_cli')
-    fecha_turno = models.DateField()
-    hora_turno = models.TimeField()
-    estado_turno = models.CharField(max_length=9, blank=True, null=True)
-    observaciones = models.TextField(blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'turnos'
-
-
-class TurnosXServicios(models.Model):
-    id_turno_servicio = models.AutoField(primary_key=True)
-    id_turno = models.ForeignKey(Turnos, models.DO_NOTHING, db_column='id_turno')
-    id_serv = models.ForeignKey(Servicios, models.DO_NOTHING, db_column='id_serv')
-
-    class Meta:
-        managed = False
-        db_table = 'turnos_x_servicios'
-
-
-class Usuarios(models.Model):
-    id_usuario = models.AutoField(primary_key=True)
-    nombre_usuario = models.CharField(max_length=100)
-    apellido_usuario = models.CharField(max_length=100)
-    usuario = models.CharField(max_length=100)
-    contrasena = models.CharField(max_length=255)
-    rol_usuario = models.CharField(max_length=50)
-
-    class Meta:
-        managed = False
-        db_table = 'usuarios'
 
 
 class Ventas(models.Model):
@@ -176,5 +167,5 @@ class Ventas(models.Model):
     tipo_pago = models.CharField(max_length=100)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'ventas'
