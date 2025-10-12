@@ -2,6 +2,14 @@
 
 const API_URL = "http://localhost:8000/api/servicios/";
 
+const PUBLIC_API_URL = "http://localhost:8000/api/public/servicios/";
+
+export async function getServiciosPublicos() {
+  const response = await fetch(PUBLIC_API_URL);
+  if (!response.ok) throw new Error("Error al obtener servicios públicos");
+  return response.json();
+}
+
 export async function getServicios() {
   const response = await fetch(API_URL);
   if (!response.ok) throw new Error("Error al obtener servicios");

@@ -10,16 +10,20 @@ import Perfil from "./pages/Cliente/PerfilCliente";
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 import ServiciosAdmin from "./pages/Admin/ServiciosAdmin";
 
+import Home from "./pages/Home";
+import Reservar from "./pages/Reservar";
+
 export default function App() {
   return (
     <Router>
       <Header />
       <div style={{ marginTop: 20 }}>
         <Routes>
-          <Route path="/" element={<Nosotros />} />
+          <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/servicios" element={<Servicios />} />
-          <Route path="/Login" element={<Login />} /> 
+          <Route path="/Login" element={<Login />} />
+          <Route path="/reservar" element={<Reservar />} /> 
           <Route
             path="/turnos"
             element={
@@ -52,6 +56,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
         </Routes>
       </div>
     </Router>

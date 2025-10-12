@@ -28,10 +28,19 @@ export const createTurno = async (nuevoTurno) => {
       },
       body: JSON.stringify(nuevoTurno),
     });
-    if (!res.ok) throw new Error("Error al crear turno");
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      const errorMsg =
+        errorData.non_field_errors?.[0] ||
+        errorData.detail ||
+        "Error desconocido al crear el turno.";
+      throw new Error(errorMsg);
+    }
+
     return await res.json();
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en createTurno:", error);
     throw error;
   }
 };
@@ -46,7 +55,9 @@ export const updateTurno = async (id, data) => {
       },
       body: JSON.stringify(data),
     });
+
     if (!res.ok) throw new Error("Error al actualizar turno");
+
     return await res.json();
   } catch (error) {
     console.error(error);
@@ -60,6 +71,7 @@ export const deleteTurno = async (id) => {
       method: "DELETE",
       headers: getAuthHeader(),
     });
+
     if (!res.ok) throw new Error("Error al eliminar turno");
   } catch (error) {
     console.error(error);
