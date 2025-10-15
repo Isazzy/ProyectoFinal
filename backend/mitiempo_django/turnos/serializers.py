@@ -1,9 +1,9 @@
-#mitiempo_django/turnos/serializers.py
 from rest_framework import serializers
 from .models import Servicios, Turnos, TurnosXServicios
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,20 +24,9 @@ class TurnosXServiciosSerializer(serializers.ModelSerializer):
 
 class TurnosSerializer(serializers.ModelSerializer):
     cliente = serializers.StringRelatedField(source='id_cli', read_only=True)
+    profesional = serializers.StringRelatedField(source='id_prof', read_only=True)
     servicios = TurnosXServiciosSerializer(many=True, read_only=True)
 
     class Meta:
         model = Turnos
-        fields = [
-            'id_turno',
-            'id_cli',
-            'cliente',
-            'fecha_turno',
-            'hora_turno',
-            'estado_turno',
-            'observaciones',
-            'servicios',
-        ]
-
-    def create(self, validated_data):
-        return Turnos.objects.create(**validated_data)
+        fields = '__all__'

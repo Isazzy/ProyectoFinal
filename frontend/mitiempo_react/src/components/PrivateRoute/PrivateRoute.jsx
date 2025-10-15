@@ -6,13 +6,13 @@ export default function PrivateRoute({ children, role }) {
   const raw = localStorage.getItem("user");
   const user = raw ? JSON.parse(raw) : null;
 
-  if (!user) {
-    return <Navigate to="/Login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
 
   if (role && user.role !== role) {
-    // rol no autorizado -> redirige a login o a su dashboard
-    return <Navigate to="/Login" replace />;
+    // Redirige a su propio dashboard según el rol
+    if (user.role === "cliente") return <Navigate to="/perfil_cliente" replace />;
+    if (user.role === "empleado") return <Navigate to="/empleado/dashboard" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

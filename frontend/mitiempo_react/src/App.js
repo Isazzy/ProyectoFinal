@@ -1,25 +1,45 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+
+// Componentes base
 import Header from "./components/Header";
-import Login from "./components/Login/Login"; 
+import Login from "./components/Login/Login";
+
+// Páginas públicas
 import Nosotros from "./pages/Nosotros";
 import Servicios from "./pages/Servicios";
+
+// Cliente
 import TurnosFlow from "./pages/Turnos/TurnosFlow";
 import DashboardCliente from "./pages/Cliente/DashboardCliente";
-import Perfil from "./pages/Cliente/PerfilCliente";
-import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
-import ServiciosAdmin from "./pages/Admin/ServiciosAdmin";
+import PerfilCliente from "./pages/Cliente/PerfilCliente";
 
-export default function App() {
+// Admin
+import DashboardAdmin from "./pages/Admin/AdminDashboard";
+import AdminServicios from "./pages/Admin/AdminServicios";
+
+// Rutas protegidas
+import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
+
+function Layout() {
+  const location = useLocation();
+
+  const hideHeader =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/login");
+
   return (
-    <Router>
-      <Header />
+    <>
+      {!hideHeader && <Header />} 
       <div style={{ marginTop: 20 }}>
         <Routes>
+          {/* RUTAS PÚBLICAS */}
           <Route path="/" element={<Nosotros />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/servicios" element={<Servicios />} />
-          <Route path="/Login" element={<Login />} /> 
+          <Route path="/login" element={<Login />} />
+
+          {/*  RUTAS CLIENTE */}
           <Route
             path="/turnos"
             element={
@@ -32,7 +52,7 @@ export default function App() {
             path="/perfil"
             element={
               <PrivateRoute role="cliente">
-                <Perfil />
+                <PerfilCliente />
               </PrivateRoute>
             }
           />
@@ -44,16 +64,26 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
+          {/*  RUTAS ADMIN */}
           <Route
-            path="/admin/servicios"
+            path="/admin/dashboard/*"
             element={
               <PrivateRoute role="admin">
-                <ServiciosAdmin />
+                <DashboardAdmin />
               </PrivateRoute>
             }
           />
         </Routes>
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Layout />
     </Router>
   );
 }

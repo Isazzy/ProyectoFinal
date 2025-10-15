@@ -1,5 +1,6 @@
-from django.urls import path
-from . import views
+#/backend/mitiempo_django/mitiempo_enloderomi/urls.py
+from django.urls import path, include
+
 urlpatterns = [
-    path('', views.mi_vista, name='mi_vista'),
+    path("", include("mitiempo_enloderomi.api.urls")),  #  esto conecta el router
 ]

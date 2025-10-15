@@ -1,37 +1,76 @@
-// front/src/componentesTurnos/TurnoForm.jsx
-import React, {useState, useEffect} from "react";
-import {getServicios} from "../../api/servicios";
-import {createTurno} from "../../api/turnos"
-//Crear o editar/eliminar un producto
-export default function TurnoForm({onTurnoCreado}){
-    const [fecha, serFecha] = useState ("");
-    const [hora, setHora] = useState ("");
-    const [servicioId, setServicioId] = useState("");
-    const [servicios, setServicios] = useState ("");
+import React, { useState, useEffect } from "react";
+import { getServicios } from "../../api/servicios";
+import { getEmpleados } from "../../api/Usuarios";
+import { fetchServicios, fetchUsuarios, fetchTurnos, createTurno } from "../../api/index";
 
-    useEffect(() =>{
-        getServicios().then(setServicios);
-    },[]);
 
-    const handleSubmit = async (e) =>{
-        e.preventDefault();
+export default function TurnoForm({ onTurnoCreado }) {
+  const [fecha, setFecha] = useState("");
+  const [hora, setHora] = useState("");
+  const [servicioId, setServicioId] = useState("");
+  const [profesionalId, setProfesionalId] = useState("");
+  const [servicios, setServicios] = useState([]);
+  const [profesionales, setProfesionales] = useState([]);
+  const [error, setError] = useState(null);
 
-        const user = JSON.parse(localStorage.getItem("user"));
+  // Cargar servicios y profesionales al montar el componente
+  useEffect(() => {
+    getServicios()
+      .then((data) => {
+        if (Array.isArray(data)) setServicios(data);
+        else setServicios([]);
+      })
+      .catch(() => setError("Error al cargar los servicios."));
 
-        const nuevoTurno = {
-          fecha_turno: fecha,
-          hora_turno: hora,
-          estado_turno: "pendiente",
-        };
-        await createTurno(nuevoTurno);
+    getEmpleados()
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setProfesionales(res.data);
+        } else {
+          setProfesionales([]);
+        }
+      })
+      .catch(() => setError("Error al cargar los profesionales."));
+  }, []);
 
-        onTurnoCreado();
-        setFecha("");
-        setHora("");
-        setServicioId("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      setError("Debes iniciar sesión para sacar un turno.");
+      return;
+    }
+
+    const nuevoTurno = {
+      fecha_turno: fecha,
+      hora_turno: hora,
+      servicio: servicioId,
+      profesional: profesionalId,
+      estado_turno: "pendiente",
+      cliente: user.id,
     };
-    return (
+
+    try {
+      await createTurno(nuevoTurno);
+      onTurnoCreado();
+      setFecha("");
+      setHora("");
+      setServicioId("");
+      setProfesionalId("");
+    } catch (err) {
+      console.error("Error al crear turno:", err);
+      setError("No se pudo crear el turno. Intenta nuevamente.");
+    }
+  };
+
+  return (
     <form onSubmit={handleSubmit} style={styles.form}>
+      <h3>Agendar Turno</h3>
+
+      {error && <p style={styles.error}>{error}</p>}
+
       <label>Fecha:</label>
       <input
         type="date"
@@ -62,13 +101,47 @@ export default function TurnoForm({onTurnoCreado}){
         ))}
       </select>
 
+      <label>Profesional:</label>
+      <select
+        value={profesionalId}
+        onChange={(e) => setProfesionalId(e.target.value)}
+        required
+      >
+        <option value="">Seleccionar...</option>
+        {profesionales.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.username} ({p.role})
+          </option>
+        ))}
+      </select>
+
       <button type="submit" style={styles.button}>
         Agendar Turno
       </button>
     </form>
   );
 }
+
 const styles = {
-  form: { display: "flex", flexDirection: "column", gap: 10, width: 250 },
-  button: { backgroundColor: "#4CAF50", color: "white", padding: 8, border: "none", borderRadius: 4 },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    width: 320,
+    background: "#f7f7f7",
+    padding: 20,
+    borderRadius: 8,
+  },
+  button: {
+    backgroundColor: "#4CAF50",
+    color: "white",
+    padding: 8,
+    border: "none",
+    borderRadius: 4,
+    cursor: "pointer",
+  },
+  error: {
+    color: "red",
+    fontSize: 14,
+  },
 };

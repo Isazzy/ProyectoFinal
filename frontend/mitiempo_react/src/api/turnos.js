@@ -1,68 +1,24 @@
 // front/src/api/turnos.js
+import api from "./axiosConfig";
 
-const API_URL = "http://127.0.0.1:8000/api/turnos/";
+const ENDPOINT = "/turnos/";
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+export const getTurnos = (id = null) =>
+  id ? api.get(`${ENDPOINT}${id}/`) : api.get(ENDPOINT);
 
-export const getTurnos = async () => {
-  try {
-    const res = await fetch(API_URL, { headers: getAuthHeader() });
-    if (!res.ok) throw new Error("Error al obtener turnos");
-    return await res.json();
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+export const createTurno = (turno) => api.post(ENDPOINT, turno);
 
-export const createTurno = async (nuevoTurno) => {
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeader(),
-      },
-      body: JSON.stringify(nuevoTurno),
-    });
-    if (!res.ok) throw new Error("Error al crear turno");
-    return await res.json();
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+export const updateTurno = (id, turno) => api.put(`${ENDPOINT}${id}/`, turno);
 
-export const updateTurno = async (id, data) => {
-  try {
-    const res = await fetch(`${API_URL}${id}/`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeader(),
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Error al actualizar turno");
-    return await res.json();
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+export const deleteTurno = (id) => api.delete(`${ENDPOINT}${id}/`);
 
-export const deleteTurno = async (id) => {
-  try {
-    const res = await fetch(`${API_URL}${id}/`, {
-      method: "DELETE",
-      headers: getAuthHeader(),
-    });
-    if (!res.ok) throw new Error("Error al eliminar turno");
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
+export const getHorariosDisponibles = (id_prof, fecha) =>
+  api.get(`/turnos/horarios_disponibles/`, { params: { id_prof, fecha } });
+
+export default {
+  getTurnos,
+  createTurno,
+  updateTurno,
+  deleteTurno,
+  getHorariosDisponibles,
 };
