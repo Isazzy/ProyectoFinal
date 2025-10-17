@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
+from django.conf import settings
 
 # -------------------------
 # Custom User + Profile
@@ -33,7 +33,7 @@ class Profile(models.Model):
         return f"Perfil de {self.user.email}"
 
 
-User = get_user_model()
+
 
 # -------------------------
 # Modelos del sistema
@@ -41,8 +41,13 @@ User = get_user_model()
 
 class Cajas(models.Model):
     id_caja = models.AutoField(primary_key=True)
-    id_usuario = models.ForeignKey(User, models.DO_NOTHING, db_column='id_usuario', null=True, blank=True)
-
+    id_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # <- clave
+        models.DO_NOTHING,
+        db_column='id_usuario',
+        null=True,
+        blank=True
+    )
     fech_hrs_ape = models.DateTimeField()
     fech_hrs_cie = models.DateTimeField(blank=True, null=True)
     monto_ini = models.DecimalField(max_digits=10, decimal_places=2)

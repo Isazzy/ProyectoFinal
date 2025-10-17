@@ -8,7 +8,8 @@ urlpatterns = [
     # Autenticación JWT
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    
     # Usuarios (app real)
     path('api/usuarios/', include('mitiempo_enloderomi.urls')),
 

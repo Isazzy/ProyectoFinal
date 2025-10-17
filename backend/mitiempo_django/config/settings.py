@@ -99,7 +99,7 @@ SIMPLE_JWT = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME':'mitiempo',
+        'NAME':'mitiem',
         'USER': 'root',
         'PASSWORD' : 'root',
         'HOST': 'localhost',
