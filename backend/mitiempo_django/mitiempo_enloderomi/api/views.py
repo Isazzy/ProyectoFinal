@@ -12,12 +12,12 @@ from rest_framework.response import Response
 
 User = get_user_model()
 
-# 🔐 Login con JWT personalizado
+#  Login con JWT personalizado
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-# 🧾 Registro público
+#  Registro público
 class RegisterAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -36,20 +36,22 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return User.objects.none()
-        if getattr(user, "role", "").lower() != "administrador":
-            # Los empleados o clientes solo se ven a sí mismos
-            return User.objects.filter(id=user.id)
-        return User.objects.all()
+
+        # Admin ve todos
+        if getattr(user, "role", "").lower() == "admin":
+            return User.objects.all().order_by("username")
+
+        # Empleado o cliente solo ve su propio registro
+        return User.objects.filter(id=user.id)
 
     def perform_create(self, serializer):
         print("Creando usuario:", serializer.validated_data)
         serializer.save()
 
-    # 🔹 Endpoint público para obtener profesionales
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def empleados(self, request):
         empleados = User.objects.filter(
-            role__in=["Empleado", "Administrador"], 
+            role__in=["empleado", "admin"], 
             is_active=True
         )
         serializer = self.get_serializer(empleados, many=True)

@@ -28,6 +28,8 @@ class Servicios(models.Model):
         return f"{self.nombre_serv} ({estado})"
 
 
+
+
 class Turnos(models.Model):
     id_turno = models.AutoField(primary_key=True)
     id_cli = models.ForeignKey(
