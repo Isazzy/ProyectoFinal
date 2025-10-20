@@ -3,9 +3,9 @@ from rest_framework.routers import DefaultRouter
 from .views import ServicioViewSet, TurnosViewSet, TurnosXServicosViewSet, horarios_disponibles
 
 router = DefaultRouter()
-router.register('servicios', ServicioViewSet)
 router.register('turnos', TurnosViewSet)
 router.register('turnos_x_servicios', TurnosXServicosViewSet)
+router.register('servicios', ServicioViewSet)  #
 
 urlpatterns = [
     path('', include(router.urls)),

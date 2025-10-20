@@ -1,3 +1,4 @@
+#turnos/views.py
 from rest_framework import viewsets, permissions
 from .models import Servicios, Turnos, TurnosXServicios
 from .serializers import ServicioSerializer, TurnosSerializer, TurnosXServiciosSerializer
@@ -7,6 +8,8 @@ from datetime import timedelta, datetime
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
+from datetime import datetime, timedelta, time
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -74,13 +77,83 @@ class ServicioViewSet(viewsets.ModelViewSet):
         return Servicios.objects.all()
 
 
+
+
 class TurnosViewSet(viewsets.ModelViewSet):
     queryset = Turnos.objects.all().select_related('id_cli', 'id_prof')
     serializer_class = TurnosSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(id_cli=self.request.user)
+        servicios_ids = self.request.data.get('servicios', [])
+        servicios_objs = Servicios.objects.filter(id_serv__in=servicios_ids, activado=True)
+
+        if not servicios_objs.exists():
+            raise serializers.ValidationError("No se encontraron servicios válidos.")
+
+        # Duración total de todos los servicios
+        duracion_total = sum([s.duracion_serv.total_seconds() for s in servicios_objs if s.duracion_serv], 0)
+        if duracion_total == 0:
+            raise serializers.ValidationError("Al menos un servicio debe tener duración definida.")
+
+        # Si el cliente no envía un profesional, asignamos automáticamente
+        id_prof = self.request.data.get('id_prof')
+        profesional = None
+
+        if not id_prof:
+            posibles_profesionales = User.objects.filter(
+                role='empleado',
+                turnos_profesional__servicio__in=servicios_objs
+            ).distinct()
+
+            if posibles_profesionales.count() == 1:
+                profesional = posibles_profesionales.first()
+            elif posibles_profesionales.count() > 1:
+                profesional = posibles_profesionales.first()  # Podés mejorar la lógica según disponibilidad
+            else:
+                raise serializers.ValidationError("No hay profesionales disponibles para los servicios seleccionados.")
+        else:
+            profesional = User.objects.get(id=id_prof, role='empleado')
+
+        # Fecha solicitada o hoy
+        fecha_turno = self.request.data.get('fecha_turno')
+        if not fecha_turno:
+            fecha_turno = datetime.today().date()
+        else:
+            fecha_turno = datetime.strptime(fecha_turno, "%Y-%m-%d").date()
+
+        # Obtener turnos existentes del profesional en esa fecha
+        turnos = Turnos.objects.filter(id_prof=profesional, fecha_turno=fecha_turno)
+        ocupados = []
+        for t in turnos:
+            start = datetime.combine(fecha_turno, t.hora_turno)
+            end = start + timedelta(minutes=sum([s.duracion_serv.total_seconds()/60 for s in TurnosXServicios.objects.filter(id_turno=t).select_related('id_serv')]))
+            ocupados.append((start, end))
+
+        # Horarios base del profesional (ejemplo 9:00 a 17:00)
+        inicio = datetime.combine(fecha_turno, time(hour=9, minute=0))
+        fin = datetime.combine(fecha_turno, time(hour=17, minute=0))
+        step = timedelta(minutes=15)  # check cada 15 min
+
+        horario_asignado = None
+        t = inicio
+        while t + timedelta(seconds=duracion_total) <= fin:
+            rango_turno = (t, t + timedelta(seconds=duracion_total))
+            # verificar superposición
+            if all(rango_turno[1] <= o[0] or rango_turno[0] >= o[1] for o in ocupados):
+                horario_asignado = t.time()
+                break
+            t += step
+
+        if not horario_asignado:
+            raise serializers.ValidationError("No hay horarios disponibles para la duración combinada de los servicios.")
+
+        # Guardar turno
+        turno = serializer.save(id_cli=self.request.user, id_prof=profesional, fecha_turno=fecha_turno, hora_turno=horario_asignado)
+
+        # Guardar relación TurnosXServicios
+        for serv in servicios_objs:
+            TurnosXServicios.objects.create(id_turno=turno, id_serv=serv)
 
 
 class TurnosXServicosViewSet(viewsets.ModelViewSet):

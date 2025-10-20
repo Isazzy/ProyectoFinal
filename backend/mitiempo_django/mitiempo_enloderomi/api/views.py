@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from mitiempo_enloderomi.api.permissions import IsAdminRole 
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -30,7 +30,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserCRUDSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRole]  # admin para CRUD
 
     def get_queryset(self):
         user = self.request.user
@@ -48,11 +48,15 @@ class UserViewSet(viewsets.ModelViewSet):
         print("Creando usuario:", serializer.validated_data)
         serializer.save()
 
-    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def empleados(self, request):
+        """
+        Endpoint para listar profesionales disponibles.
+        Admin y clientes pueden consultarlo, devuelve solo role='empleado'.
+        """
         empleados = User.objects.filter(
-            role__in=["empleado", "admin"], 
+            role="empleado",
             is_active=True
         )
-        serializer = self.get_serializer(empleados, many=True)
+        serializer = UserCRUDSerializer(empleados, many=True)
         return Response(serializer.data)

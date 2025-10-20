@@ -27,7 +27,22 @@ class Servicios(models.Model):
         estado = "Activo" if self.activado else "Inactivo"
         return f"{self.nombre_serv} ({estado})"
 
+class ServicioProfesional(models.Model):
+    servicio = models.ForeignKey(Servicios, on_delete=models.CASCADE)
+    profesional = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    rol = models.CharField(
+        max_length=20,
+        choices=Servicios.ROL_REQUERIDO_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Rol que cumple el profesional en este servicio"
+    )
 
+    class Meta:
+        unique_together = ('servicio', 'profesional')
+
+    def __str__(self):
+        return f"{self.profesional.username} - {self.servicio.nombre_serv} ({self.rol})"
 
 
 class Turnos(models.Model):
