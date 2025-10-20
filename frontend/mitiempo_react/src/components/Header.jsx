@@ -41,7 +41,7 @@ export default function Header() {
 
         {/* Navegación visible para todos */}
         <nav className="nav-links">
-          <Link to="/nosotros">Nosotros</Link>
+          <Link to="/nosotros">Inicio</Link>
           <Link to="/servicios">Servicios</Link>
           <button onClick={handleTurnosClick} className="link-btn">
             Turnos
