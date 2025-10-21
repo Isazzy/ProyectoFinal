@@ -19,13 +19,13 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/login/", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ email, password }),
-});
+      const response = await fetch("http://127.0.0.1:8000/api/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await response.json();
 
@@ -34,13 +34,14 @@ export default function Login() {
         return;
       }
 
-      // Guardar tokens
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
+      // ✅ Guardar tokens con nombres consistentes
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
 
-      // Intentar obtener rol
+      // ✅ Obtener y guardar rol
       let role = null;
-      if (data.user && data.user.role) {
+
+      if (data.user?.role) {
         role = data.user.role;
       } else if (data.access) {
         try {
@@ -53,9 +54,17 @@ export default function Login() {
       }
 
       if (!role) throw new Error("No se pudo obtener el rol del usuario");
-      localStorage.setItem("user", JSON.stringify({ role }));
 
-      // Redirigir según rol
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          role,
+        })
+      );
+
+      // ✅ Redirigir según el rol
       if (role === "admin") navigate("/admin/dashboard");
       else if (role === "empleado") navigate("/panel_empleado");
       else navigate("/perfil_cliente");
@@ -83,7 +92,7 @@ export default function Login() {
           <h2>Iniciar Sesión</h2>
 
           <input
-            type="text"
+            type="email"
             placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

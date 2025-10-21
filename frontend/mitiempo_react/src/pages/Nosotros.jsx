@@ -5,7 +5,7 @@ export default function Nosotros() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Nosotros</h1>
-      <p>Somos una peluquería dedicada a ... (rellenar contenido)</p>
+      <p>Somos una peluquería dedicada a ... </p>
     </div>
   );
 }

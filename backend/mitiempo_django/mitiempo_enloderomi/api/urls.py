@@ -1,14 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterAPIView, UserViewSet, CustomLoginView
-from rest_framework_simplejwt.views import TokenRefreshView
+from .views import RegisterAPIView, UserViewSet
 
 router = DefaultRouter()
+router.register(r'', UserViewSet, basename='usuarios')  # sin 'usuarios' aquí
 
-router.register('usuarios', UserViewSet, basename='usuarios')
-
-urlpatterns = router.urls + [
+urlpatterns = [
     path("register/", RegisterAPIView.as_view(), name="register"),
-    path("login/", CustomLoginView.as_view(), name="login"),  
-    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("", include(router.urls)),  # esto generará /api/usuarios/... correctamente
 ]

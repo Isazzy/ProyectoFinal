@@ -1,75 +1,89 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+
+// Componentes base
 import Header from "./components/Header";
-import Login from "./components/Login/Login"; 
+import Login from "./components/Login/Login";
+
+// Páginas públicas
 import Nosotros from "./pages/Nosotros";
 import Servicios from "./pages/Servicios";
+
+// Cliente
 import TurnosFlow from "./pages/Turnos/TurnosFlow";
 import DashboardCliente from "./pages/Cliente/DashboardCliente";
-import Perfil from "./pages/Cliente/PerfilCliente";
+import PerfilCliente from "./pages/Cliente/PerfilCliente";
+
+// Admin
+import DashboardAdmin from "./pages/Admin/AdminDashboard";
+import AdminServicios from "./pages/Admin/AdminServicios";
+
+// Rutas protegidas
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
-import ServiciosAdmin from "./pages/Admin/ServiciosAdmin";
 
-import ProductosStockView from "./components/Productos/Productos";
+function Layout() {
+  const location = useLocation();
 
+  const hideHeader =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/login");
+
+  return (
+    <>
+      {!hideHeader && <Header />} 
+      <div style={{ marginTop: 20 }}>
+        <Routes>
+          {/* RUTAS PÚBLICAS */}
+          <Route path="/" element={<Nosotros />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/servicios" element={<Servicios />} />
+          <Route path="/login" element={<Login />} />
+
+          {/*  RUTAS CLIENTE */}
+          <Route
+            path="/turnos"
+            element={
+              <PrivateRoute role="cliente">
+                <TurnosFlow />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <PrivateRoute role="cliente">
+                <PerfilCliente />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/perfil_cliente"
+            element={
+              <PrivateRoute role="cliente">
+                <DashboardCliente />
+              </PrivateRoute>
+            }
+          />
+
+          {/*  RUTAS ADMIN */}
+          <Route
+            path="/admin/dashboard/*"
+            element={
+              <PrivateRoute role="admin">
+                <DashboardAdmin />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </>
+  );
+}
 
 export default function App() {
   return (
-      <div className="App">
-          
-      
-
-        <Router>
-          <Header />
-          <div style={{ marginTop: 20 }}>
-            <Routes>
-              <Route path="/" element={<ProductosStockView />} />
-              <Route path="/nosotros" element={<Nosotros />} />
-              <Route path="/servicios" element={<Servicios />} />
-              <Route path="/Login" element={<Login />} /> 
-              <Route
-                path="/turnos"
-                element={
-                  <PrivateRoute role="cliente">
-                    <TurnosFlow />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Ruta protegida para Productos */}
-            <Route path="/productos" element={
-              <PrivateRoute>
-                  <ProductosStockView /> {/* Aquí se renderiza tu componente después del login */}
-              </PrivateRoute>
-            } />
-              <Route
-                path="/perfil"
-                element={
-                  <PrivateRoute role="cliente">
-                    <Perfil />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/perfil_cliente"
-                element={
-                  <PrivateRoute role="cliente">
-                    <DashboardCliente />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin/servicios"
-                element={
-                  <PrivateRoute role="admin">
-                    <ServiciosAdmin />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </div>
-        </Router>
-    
-      </div>
+    <Router>
+      <Layout />
+    </Router>
   );
 }

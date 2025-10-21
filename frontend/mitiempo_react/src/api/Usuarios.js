@@ -1,28 +1,25 @@
-// front/src/api/usuarios.js
-import axios from "axios";
+// front/src/api/Usuarios.js
+import api from "./axiosConfig";
 
-const usuariosApi = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/usuarios/",
-});
+const ENDPOINT = "/usuarios/";
 
-usuariosApi.interceptors.response.use(
-  response => response,
-  async error => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("access_token");
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
+export const getUsuarios = (id = null) =>
+  id ? api.get(`${ENDPOINT}${id}/`) : api.get(ENDPOINT);
 
-const authHeader = () => {
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export const createUsuario = (usuario) => api.post(ENDPOINT, usuario);
+
+export const updateUsuario = (id, usuario) =>
+  api.put(`${ENDPOINT}${id}/`, usuario);
+
+export const deleteUsuario = (id) => api.delete(`${ENDPOINT}${id}/`);
+
+// Obtener empleados para seleccionar profesional al sacar turno
+export const getEmpleados = () => api.get(`${ENDPOINT}empleados/`);
+
+export default {
+  getUsuarios,
+  createUsuario,
+  updateUsuario,
+  deleteUsuario,
+  getEmpleados,
 };
-
-export const getUsuarios = async () => (await usuariosApi.get("/", { headers: authHeader() })).data;
-export const getUsuario = async (id) => (await usuariosApi.get(`${id}/`, { headers: authHeader() })).data;
-export const createUsuario = async (usuario) => (await usuariosApi.post("/", usuario, { headers: authHeader() })).data;
-export const updateUsuario = async (id, usuario) => (await usuariosApi.put(`${id}/`, usuario, { headers: authHeader() })).data;
-export const deleteUsuario = async (id) => (await usuariosApi.delete(`${id}/`, { headers: authHeader() })).data;

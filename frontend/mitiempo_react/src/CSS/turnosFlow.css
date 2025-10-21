@@ -1,0 +1,51 @@
+.turnos-flow {
+  max-width: 600px;
+  margin: 30px auto;
+  background: #1e1e1e;
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.opciones-lista {
+  list-style: none;
+  padding: 0;
+}
+
+.opcion {
+  background: #333;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 5px 0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.opcion:hover {
+  background: #444;
+}
+
+.opcion.seleccionada {
+  background: #ff6b81;
+}
+
+button {
+  background: #ff6b81;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}

@@ -1,74 +1,26 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-
-export default function Home() {
-  const navigate = useNavigate();
-
-  const handleIngresar = () => {
-    navigate("/Login");
-  };
-
-  return (
-    <div className="landing-container">
-      <h1>Bienvenido a MiTiempo</h1>
-      <p>Gestioná tus turnos de forma simple y rápida.</p>
-      <button onClick={handleIngresar} className="btn-ingresar">
-        Ingresar
-      </button>
-    </div>
-  );
-}
-
-
-
 // front/src/api/index.js
-const API_URL = "http://127.0.0.1:8000/api";
-
-// 🔹 Helper genérico para GET con token
-const authFetch = async (endpoint, options = {}) => {
-  const token = localStorage.getItem("access_token");
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Error ${res.status}: ${text}`);
-  }
-
-  return res.json();
-};
+import api from "./axiosConfig";
 
 // 🔹 Servicios
-export const fetchServicios = () => authFetch("/servicios/");
+export const fetchServicios = async () => {
+  const res = await api.get("/servicios/");
+  return res.data;
+};
 
-// 🔹 Usuarios (profesionales, clientes, etc.)
-export const fetchUsuarios = () => authFetch("/usuarios/");
+// 🔹 Usuarios
+export const fetchUsuarios = async () => {
+  const res = await api.get("/usuarios/");
+  return res.data;
+};
 
-// 🔹 Turnos (GET)
-export const fetchTurnos = () => authFetch("/turnos/");
+// 🔹 Turnos
+export const fetchTurnos = async () => {
+  const res = await api.get("/turnos/");
+  return res.data;
+};
 
-// 🔹 Crear turno (POST)
+// 🔹 Crear turno
 export const createTurno = async (payload) => {
-  const token = localStorage.getItem("access_token");
-  const res = await fetch(`${API_URL}/turnos/`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Error ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  const res = await api.post("/turnos/", payload);
+  return res.data;
 };

@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('mitiempo_enloderomi', '0001_initial'),
-        ('turnos', '0001_initial'),
     ]
 
     operations = [

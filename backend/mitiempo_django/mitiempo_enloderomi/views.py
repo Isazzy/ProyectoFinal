@@ -1,6 +1,7 @@
-from rest_framework import viewsets, filters  # Importa ViewSets y filtros de DRF.
-from .models import Productos  # Importa el modelo Productos.
-from .serializers import ProductosSerializer  # Importa el serializador.
+#/backend/mitiempo_django/mitiempo_enloderomi/views.py
+from django.http import HttpResponse
+def mi_vista(request):
+    return HttpResponse("")
 
 class ProductosViewSet(viewsets.ModelViewSet):
     # Línea 1: Importa los módulos necesarios.

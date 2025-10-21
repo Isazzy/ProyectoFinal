@@ -1,0 +1,15 @@
+.admin-container {
+  display: flex;
+}
+
+.admin-content {
+  margin-left: 230px;
+  padding: 40px;
+  width: calc(100% - 230px);
+  min-height: 100vh;
+  background: #f8f8f8;
+}
+
+.admin-content h2 {
+  margin-bottom: 20px;
+}

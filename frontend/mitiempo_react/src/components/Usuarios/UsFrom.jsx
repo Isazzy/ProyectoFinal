@@ -1,6 +1,5 @@
-//componentes/Usuarios/UsForm.jsx
 import React, { useEffect, useState } from "react";
-import { createUsuarios, getUsuario, updateUsuario } from "../../api/Usuarios";
+import { createUsuario, getUsuarios, updateUsuario } from "../../api/Usuarios";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import "../../CSS/usuarios.css";
@@ -16,50 +15,59 @@ export default function UsForm() {
   });
 
   const navigate = useNavigate();
-  const params = useParams();
+  const { id } = useParams();
 
   useEffect(() => {
-    const loadUsuarios = async () => {
-      if (params.id) {
-        const response = await getUsuario(params.id);
-        setUsuario(response.data);
+    const loadUsuario = async () => {
+      if (id) {
+        try {
+          const res = await getUsuarios(id);
+          setUsuario(res.data);
+        } catch (err) {
+          toast.error("Error al cargar el usuario");
+        }
       }
     };
-    loadUsuarios();
-  }, [params.id]);
+    loadUsuario();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (params.id) {
-      await updateUsuario(params.id, usuario);
-      toast.success("Usuario modificado correctamente");
-    } else {
-      await createUsuarios(usuario);
-      toast.success("Usuario creado correctamente");
+    try {
+      if (id) {
+        await updateUsuario(id, usuario);
+        toast.success("Usuario modificado correctamente");
+      } else {
+        await createUsuario(usuario);
+        toast.success("Usuario creado correctamente");
+      }
+      navigate("/usuarios");
+    } catch (err) {
+      toast.error("Error al guardar el usuario");
     }
-    navigate("/Usuarios");
   };
 
   return (
     <div className="container">
-      <h2>{params.id ? "Editar Usuario" : "Crear Usuario"}</h2>
+      <h2>{id ? "Editar Usuario" : "Crear Usuario"}</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Nombre de usuario</label>
           <input
-            value={usuario.username}
             type="text"
+            value={usuario.username}
             onChange={(e) =>
               setUsuario({ ...usuario, username: e.target.value })
             }
+            required
           />
         </div>
 
         <div className="form-group">
           <label>Nombre</label>
           <input
-            value={usuario.first_name}
             type="text"
+            value={usuario.first_name}
             onChange={(e) =>
               setUsuario({ ...usuario, first_name: e.target.value })
             }
@@ -69,8 +77,8 @@ export default function UsForm() {
         <div className="form-group">
           <label>Apellido</label>
           <input
-            value={usuario.last_name}
             type="text"
+            value={usuario.last_name}
             onChange={(e) =>
               setUsuario({ ...usuario, last_name: e.target.value })
             }
@@ -80,46 +88,53 @@ export default function UsForm() {
         <div className="form-group">
           <label>Email</label>
           <input
-            value={usuario.email}
             type="email"
-            onChange={(e) =>
-              setUsuario({ ...usuario, email: e.target.value })
-            }
+            value={usuario.email}
+            onChange={(e) => setUsuario({ ...usuario, email: e.target.value })}
+            required
           />
         </div>
 
-        <div className="form-group">
-          <label>Contraseña</label>
-          <input
-            value={usuario.password}
-            type="password"
-            onChange={(e) =>
-              setUsuario({ ...usuario, password: e.target.value })
-            }
-          />
-        </div>
+        {!id && (
+          <div className="form-group">
+            <label>Contraseña</label>
+            <input
+              type="password"
+              value={usuario.password}
+              onChange={(e) =>
+                setUsuario({ ...usuario, password: e.target.value })
+              }
+              required
+            />
+          </div>
+        )}
 
         <div className="form-group">
           <label>Rol</label>
           <select
             value={usuario.role}
             onChange={(e) => setUsuario({ ...usuario, role: e.target.value })}
+            required
           >
             <option value="">Seleccionar rol</option>
-            <option value="admin">Administrador</option>
-            <option value="empleado">Empleado</option>
-            <option value="cliente">Cliente</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Empleado">Empleado</option>
+            <option value="Cliente">Cliente</option>
           </select>
         </div>
 
-        <button className="btn btn-save">Guardar</button>
-        <button
-          type="button"
-          className="btn btn-cancel"
-          onClick={() => navigate("/Usuarios")}
-        >
-          Cancelar
-        </button>
+        <div className="button-group">
+          <button className="btn btn-save" type="submit">
+            Guardar
+          </button>
+          <button
+            type="button"
+            className="btn btn-cancel"
+            onClick={() => navigate("/usuarios")}
+          >
+            Cancelar
+          </button>
+        </div>
       </form>
     </div>
   );

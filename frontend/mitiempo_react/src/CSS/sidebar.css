@@ -1,0 +1,39 @@
+.sidebar {
+  width: 120px;
+  height: 50vh;
+  background-color: #222;
+  color: white;
+  padding: 20px;
+  position:fixed;
+  margin-top: 280px;
+  margin-left: 680px;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin: 15px 0;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+}
+
+.logout {
+  margin-top: 30px;
+  background: crimson;
+  border: none;
+  color: white;
+  padding: 10px;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 6px;
+}
