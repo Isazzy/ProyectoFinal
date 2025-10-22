@@ -14,32 +14,50 @@ export default function TurnoResumen({ resumen, onBack, onConfirm, saving }) {
     return result.trim() || `${s}s`;
   };
 
+  // Total precio y duración si hay varios servicios
+  const totalPrecio = Array.isArray(resumen.servicios)
+    ? resumen.servicios.reduce((acc, s) => acc + (s.precio_serv || 0), 0)
+    : resumen.precio;
+
+  const totalDuracion = Array.isArray(resumen.servicios)
+    ? resumen.servicios
+        .map((s) => s.duracion_serv)
+        .filter(Boolean)
+        .reduce((acc, d) => {
+          const [h, m, s] = d.split(":").map(Number);
+          return acc + h * 60 + m + s / 60;
+        }, 0)
+    : resumen.duracion;
+
   return (
     <div style={styles.card}>
       <h3 style={styles.title}>Confirmar Turno</h3>
 
       <div style={styles.infoGroup}>
         <p>
-          <strong>Servicio:</strong> {resumen.servicioName}
+          <strong>Servicios:</strong>{" "}
+          {Array.isArray(resumen.servicios)
+            ? resumen.servicios.map((s) => s.nombre_serv).join(", ")
+            : resumen.servicioName}
         </p>
         <p>
           <strong>Profesional:</strong> {resumen.profName}
         </p>
         <p>
-          <strong>Fecha:</strong>{" "}
-          {new Date(resumen.fecha).toLocaleDateString("es-AR")}
+          <strong>Fecha:</strong> {resumen.fecha}
         </p>
         <p>
           <strong>Hora:</strong> {resumen.hora}
         </p>
-        {resumen.precio && (
+        {totalPrecio && (
           <p>
-            <strong>Precio:</strong> ${resumen.precio}
+            <strong>Total:</strong> ${totalPrecio}
           </p>
         )}
-        {resumen.duracion && (
+        {totalDuracion && (
           <p>
-            <strong>Duración:</strong> {formatDuration(resumen.duracion)}
+            <strong>Duración:</strong> {Math.floor(totalDuracion / 60)}h{" "}
+            {Math.round(totalDuracion % 60)}m
           </p>
         )}
       </div>
@@ -89,6 +107,7 @@ const styles = {
     padding: "8px 16px",
     borderRadius: "6px",
     cursor: "pointer",
+    transition: "0.2s",
   },
   btnConfirm: {
     background: "#4CAF50",
@@ -97,5 +116,6 @@ const styles = {
     padding: "8px 16px",
     borderRadius: "6px",
     cursor: "pointer",
+    transition: "0.2s",
   },
 };

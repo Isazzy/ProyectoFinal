@@ -36,7 +36,7 @@ function AdminServicios() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Gestión de Servicios</h2>
         <button
-          onClick={() => navigate("/admin/servicios/create")}
+          onClick={() => navigate("/admin/dashboard/servicios/create")}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
            Crear servicio
@@ -66,7 +66,7 @@ function AdminServicios() {
               <td className="p-2">{s.activado ? "✅" : "❌"}</td>
               <td className="p-2 text-center space-x-2">
                 <button
-                  onClick={() => navigate(`/admin/servicios/edit/${s.id_serv}`)}
+                  onClick={() => navigate(`/admin/dashboard/servicios/edit/${s.id_serv}`)}
                   className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
                 >
                   Editar

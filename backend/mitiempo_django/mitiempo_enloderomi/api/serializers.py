@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from mitiempo_enloderomi.models import Profile
 
+
 User = get_user_model()
 
 
@@ -60,7 +61,10 @@ class UserCRUDSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password', 'role']
+        fields = [
+            'id', 'username', 'first_name', 'last_name', 'email',
+            'password', 'role', 'rol_profesional', 'dias_laborables'
+        ]
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)

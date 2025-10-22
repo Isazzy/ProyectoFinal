@@ -1,12 +1,16 @@
 .sidebar {
-  width: 120px;
-  height: 50vh;
+  width: 180px;
+  height: 100vh;
   background-color: #222;
   color: white;
   padding: 20px;
-  position:fixed;
-  margin-top: 280px;
-  margin-left: 680px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 1000;
 }
 
 .sidebar h2 {
@@ -27,8 +31,15 @@
   text-decoration: none;
 }
 
-.logout {
-  margin-top: 30px;
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.sidebar-user {
+  margin-bottom: 10px;
+}
+
+.sidebar-logout {
   background: crimson;
   border: none;
   color: white;

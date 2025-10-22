@@ -1,9 +1,9 @@
 // front/src/pages/Turnos/TurnosFlow.jsx
 import React, { useState, useEffect } from "react";
 import turnosApi from "../../api/turnos";
-import usuariosApi from "../../api/Usuarios";
-import * as serviciosApi from "../../api/servicios"; // usa named imports
+import * as serviciosApi from "../../api/servicios"; 
 import TurnoResumen from "../../components/Turnos/TurnoResumen";
+import axios from "axios";
 
 export default function TurnosFlow() {
   const [step, setStep] = useState(1);
@@ -15,115 +15,144 @@ export default function TurnosFlow() {
   const [selectedTime, setSelectedTime] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Cargar servicios y profesionales
-  useEffect(() => {
-    serviciosApi
-      .getServicios()
-      .then((res) => setServicios(res.data))
-      .catch((err) => console.error(err));
+  // Cargar servicios y profesionales desde endpoints públicos
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const servRes = await serviciosApi.getServicios();
+      console.log("Servicios:", servRes.data);
+      setServicios(servRes.data);
 
-    usuariosApi
-      .getUsuarios()
-      .then((res) => {
-        const empleados = res.data.filter(
-          (u) => u.role === "empleado" || u.role === "admin"
-        );
-        setProfesionales(empleados);
-      })
-      .catch((err) => console.error(err));
-  }, []);
+      const profRes = await axios.get("http://127.0.0.1:8000/api/usuarios/profesionales/");
+      console.log("Profesionales:", profRes.data);
+      setProfesionales(profRes.data);
+    } catch (err) {
+      console.error("Error cargando datos:", err);
+    }
+  };
+  fetchData();
+}, []);
 
   const onConfirm = async () => {
     setSaving(true);
     try {
       const turnoData = {
-        id_serv: selectedService,
-        id_prof: selectedProfessional,
+        id_serv: selectedService.id_serv,
+        id_prof: selectedProfessional.id,
         fecha_turno: selectedDate,
         hora_turno: selectedTime,
         estado_turno: "pendiente",
       };
-
+      console.log("Payload turno enviado:", turnoData);
       await turnosApi.createTurno(turnoData);
       alert("Turno creado correctamente");
 
+      // Resetear flujo
       setStep(1);
       setSelectedService(null);
       setSelectedProfessional(null);
       setSelectedDate(null);
       setSelectedTime(null);
     } catch (error) {
-      console.error(error);
+      console.error("Error creando turno:", error);
       alert("Error al crear el turno");
     } finally {
       setSaving(false);
     }
   };
 
-  // Paso 1 — Servicio
+  // Agrupar servicios por tipo_serv
+  const serviciosPorCategoria = servicios.reduce((acc, serv) => {
+    if (!acc[serv.tipo_serv]) acc[serv.tipo_serv] = [];
+    acc[serv.tipo_serv].push(serv);
+    return acc;
+  }, {});
+
+  // --- Paso 1: Elegir servicio ---
   if (step === 1)
     return (
       <div className="turno-step">
         <h2>Elegí un servicio</h2>
-        <ul>
-          {servicios.map((s) => (
-            <li
-              key={s.id_serv}
-              onClick={() => {
-                setSelectedService(s.id_serv);
-                setStep(2);
-              }}
-              style={{
-                cursor: "pointer",
-                marginBottom: "10px",
-                border:
-                  selectedService === s.id_serv
-                    ? "2px solid #4CAF50"
-                    : "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "6px",
-              }}
-            >
-              {s.nombre_serv} — ${s.precio_serv}
-            </li>
-          ))}
-        </ul>
+        {Object.entries(serviciosPorCategoria).map(([categoria, lista]) => (
+          <div key={categoria} style={{ marginBottom: "20px" }}>
+            <h3>{categoria}</h3>
+            <ul>
+              {lista.map((s) => (
+                <li
+                  key={s.id_serv}
+                  onClick={() => {
+                    setSelectedService(s);
+                    setStep(2);
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    marginBottom: "10px",
+                    border:
+                      selectedService?.id_serv === s.id_serv
+                        ? "2px solid #4CAF50"
+                        : "1px solid #ccc",
+                    padding: "10px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  {s.nombre_serv} — ${s.precio_serv}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     );
 
-  // Paso 2 — Profesional
-  if (step === 2)
+  // --- Paso 2: Elegir profesional compatible ---
+  if (step === 2) {
+    const rolRequerido = selectedService?.rol_requerido;
+
+    // Filtrar profesionales según rol y permitir "multi"
+    const profesionalesFiltrados = profesionales.filter(
+      (p) =>
+        p.profesion === rolRequerido ||
+        p.profesion === "multi"
+    );
+
     return (
       <div className="turno-step">
         <h2>Elegí un profesional</h2>
-        <ul>
-          {profesionales.map((p) => (
-            <li
-              key={p.id}
-              onClick={() => {
-                setSelectedProfessional(p.id);
-                setStep(3);
-              }}
-              style={{
-                cursor: "pointer",
-                marginBottom: "10px",
-                border:
-                  selectedProfessional === p.id
-                    ? "2px solid #4CAF50"
-                    : "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "6px",
-              }}
-            >
-              {p.first_name} {p.last_name}
-            </li>
-          ))}
-        </ul>
+        {profesionalesFiltrados.length > 0 ? (
+          <ul>
+            {profesionalesFiltrados.map((p) => (
+              <li
+                key={p.id}
+                onClick={() => {
+                  setSelectedProfessional(p);
+                  setStep(3);
+                }}
+                style={{
+                  cursor: "pointer",
+                  marginBottom: "10px",
+                  border:
+                    selectedProfessional?.id === p.id
+                      ? "2px solid #4CAF50"
+                      : "1px solid #ccc",
+                  padding: "10px",
+                  borderRadius: "6px",
+                }}
+              >
+                {p.nombre} ({p.profesion})
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: "gray" }}>
+            No hay profesionales disponibles para este tipo de servicio.
+          </p>
+        )}
         <button onClick={() => setStep(1)}>Volver</button>
       </div>
     );
+  }
 
-  // Paso 3 — Fecha
+  // --- Paso 3: Fecha ---
   if (step === 3)
     return (
       <div className="turno-step">
@@ -146,7 +175,7 @@ export default function TurnosFlow() {
       </div>
     );
 
-  // Paso 4 — Hora
+  // --- Paso 4: Hora ---
   if (step === 4)
     return (
       <div className="turno-step">
@@ -169,31 +198,23 @@ export default function TurnosFlow() {
       </div>
     );
 
-  // Paso 5 — Confirmar
-  if (step === 5) {
-    const servicio = servicios.find((s) => s.id_serv === selectedService);
-    const profesional = profesionales.find(
-      (p) => p.id === selectedProfessional
-    );
-
+  // --- Paso 5: Confirmar ---
+  if (step === 5)
     return (
       <TurnoResumen
         resumen={{
-          servicioName: servicio?.nombre_serv,
-          profName: profesional
-            ? `${profesional.first_name} ${profesional.last_name}`
-            : "",
+          servicioName: selectedService?.nombre_serv,
+          profName: selectedProfessional?.nombre,
           fecha: selectedDate,
           hora: selectedTime,
-          precio: servicio?.precio_serv,
-          duracion: servicio?.duracion_serv,
+          precio: selectedService?.precio_serv,
+          duracion: selectedService?.duracion_serv,
         }}
         onBack={() => setStep(4)}
         onConfirm={onConfirm}
         saving={saving}
       />
     );
-  }
 
   return null;
 }

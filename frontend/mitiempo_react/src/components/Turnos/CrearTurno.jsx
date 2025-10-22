@@ -17,7 +17,7 @@ function CrearTurno() {
     e.preventDefault();
     try {
       await crearTurno(token, {
-        id_cli: 1, // reemplazar con el ID del usuario logueado (puede obtenerse del token)
+        id_cli: "",
         fecha_turno: fecha,
         hora_turno: hora,
         observaciones: "",

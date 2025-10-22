@@ -1,51 +1,150 @@
-.turnos-flow {
-  max-width: 600px;
-  margin: 30px auto;
-  background: #1e1e1e;
-  color: white;
+/* turnosFlow.css */
+
+/* Contenedor general de cada paso */
+.turno-step {
+  max-width: 700px;
+  margin: 0 auto;
   padding: 20px;
+  background: #fff0f5; /* rosa suave */
   border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-.step-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+/* Títulos */
+.turno-step h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #d63384; /* rosa fuerte */
 }
 
-.opciones-lista {
+/* Servicios y profesionales */
+.turno-step ul {
   list-style: none;
   padding: 0;
 }
 
-.opcion {
-  background: #333;
-  padding: 10px;
+.turno-step li {
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  background: #ffe6f0;
+  border: 1px solid #d9a3bf;
   border-radius: 8px;
-  margin: 5px 0;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
 }
 
-.opcion:hover {
-  background: #444;
+.turno-step li:hover {
+  transform: scale(1.03);
+  background: #ffb3d1;
+  border-color: #ff80bf;
 }
 
-.opcion.seleccionada {
-  background: #ff6b81;
+/* Elemento seleccionado */
+.turno-step li.selected,
+.turno-step li:active,
+.turno-step li[style*="2px solid #4CAF50"] {
+  border: 2px solid #4CAF50 !important;
+  background: #a6f1c5 !important;
 }
 
-button {
-  background: #ff6b81;
-  color: white;
+/* Botones */
+.turno-step button {
+  padding: 10px 18px;
+  margin-top: 15px;
   border: none;
-  padding: 10px;
   border-radius: 8px;
+  background-color: #d63384;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.2s ease;
 }
 
-button:disabled {
-  background: #555;
+.turno-step button:hover {
+  background-color: #ff66aa;
+}
+
+.turno-step button:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* Botones inline para Siguiente / Volver */
+.turno-step button + button {
+  margin-left: 10px;
+}
+
+/* Calendario */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker {
+  border: 1px solid #d63384;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.react-datepicker__day {
+  border-radius: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  line-height: 2.2rem;
+  margin: 0.2rem;
+  transition: all 0.2s;
+}
+
+/* Días disponibles */
+.react-datepicker__day.disponible {
+  background-color: #ffb6c1;
+  color: white;
+}
+
+.react-datepicker__day.disponible:hover {
+  background-color: #ff69b4;
+}
+
+/* Días no disponibles */
+.react-datepicker__day.no-disponible {
+  background-color: #ccc;
+  color: #666;
+  pointer-events: none;
+}
+
+/* Horarios */
+.turno-step ul li {
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+/* Resumen del turno */
+.turno-resumen {
+  background-color: #ffe6f0;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #d63384;
+}
+
+.turno-resumen p {
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .turno-step {
+    padding: 15px;
+  }
+
+  .turno-step li {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .react-datepicker__day {
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;
+  }
 }
