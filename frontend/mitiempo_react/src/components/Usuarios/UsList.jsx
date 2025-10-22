@@ -45,9 +45,9 @@ export default function UsList() {
         <h2>Gestión de Usuarios</h2>
         <button
           className="btn btn-add"
-          onClick={() => navigate("/usuarios/create")}
+          onClick={() => navigate("/admin/dashboard/usuarios/create")}
         >
-          ➕ Crear Usuario
+           Crear Usuario
         </button>
       </div>
 
@@ -78,15 +78,15 @@ export default function UsList() {
                 <td>
                   <button
                     className="btn btn-edit"
-                    onClick={() => navigate(`/usuarios/edit/${u.id}`)}
+                    onClick={() => navigate(`/admin/dashboard/usuarios/edit/${u.id}`)}
                   >
-                    ✏️ Editar
+                     Editar
                   </button>
                   <button
                     className="btn btn-delete"
                     onClick={() => handleDelete(u.id)}
                   >
-                    🗑️ Eliminar
+                     Eliminar
                   </button>
                 </td>
               </tr>

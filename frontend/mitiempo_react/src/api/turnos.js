@@ -1,7 +1,6 @@
-// front/src/api/turnos.js
 import api from "./axiosConfig";
 
-const ENDPOINT = "/turnos/";
+const ENDPOINT = "/turnos/"; // esto apunta a /api/turnos/ cuando se usa api baseURL
 
 export const getTurnos = (id = null) =>
   id ? api.get(`${ENDPOINT}${id}/`) : api.get(ENDPOINT);

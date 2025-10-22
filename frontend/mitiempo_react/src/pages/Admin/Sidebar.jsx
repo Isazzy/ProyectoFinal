@@ -60,7 +60,7 @@ export default function Sidebar() {
 
       <div className="sidebar-footer">
         <p className="sidebar-user">
-           {user?.username || "Invitado"} ({role})
+           {user?.username || ""} ({role})
         </p>
         <button className="sidebar-logout" onClick={logout}>
           Cerrar sesión

@@ -1,17 +1,28 @@
 /* Contenedor general */
 .container {
-  max-width: 900px;
-  margin: 20px auto;
+  margin-left: 180px; /* Empuja el contenido para que no quede debajo del sidebar */
   padding: 20px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Encabezado de usuarios */
+.usuarios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.usuarios-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
 /* Títulos */
 h1, h2 {
-  text-align: center;
-  margin-bottom: 20px;
   color: #333;
 }
 
@@ -54,7 +65,7 @@ input {
 }
 
 .btn-edit {
-  background-color: #0077b6;
+  background-color: #fb5b5b;
   color: white;
 }
 
@@ -66,7 +77,10 @@ input {
 .btn-add {
   background-color: #e63946;
   color: white;
-  float: right;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 /* Lista */

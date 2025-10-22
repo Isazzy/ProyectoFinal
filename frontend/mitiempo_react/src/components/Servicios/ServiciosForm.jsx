@@ -17,19 +17,24 @@ export default function ServiciosForm() {
     descripcion_serv: "",
     disponible_serv: 1,
     activado: true,
+    rol_requerido: "",
   });
 
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { id } = useParams();
 
-  //  Cargar servicio existente si hay ID
+  // Opciones predefinidas (de la lógica de la BD)
+  const tiposServicio = ["Peluquería", "Uñas", "Maquillaje"];
+  const roles = ["Peluquera", "Manicurista", "Estilista", "Múltiple"];
+
+  // Cargar servicio existente si hay ID
   useEffect(() => {
     const cargarServicio = async () => {
       if (id) {
         try {
           const res = await getServicioById(id);
-          console.log(" Servicio cargado:", res.data);
+          console.log("Servicio cargado:", res.data);
           setServicio(res.data);
         } catch (err) {
           console.error("Error al cargar servicio:", err);
@@ -40,7 +45,7 @@ export default function ServiciosForm() {
     cargarServicio();
   }, [id]);
 
-  //  Manejar cambios en los inputs
+  // Manejar cambios en los inputs
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setServicio((prev) => ({
@@ -49,7 +54,7 @@ export default function ServiciosForm() {
     }));
   };
 
-  //  Guardar cambios (crear o editar)
+  // Guardar cambios (crear o editar)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -66,18 +71,18 @@ export default function ServiciosForm() {
 
     try {
       if (id) {
-        console.log(" Actualizando servicio:", id, payload);
+        console.log("Actualizando servicio:", id, payload);
         await updateServicio(id, payload);
-        console.log(" Servicio actualizado correctamente");
+        console.log("Servicio actualizado correctamente");
       } else {
-        console.log(" Creando servicio:", payload);
+        console.log("Creando servicio:", payload);
         await createServicio(payload);
-        console.log(" Servicio creado correctamente");
+        console.log("Servicio creado correctamente");
       }
 
-      navigate("/admin/servicios");
+      navigate("/admin/dashboard/servicios");
     } catch (err) {
-      console.error(" Error al guardar servicio:", err);
+      console.error("Error al guardar servicio:", err);
       if (err.response?.data) {
         console.error("Detalles del error:", err.response.data);
       }
@@ -90,6 +95,7 @@ export default function ServiciosForm() {
       <h2>{id ? "Editar Servicio" : "Nuevo Servicio"}</h2>
 
       <form onSubmit={handleSubmit} className="servicios-form">
+        {/* Nombre */}
         <label>Nombre del servicio</label>
         <input
           name="nombre_serv"
@@ -99,15 +105,38 @@ export default function ServiciosForm() {
           required
         />
 
+        {/* Tipo */}
         <label>Tipo de servicio</label>
-        <input
+        <select
           name="tipo_serv"
           value={servicio.tipo_serv}
           onChange={handleChange}
-          placeholder="Ej: Peluquería, Maquillaje..."
           required
-        />
+        >
+          <option value="">Seleccionar tipo</option>
+          {tiposServicio.map((tipo) => (
+            <option key={tipo} value={tipo}>
+              {tipo}
+            </option>
+          ))}
+        </select>
 
+        {/* Rol requerido */}
+        <label>Rol requerido</label>
+        <select
+          name="rol_requerido"
+          value={servicio.rol_requerido || ""}
+          onChange={handleChange}
+        >
+          <option value="">Seleccionar rol</option>
+          {roles.map((rol) => (
+            <option key={rol} value={rol.toLowerCase()}>
+              {rol}
+            </option>
+          ))}
+        </select>
+
+        {/* Precio */}
         <label>Precio ($)</label>
         <input
           name="precio_serv"
@@ -118,6 +147,7 @@ export default function ServiciosForm() {
           required
         />
 
+        {/* Duración */}
         <label>Duración</label>
         <input
           name="duracion_serv"
@@ -126,6 +156,7 @@ export default function ServiciosForm() {
           type="time"
         />
 
+        {/* Descripción */}
         <label>Descripción</label>
         <textarea
           name="descripcion_serv"
@@ -134,7 +165,8 @@ export default function ServiciosForm() {
           placeholder="Breve descripción del servicio..."
         />
 
-        <label>
+        {/* Activo */}
+        <label className="checkbox-label">
           <input
             type="checkbox"
             name="activado"
@@ -144,6 +176,7 @@ export default function ServiciosForm() {
           Activo
         </label>
 
+        {/* Botones */}
         <div className="form-buttons">
           <button type="submit" className="btn-guardar">
             {id ? "Actualizar" : "Crear"}
@@ -151,7 +184,7 @@ export default function ServiciosForm() {
           <button
             type="button"
             className="btn-cancelar"
-            onClick={() => navigate("/admin/servicios")}
+            onClick={() => navigate("/admin/dashboard/servicios")}
           >
             Cancelar
           </button>

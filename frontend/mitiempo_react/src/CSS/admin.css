@@ -1,12 +1,11 @@
 .admin-container {
   display: flex;
+  min-height: 100vh;
 }
 
 .admin-content {
-  margin-left: 230px;
+  flex: 1;
   padding: 40px;
-  width: calc(100% - 230px);
-  min-height: 100vh;
   background: #f8f8f8;
 }
 

@@ -65,6 +65,10 @@ class IsAdminOrEmployee(BasePermission):
 
 # --- ViewSets ---
 class ServicioViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para listar, crear y administrar servicios.
+    Filtra automáticamente los servicios activos para los clientes.
+    """
     queryset = Servicios.objects.all().order_by('nombre_serv')
     serializer_class = ServicioSerializer
     authentication_classes = [JWTAuthentication]
@@ -72,9 +76,27 @@ class ServicioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+
+        # Si el usuario es anónimo o cliente → solo mostrar los servicios activados
         if not user.is_authenticated or getattr(user, 'role', '') == 'cliente':
-            return Servicios.objects.filter(activado=True)
-        return Servicios.objects.all()
+            return Servicios.objects.filter(activado=True).only(
+                "id_serv", "nombre_serv", "descripcion_serv", "precio_serv", "duracion_serv", "rol_requerido"
+            )
+
+        # Si es admin o empleado → todos los servicios
+        return Servicios.objects.all().only(
+            "id_serv", "nombre_serv", "descripcion_serv", "precio_serv", "duracion_serv", "rol_requerido"
+        )
+
+    def perform_create(self, serializer):
+        """
+        Asigna valores por defecto si faltan campos opcionales.
+        """
+        servicio = serializer.save()
+        if not servicio.duracion_serv:
+            servicio.duracion_serv = timedelta(minutes=30)
+            servicio.save()
+
 
 
 
