@@ -21,6 +21,10 @@ import AdminServicios from "./pages/Admin/AdminServicios";
 // Rutas protegidas
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 
+// Libreria bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+
 function Layout() {
   const location = useLocation();
 
@@ -31,7 +35,7 @@ function Layout() {
   return (
     <>
       {!hideHeader && <Header />} 
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 0 }}>
         <Routes>
           {/* RUTAS PÚBLICAS */}
           <Route path="/" element={<Nosotros />} />
