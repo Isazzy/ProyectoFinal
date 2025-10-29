@@ -1,0 +1,213 @@
+/* src/CSS/TurnoFormAdmin.css */
+
+/* Contenedor específico del modal de turnos si necesitas ajustes */
+.turno-modal-admin {
+    max-width: 750px; 
+    /* Fondo oscuro y texto claro ya vienen de modalForm.css o del contenedor */
+}
+
+.turno-modal-admin h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #4b5563;
+    text-align: center; /* Centrar título */
+}
+
+.turno-form-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* Aumentar espacio entre grupos */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 6px; /* Más espacio */
+    color: #d1d5db;
+}
+
+/* Estilo para inputs, selects y textarea */
+.turno-form-admin input[type="date"],
+.turno-form-admin input[type="time"],
+.turno-form-admin select,
+.turno-form-admin textarea {
+    background-color: #374151; 
+    color: #ffffff;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 12px; /* Más padding */
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.turno-form-admin input:focus,
+.turno-form-admin select:focus,
+.turno-form-admin textarea:focus {
+    outline: none;
+    border-color: #fb5b5b; /* Color principal al enfocar */
+    box-shadow: 0 0 0 2px rgba(251, 91, 91, 0.3); /* Resplandor al enfocar */
+}
+
+.turno-form-admin textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Fila para fecha y hora */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px; /* Mismo gap que el form */
+}
+
+/* Grupo de Checkboxes (Servicios) */
+.checkbox-group-admin {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Columnas adaptables */
+    gap: 12px;
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Más espacio */
+    font-size: 0.95rem; /* Ligeramente más grande */
+    color: #e5e7eb;
+    cursor: pointer;
+    padding: 5px; /* Padding para hacer click más fácil */
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+.checkbox-label:hover {
+    background-color: #4b5563; /* Fondo al pasar el mouse */
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px; /* Checkbox más grande */
+    height: 18px;
+    cursor: pointer;
+    accent-color: #fb5b5b; /* Color del check */
+}
+
+/* Botones y Errores */
+.form-error-admin {
+    color: #fca5a5; 
+    background-color: #7f1d1d; 
+    border: 1px solid #ef4444;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+    margin-top: 5px; /* Espacio superior */
+}
+
+/* Loading text style */
+.loading-text {
+    text-align: center;
+    font-style: italic;
+    color: #9ca3af;
+    padding: 20px;
+}
+
+/* src/CSS/modalForm.css */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo más oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Centrar verticalmente */
+    z-index: 1000;
+    padding: 20px; /* Espacio por si el contenido es muy alto */
+    overflow-y: auto; /* Permitir scroll si el modal es muy alto */
+}
+
+.modal-content {
+    background: #1f2937; /* Fondo oscuro del modal */
+    color: #e5e7eb; /* Texto claro */
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 750px; /* Ancho base del modal */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative; /* Para posicionar el botón de cierre si lo añades */
+}
+
+/* Footer del modal */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #4b5563; /* Línea separadora oscura */
+    margin-top: 20px; /* Separación del contenido */
+}
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Estilos base de botones (puedes personalizarlos más) */
+.btn-modal-cancel, .btn-modal-save, .btn-delete-user {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+.btn-modal-cancel:disabled, .btn-modal-save:disabled, .btn-delete-user:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-modal-cancel { 
+    background-color: #4b5563;
+    color: #e5e7eb;
+}
+.btn-modal-cancel:hover:not(:disabled) {
+    background-color: #6b7280;
+}
+
+.btn-modal-save { 
+    background-color: #fb5b5b; /* Color principal */
+    color: white;
+}
+.btn-modal-save:hover:not(:disabled) {
+    background-color: #e24e4e;
+}
+
+.btn-delete-user { 
+    background: none;
+    color: #fca5a5; /* Rojo claro */
+    padding-left: 0; /* Alinear a la izquierda */
+}
+.btn-delete-user:hover:not(:disabled) {
+    color: #ef4444; /* Rojo más intenso */
+}
+
+/* Título del modal */
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #4b5563;
+    text-align: center;
+}

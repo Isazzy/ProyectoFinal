@@ -6,8 +6,9 @@ class Servicios(models.Model):
     tipo_serv = models.CharField(max_length=100)
     nombre_serv = models.CharField(max_length=100)
     precio_serv = models.DecimalField(max_digits=9, decimal_places=2)
-    duracion_serv = models.DurationField(blank=True, null=True)
-    disponible_serv = models.IntegerField(blank=True, null=True)
+    # Importante: DurationField almacena la duración del servicio (ej: '01:30:00')
+    duracion_serv = models.DurationField(blank=True, null=True) 
+
     descripcion_serv = models.TextField(blank=True, null=True)
     activado = models.BooleanField(default=True)
 
@@ -64,6 +65,13 @@ class Turnos(models.Model):
     hora_turno = models.TimeField()
     estado_turno = models.CharField(max_length=9, blank=True, null=True, default="pendiente")
     observaciones = models.TextField(blank=True, null=True)
+    
+    # RELACIÓN CRÍTICA: Muchos a muchos con Servicios a través de TurnosXServicios
+    servicios_incluidos = models.ManyToManyField(
+        Servicios, 
+        through='TurnosXServicios', 
+        related_name='turnos_relacionados'
+    )
 
     class Meta:
         managed = True
@@ -81,4 +89,3 @@ class TurnosXServicios(models.Model):
     class Meta:
         managed = True
         db_table = 'turnos_x_servicios'
-

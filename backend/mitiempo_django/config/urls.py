@@ -15,8 +15,10 @@ urlpatterns = [
     path('api/usuarios/', include('mitiempo_enloderomi.api.urls')),
 
     # Servicios
-    path('api/servicios/', include('turnos.urls_servicios')),
+    #path('api/servicios/', include('turnos.urls_servicios')),
 
     # Turnos
-    path('api/turnos/', include('turnos.urls')),
+    path('api/', include('turnos.urls')),
+
+    path('api/productos/', include('productos.urls')),
 ]

@@ -1,0 +1,181 @@
+/* src/CSS/TurnoDetalleModal.css */
+
+/* Hereda .modal-overlay y .modal-content de modalForm.css */
+
+.turno-detalle-modal {
+    max-width: 600px; /* Ancho para detalles */
+    background-color: #2d3748; /* Fondo un poco más claro que el overlay */
+    color: #e2e8f0; /* Texto gris claro */
+}
+
+.turno-detalle-modal .modal-title {
+    color: #ffffff;
+    border-bottom: 1px solid #4a5568;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+.turno-detalle-info {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.turno-detalle-info p {
+    margin-bottom: 10px;
+}
+.turno-detalle-info strong {
+    color: #a0aec0; /* Gris más claro para etiquetas */
+    margin-right: 8px;
+    display: inline-block;
+    min-width: 100px; /* Alineación de etiquetas */
+}
+
+.turno-detalle-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #cbd5e0;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    border-top: 1px solid #4a5568;
+    padding-top: 10px;
+}
+
+.turno-detalle-info ul {
+    list-style: none;
+    padding-left: 15px;
+    margin-bottom: 10px;
+}
+.turno-detalle-info li {
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.observaciones-box {
+    background-color: #1a202c; /* Fondo más oscuro para observaciones */
+    border: 1px solid #4a5568;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap; /* Mantiene saltos de línea */
+    max-height: 100px; /* Limita altura */
+    overflow-y: auto; /* Scroll si es necesario */
+}
+
+/* Estado del turno */
+.estado-turno {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.estado-pendiente {
+    background-color: #fef3c7; /* Amarillo */
+    color: #92400e;
+}
+.estado-confirmado {
+    background-color: #dcfce7; /* Verde */
+    color: #166534;
+}
+.estado-cancelado {
+    background-color: #fee2e2; /* Rojo */
+    color: #991b1b;
+}
+
+/* Ajustes al footer si es necesario */
+.turno-detalle-modal .modal-footer {
+    border-top: 1px solid #4a5568;
+}
+
+/* src/CSS/modalForm.css */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo más oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Centrar verticalmente */
+    z-index: 1000;
+    padding: 20px; /* Espacio por si el contenido es muy alto */
+    overflow-y: auto; /* Permitir scroll si el modal es muy alto */
+}
+
+.modal-content {
+    background: #1f2937; /* Fondo oscuro del modal */
+    color: #e5e7eb; /* Texto claro */
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 750px; /* Ancho base del modal */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative; /* Para posicionar el botón de cierre si lo añades */
+}
+
+/* Footer del modal */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #4b5563; /* Línea separadora oscura */
+    margin-top: 20px; /* Separación del contenido */
+}
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Estilos base de botones (puedes personalizarlos más) */
+.btn-modal-cancel, .btn-modal-save, .btn-delete-user {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+.btn-modal-cancel:disabled, .btn-modal-save:disabled, .btn-delete-user:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-modal-cancel { 
+    background-color: #4b5563;
+    color: #e5e7eb;
+}
+.btn-modal-cancel:hover:not(:disabled) {
+    background-color: #6b7280;
+}
+
+.btn-modal-save { 
+    background-color: #fb5b5b; /* Color principal */
+    color: white;
+}
+.btn-modal-save:hover:not(:disabled) {
+    background-color: #e24e4e;
+}
+
+.btn-delete-user { 
+    background: none;
+    color: #fca5a5; /* Rojo claro */
+    padding-left: 0; /* Alinear a la izquierda */
+}
+.btn-delete-user:hover:not(:disabled) {
+    color: #ef4444; /* Rojo más intenso */
+}
+
+/* Título del modal */
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #4b5563;
+    text-align: center;
+}

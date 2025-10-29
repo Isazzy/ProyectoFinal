@@ -1,4 +1,3 @@
-// front/src/api/axiosConfig.js
 import axios from "axios";
 
 const BASE_API_URL = "http://127.0.0.1:8000/api";
@@ -9,17 +8,18 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // 🔓 Solo lectura pública (GET /servicios/ o /servicios?...)
+  
+    // 💡 Asegura que los endpoints de lectura pública (servicios y horarios) no necesiten token
     const isPublic =
       config.method === "get" &&
-      (config.url === "/servicios/" || config.url.startsWith("/servicios?"));
+      (config.url.startsWith("/servicios") || config.url.startsWith("/turnos/horarios_disponibles"));
 
     if (isPublic) {
       delete config.headers.Authorization;
       return config;
     }
 
-    // 🔐 Agregamos token si existe
+    
     const token = localStorage.getItem("access");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -35,7 +35,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 🔄 Si expira el token, intenta refrescar
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem("refresh");

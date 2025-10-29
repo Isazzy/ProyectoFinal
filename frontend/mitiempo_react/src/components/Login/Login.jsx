@@ -34,11 +34,11 @@ export default function Login() {
         return;
       }
 
-      // ✅ Guardar tokens con nombres consistentes
+      //  Guardar tokens con nombres consistentes
       localStorage.setItem("access", data.access);
       localStorage.setItem("refresh", data.refresh);
 
-      // ✅ Obtener y guardar rol
+      //  Obtener y guardar rol
       let role = null;
 
       if (data.user?.role) {
@@ -64,7 +64,7 @@ export default function Login() {
         })
       );
 
-      // ✅ Redirigir según el rol
+      //  Redirigir según el rol
       if (role === "admin") navigate("/admin/dashboard");
       else if (role === "empleado") navigate("/panel_empleado");
       else navigate("/perfil_cliente");

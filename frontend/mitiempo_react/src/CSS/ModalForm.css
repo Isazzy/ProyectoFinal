@@ -1,0 +1,350 @@
+/* src/CSS/modalForm.css */
+
+/* ======================================================= */
+/* ESTILOS DEL MODAL (VENTANA EMERGENTE) */
+/* ======================================================= */
+
+/* Fondo semitransparente oscuro que cubre toda la pantalla */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4); /* Gris semi-transparente */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Ajustado para que el modal no esté tan centrado verticalmente */
+    z-index: 1000;
+    padding-top: 50px; /* Espacio superior para imitar la imagen */
+}
+
+/* Contenido de la ventana modal */
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 650px; /* Tamaño del modal similar al de la imagen */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    max-height: 90vh; /* Establece una altura máxima (90% del viewport height) */
+    overflow-y: auto;
+}
+
+/* ======================================================= */
+/* ENCABEZADO Y PERFIL (Área Superior) */
+/* ======================================================= */
+.profile-header {
+    display: flex;
+    align-items: center;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 25px;
+}
+
+.profile-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-right: 15px;
+}
+
+.profile-info-text {
+    flex-grow: 1;
+}
+
+.profile-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #1f2937;
+}
+
+.profile-email-display {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 3px 0 0 0;
+}
+
+.profile-actions-top {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-copy-link, .btn-view-profile {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: white;
+    color: #1f2937;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ======================================================= */
+/* ESTRUCTURA DEL FORMULARIO */
+/* ======================================================= */
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas para Nombre y Apellido */
+    gap: 20px;
+}
+
+.form-section-fields {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.section-title-label {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 5px;
+    display: block;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 10px;
+}
+
+/* ======================================================= */
+/* ESTILOS DE INPUT (para replicar el diseño de la imagen) */
+/* ======================================================= */
+.form-group-inline {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group-full {
+    grid-column: span 2; /* Para que ocupen todo el ancho en el grid */
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group-full label, .form-group-inline label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+/* Estilo base para todos los inputs y selects */
+.user-form input[type="text"],
+.user-form input[type="email"],
+.user-form input[type="password"],
+.user-form input[type="time"],
+.user-form select {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1f2937;
+    width: 100%;
+    box-sizing: border-box; /* Incluir padding/border en el width */
+    transition: border-color 0.2s;
+}
+
+.user-form input:focus, .user-form select:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Input con Icono (Email) */
+.input-with-icon {
+    position: relative;
+}
+
+.email-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 16px;
+}
+.input-with-icon input {
+    padding-left: 35px; /* Dejar espacio para el icono */
+}
+
+/* Input de Username (prefijo de dominio) */
+.username-input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0;
+    overflow: hidden;
+}
+.username-base {
+    padding: 10px 12px;
+    background-color: #f9fafb;
+    border-right: 1px solid #d1d5db;
+    color: #6b7280;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.username-input-group input {
+    border: none;
+    flex-grow: 1;
+    padding-left: 10px;
+}
+.verified-icon {
+    color: #10b981;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+/* Sección de Profile Photo (Simulación) */
+.profile-photo-section {
+    grid-column: span 2;
+    margin-top: -10px; /* Ajuste visual */
+}
+.photo-upload-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.profile-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #4b5563;
+}
+.btn-replace {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: white;
+    color: #1f2937;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ======================================================= */
+/* DÍAS Y HORARIOS LABORALES (Diseño Moderno) */
+/* ======================================================= */
+
+.dia-horario-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f9fafb;
+    transition: background-color 0.2s;
+}
+
+.dia-horario-row:hover {
+    background-color: #fcfcfc;
+}
+
+.dia-horario-row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 0; 
+}
+
+.dia-toggle input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2); 
+    accent-color: #1f2937; 
+    width: auto; 
+}
+
+.horarios-inputs-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.horarios-inputs-group input[type="time"] {
+    width: 100px;
+    padding: 8px 10px;
+}
+
+.horarios-inputs-group span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* ======================================================= */
+/* FOOTER DEL MODAL Y BOTONES (Guardar/Cancelar) */
+/* ======================================================= */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+    margin-top: 10px;
+}
+
+.btn-delete-user {
+    background: none;
+    border: none;
+    color: #ef4444; /* Rojo */
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.btn-delete-user:hover {
+    background-color: #fef2f2;
+}
+
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-modal-cancel {
+    background-color: white;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-modal-save {
+    background-color: #1f2937; /* Negro/Gris Oscuro */
+    color: white;
+    border: 1px solid #1f2937;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.btn-modal-save:hover {
+    background-color: #374151;
+}

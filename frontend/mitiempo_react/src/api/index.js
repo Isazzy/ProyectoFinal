@@ -1,25 +1,25 @@
 // front/src/api/index.js
 import api from "./axiosConfig";
 
-// 🔹 Servicios
+//  Servicios
 export const fetchServicios = async () => {
   const res = await api.get("/servicios/");
   return res.data;
 };
 
-// 🔹 Usuarios
+//  Usuarios
 export const fetchUsuarios = async () => {
   const res = await api.get("/usuarios/");
   return res.data;
 };
 
-// 🔹 Turnos
+//  Turnos
 export const fetchTurnos = async () => {
   const res = await api.get("/turnos/");
   return res.data;
 };
 
-// 🔹 Crear turno
+// Crear turno
 export const createTurno = async (payload) => {
   const res = await api.post("/turnos/", payload);
   return res.data;

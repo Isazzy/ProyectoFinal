@@ -1,50 +1,169 @@
 .sidebar {
-  width: 180px;
+  width: 220px;
+  background: #242121;
+  color: #111;
   height: 100vh;
-  background-color: #222;
-  color: white;
-  padding: 20px;
-  position: fixed;
-  top: 0;
-  left: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: width 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid #ccc;
   z-index: 1000;
 }
 
-.sidebar h2 {
-  margin-bottom: 20px;
+.sidebar.collapsed {
+  width: 70px;
 }
 
-.sidebar ul {
-  list-style: none;
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.hamburger-btn {
+  color: #f0f0f0;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-top: -1rem;
+
+}
+
+/* ==== LOGO ==== */
+.logo {
+  font-family: 'Great Vibes', cursive;
+  text-align: center;
+  color: #fdfdfd;
+  transition: all 0.4s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.logo-open {
+  opacity: 1;
+  transform: translateX(0);
+  
+}
+
+.logo-closed {
+  opacity: 0;
+  transform: translateX(-40px);
+  width: 0;
   padding: 0;
 }
 
-.sidebar li {
-  margin: 15px 0;
+.R {
+  font-size: 0.99rem;
+  margin: 0;
+  font-weight: 400;
 }
 
-.sidebar a {
-  color: white;
+.M {
+  font-size: 0.50rem;
+  letter-spacing: 0.3em;
+  margin: 0;
+}
+
+
+/* Menú */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: -3rem 0;
+}
+
+.sidebar-menu li {
+  margin: 0.5rem 0;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   text-decoration: none;
+  color: #ffffff;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  transition: background 0.2s;
 }
 
+.sidebar-menu a:hover {
+  background: #fb5b5b;
+}
+
+.sidebar-menu .active a {
+  background: #fb5b5b;
+  border: 1px solid #302b2b;
+}
+
+/* Footer */
 .sidebar-footer {
-  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  position: relative;
 }
 
-.sidebar-user {
-  margin-bottom: 10px;
-}
-
-.sidebar-logout {
-  background: crimson;
-  border: none;
-  color: white;
-  padding: 10px;
-  width: 100%;
+.footer-icon {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  border-radius: 6px;
+  color: #fcf7f7;
+}
+
+.profile-container {
+  position: relative;
+}
+
+.profile-pic {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid #fafafa;
+}
+
+/* Menú desplegable del perfil */
+.profile-menu {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.8rem;
+  width: 180px;
+  text-align: left;
+  z-index: 10;
+}
+
+.profile-menu p {
+  margin: 0.3rem 0;
+  font-size: 0.85rem;
+}
+
+.profile-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.3rem 0;
+  cursor: pointer;
+  color: #333;
+}
+
+.profile-menu button:hover {
+  color: #fb5b5b;
 }
