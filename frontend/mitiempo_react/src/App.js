@@ -25,6 +25,7 @@ import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
+
 function Layout() {
   const location = useLocation();
 

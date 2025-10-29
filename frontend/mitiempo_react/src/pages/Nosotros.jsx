@@ -10,6 +10,8 @@ import peinado2 from "../imagenes/peinado2.jpg";
 import peinado3 from "../imagenes/peinado3.jpg";
 import peinado4 from "../imagenes/peinado4.jpg";
 
+import SplitText from "../components/texto_anim/SplitText";
+
 export default function Nosotros() {
   const [index, setIndex] = useState(0);
   const navigate = useNavigate();
@@ -22,6 +24,10 @@ export default function Nosotros() {
     } else {
       setIndex((prev) => (prev === imagenes.length - 1 ? 0 : prev + 1));
     }
+  };
+
+  const handleAnimationComplete = () => {
+    console.log('All letters have animated!');
   };
 
   const seccion1 = {
@@ -131,6 +137,8 @@ export default function Nosotros() {
     zIndex: 2,
   };
 
+
+
   return (
     <>
       {/* Sección 1 - Carrusel manual con fondo */}
@@ -166,9 +174,23 @@ export default function Nosotros() {
             textShadow: "1px 1px 4px rgba(0,0,0,0.7)",
           }}
         >
-          <h2 style={{ fontSize: "2.5rem", color: "white" }}>
-            ¡Tu look soñado <br /> empieza con un turno!
-          </h2>
+          <h1 style={{ fontSize: "2.5rem", color: "white" }}>
+            
+              <SplitText
+                  text="¡Tu look soñado, empieza con un turno!"
+                  className="text-2xl font-semibold text-center"
+                  delay={100}
+                  duration={0.6}
+                  ease="power3.out"
+                  splitType="chars"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-100px"
+                  textAlign="center"
+                  onLetterAnimationComplete={handleAnimationComplete}
+              />
+          </h1>
           <button style={boton} onClick={() => navigate("/turnos")}>
             Reservá tu turno
           </button>
@@ -189,7 +211,21 @@ export default function Nosotros() {
                 color: "#ffffff",
               }}
             >
-              CONOCÉ TODOS <br /> NUESTROS SERVICIOS
+              <SplitText
+                  text="CONOCÉ TODOS NUESTROS SERVICIOS"
+                  className="text-2xl font-semibold text-center"
+                  delay={100}
+                  duration={0.5}
+                  ease="power3.out"
+                  splitType="chars"
+                  from={{ opacity: 0, y: 40 }}
+                  to={{ opacity: 1, y: 0 }}
+                  threshold={0.1}
+                  rootMargin="-100px"
+                  textAlign="center"
+                  onLetterAnimationComplete={handleAnimationComplete}
+              />
+              
             </h1>
             <button style={boton} onClick={() => navigate("/servicios")}>
               SERVICIOS
