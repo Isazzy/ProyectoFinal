@@ -36,6 +36,23 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+<<<<<<< HEAD
+=======
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 }
 
 # cors authorization (quien se puede conectar a este  backend)
@@ -75,8 +92,14 @@ INSTALLED_APPS = [
     'servicio',
     'turnos',
     'productos',
+<<<<<<< HEAD
     'proveedores',
     'compras',
+=======
+    'compras',
+    'cajas',
+    'ventas',
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 ]
 
 MIDDLEWARE = [
@@ -126,7 +149,11 @@ SIMPLE_JWT = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+<<<<<<< HEAD
         'NAME':'mitiem',
+=======
+        'NAME':'mitiempo',
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
         'USER': 'root',
         'PASSWORD' : 'root',
         'HOST': 'localhost',

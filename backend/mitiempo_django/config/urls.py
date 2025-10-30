@@ -27,5 +27,13 @@ urlpatterns = [
     # API de Turnos
     path('api/', include('turnos.urls')),
 
+<<<<<<< HEAD
     path('api/productos/', include('productos.urls')),
+=======
+    path('api/', include('productos.urls')),
+
+    # URLs de la app compras
+    path('api/', include('compras.urls')),
+    
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 ]

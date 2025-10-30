@@ -6,6 +6,7 @@ from .models import Servicio
 from .serializers import ServicioSerializer
 
 class ServicioViewSet(viewsets.ModelViewSet):
+<<<<<<< HEAD
     """
     API endpoint para ver y editar Servicios.
     - Clientes (no autenticados o rol 'cliente') solo ven servicios 'activados'.
@@ -24,3 +25,16 @@ class ServicioViewSet(viewsets.ModelViewSet):
         
         # Admin/Empleados ven todo
         return self.queryset.prefetch_related('servicioprofesional_set__profesional')
+=======
+    queryset = Servicio.objects.all().order_by('nombre_serv')
+    serializer_class = ServicioSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+    
+        if not user.is_authenticated or getattr(user, 'role', 'cliente') == 'cliente':
+            return Servicio.objects.filter(activado=True) 
+        # Si es admin/staff, devolvemos el queryset completo (todos los servicios)
+        return self.queryset 
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)

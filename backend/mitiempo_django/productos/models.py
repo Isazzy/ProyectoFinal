@@ -48,9 +48,12 @@ class Marca(models.Model):
 
     def __str__(self):
         return self.nombre
+<<<<<<< HEAD
 
 # --- Modelo para Categorías ---
 # (Reemplaza al antiguo campo 'tipo_prod')
+=======
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, unique=True)
@@ -66,7 +69,7 @@ class Categoria(models.Model):
 
 # --- Modelo Principal de Productos ---
 class Productos(models.Model):
-    id_prod = models.AutoField(primary_key=True)
+    id_prod = models.AutoField(primary_key = True)
     nombre_prod = models.CharField(max_length=100)
     
     # Conexión a Marca
@@ -90,9 +93,16 @@ class Productos(models.Model):
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
     precio_compra = models.DecimalField(max_digits=10, decimal_places=2)
     stock_min_prod = models.IntegerField()
+<<<<<<< HEAD
     stock_act_prod = models.IntegerField(default=0) # Valor por defecto 0
     reposicion_prod = models.IntegerField()
     stock_max_prod = models.IntegerField()
+=======
+    stock_act_prod = models.IntegerField(default=0) 
+    reposicion_prod = models.IntegerField()
+    stock_max_prod = models.IntegerField()
+    imagen_url = models.URLField(max_length=300, blank=True, null=True)
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 
     class Meta:
 <<<<<<< HEAD
@@ -116,6 +126,7 @@ class Productos(models.Model):
         return self.nombre_prod
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 
 class Compras(models.Model):
     id_compra = models.AutoField(primary_key=True)
@@ -185,6 +196,8 @@ class ProductosXProveedores(models.Model):
 =======
 
 # --- Modelo para Historial de Stock ---
+=======
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 class StockHistory(models.Model):
     """Modelo para registrar cada movimiento de stock (entrada/salida)."""
     
@@ -214,7 +227,11 @@ class StockHistory(models.Model):
     
     # Campo para registrar quién hizo el movimiento (dueña/empleado)
     usuario = models.ForeignKey(
+<<<<<<< HEAD
         'mitiempo_enloderomi.CustomUser', # <--- USA EL STRING 'app.Modelo'
+=======
+        'mitiempo_enloderomi.CustomUser',
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True
@@ -225,7 +242,12 @@ class StockHistory(models.Model):
         db_table = "stock_history"
         verbose_name = "Historial de Stock"
         verbose_name_plural = "Historiales de Stock"
+<<<<<<< HEAD
 
     def __str__(self):
         return f'{self.tipo_movimiento} de {self.cantidad_movida} para {self.producto.nombre_prod}'
 >>>>>>> 874e3164 (reestructuracion de archivos)
+=======
+    def __str__(self):
+        return f'{self.tipo_movimiento} de {self.cantidad_movida} para {self.producto.nombre_prod}'
+>>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
