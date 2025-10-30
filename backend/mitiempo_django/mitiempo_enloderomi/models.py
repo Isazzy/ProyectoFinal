@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from productos.models import Productos
+
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -117,8 +117,25 @@ class Ventas(models.Model):
 class DetVentas(models.Model):
     id_det_venta = models.AutoField(primary_key=True)
     id_venta = models.ForeignKey(Ventas, models.DO_NOTHING, db_column='id_venta')
-    id_prod = models.ForeignKey(Productos, models.DO_NOTHING, db_column='id_prod', blank=True, null=True)
-    #id_serv = models.ForeignKey(Servicios, models.DO_NOTHING, db_column='id_serv', blank=True, null=True)
+    
+    # --- ¡COMENTA ESTO TEMPORALMENTE! ---
+    id_prod = models.ForeignKey(
+         'productos.Productos',
+         models.DO_NOTHING, 
+         db_column='id_prod', 
+         blank=True, null=True
+    )
+   
+    
+    # Te corrijo también el de servicios para el futuro
+    id_serv = models.ForeignKey(
+        'servicio.Servicio',   # <--- ASÍ (asumiendo tu app es 'servicios' y el modelo 'Servicio')
+        models.DO_NOTHING, 
+        db_column='id_serv', 
+        blank=True, null=True
+    )
+    # --- FIN DE CAMBIOS ---
+
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     cantidad_venta = models.IntegerField()
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)

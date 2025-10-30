@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     #"django_filters",
     "pytz",
     'mitiempo_enloderomi',
+    'servicio',
     'turnos',
     'productos',
     'proveedores',

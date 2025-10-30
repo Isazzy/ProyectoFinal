@@ -1,24 +1,47 @@
+# turnos/admin.py
 from django.contrib import admin
-from .models import Turnos, Servicios, TurnosXServicios
+from .models import Turno, TurnoServicio
 
-@admin.register(Turnos)
+class TurnoServicioInline(admin.TabularInline):
+    """
+    Permite agregar/editar/eliminar servicios directamente 
+    dentro de la vista de un Turno.
+    """
+    model = TurnoServicio
+    extra = 1  # Muestra 1 slot vacío para agregar un nuevo servicio
+    autocomplete_fields = ("servicio",) # Facilita buscar servicios
+
+@admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):
-    list_display = ("id_turno", "id_cli", "id_prof", "fecha_turno", "hora_turno", "estado_turno")
-    list_filter = ("fecha_turno", "estado_turno", "id_prof")
-    search_fields = ("id_cli__username", "id_prof__username")
-    ordering = ("-fecha_turno", "-hora_turno")
+    list_display = (
+        "id_turno", 
+        "cliente", 
+        "profesional", 
+        "fecha_hora_inicio", 
+        "fecha_hora_fin", 
+        "estado_turno"
+    )
+    list_filter = ("estado_turno", "profesional", "fecha_hora_inicio")
+    search_fields = ("cliente__username", "profesional__username", "cliente__email")
+    ordering = ("-fecha_hora_inicio",)
+    
+    # Hacemos los campos de fecha y fin solo de lectura, 
+    # ya que deben calcularse por el serializer (o manualmente si se crea desde admin)
+    readonly_fields = ("fecha_hora_fin",) 
 
     fieldsets = (
-        ("Información del turno", {
-            "fields": ("id_cli", "id_prof", "fecha_turno", "hora_turno", "estado_turno", "observaciones")
+        ("Información Principal", {
+            "fields": ("cliente", "profesional", "estado_turno", "observaciones")
+        }),
+        ("Fecha y Hora", {
+            "fields": ("fecha_hora_inicio", "fecha_hora_fin")
         }),
     )
+    
+    # ¡Aquí agregamos el inline!
+    inlines = [TurnoServicioInline]
+    
+    autocomplete_fields = ("cliente", "profesional")
 
-@admin.register(Servicios)
-class ServicioAdmin(admin.ModelAdmin):
-    list_display = ("nombre_serv", "tipo_serv", "precio_serv", "duracion_serv", "activado")
-    list_filter = ("tipo_serv", "activado")
-
-@admin.register(TurnosXServicios)
-class TurnosXServiciosAdmin(admin.ModelAdmin):
-    list_display = ("id_turno", "id_serv")
+# Nota: No registramos 'TurnoServicio' por separado, 
+# ya que se maneja mucho mejor a través del Inline en 'TurnoAdmin'.

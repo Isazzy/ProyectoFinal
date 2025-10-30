@@ -1,27 +1,22 @@
-// src/components/Usuarios/UsForm.jsx
-
+// front/src/components/Usuarios/UsForm.jsx
 import React, { useEffect, useState } from "react";
 import { createUsuario, getUsuarios, updateUsuario } from "../../api/Usuarios";
-import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import "../../CSS/ModalForm.css"; // Usaremos este archivo para los estilos del modal
+
+// 💡 1. Importa el Modal genérico
+import Modal from "../Common/Modal";
 
 const initialState = {
-  username: "",
-  first_name: "",
-  last_name: "",
-  email: "",
-  password: "",
-  role: "cliente", // Valor por defecto
-  rol_profesional: "",
+  username: "", first_name: "", last_name: "", email: "",
+  password: "", role: "cliente", rol_profesional: "",
   dias_laborables: [],
 };
 
-export default function UsForm() {
+export default function UsForm({ userId, onClose }) {
   const [usuario, setUsuario] = useState(initialState);
-  const navigate = useNavigate();
-  const { id } = useParams(); // 'id' existe si estamos editando
-  const isEditing = !!id;
+  
+  // 💡 2. 'id' ahora es 'userId' (de las props)
+  const isEditing = !!userId; 
 
   const profesiones = ["peluquera", "manicurista", "estilista", "multi"];
   const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -31,43 +26,40 @@ export default function UsForm() {
     { value: "cliente", label: "Cliente" },
   ];
 
-  // Cargar usuario existente
+  // 💡 3. useEffect ahora depende de 'userId'
   useEffect(() => {
     const loadUsuario = async () => {
-      if (!isEditing) return;
+      if (!isEditing) {
+        setUsuario(initialState); // Resetea si es para crear
+        return;
+      }
       try {
-        const res = await getUsuarios(id);
+        const res = await getUsuarios(userId);
         const data = res.data;
-
-        // Limpieza de datos (similar a tu lógica original, pero conservamos la hora como string)
+        
+        // Limpieza de datos (tu lógica era buena)
         const dias = Array.isArray(data.dias_laborables)
           ? data.dias_laborables.map((d) =>
               typeof d === "string"
-                ? { dia: d, inicio: "09:00", fin: "18:00" } // Valores por defecto si solo es un string de día
-                : { dia: d.dia || "", inicio: d.inicio || "", fin: d.fin || "" }
+                ? { dia: d, inicio: "09:00", fin: "18:00" }
+                : { dia: d.dia || "", inicio: d.inicio || "09:00", fin: d.fin || "18:00" }
             )
           : [];
 
-        // NOTA: Asegúrate de no llenar el campo 'password' al editar
-        setUsuario({ 
-            ...data, 
-            dias_laborables: dias, 
-            password: "", // Nunca precargar la contraseña
-        });
+        setUsuario({ ...data, dias_laborables: dias, password: "" });
       } catch (err) {
         toast.error("Error al cargar el usuario");
       }
     };
     loadUsuario();
-  }, [id, isEditing]);
+  }, [userId, isEditing]);
 
-  // Manejar cambios en inputs (unificado)
+  // Manejadores (handleChange, handleDiaToggle, handleHorarioChange)
+  // (Tu lógica aquí es perfecta, no necesita cambios)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUsuario((prev) => ({ ...prev, [name]: value }));
   };
-
-  // Toggle días laborables y asegura la estructura de horario
   const handleDiaToggle = (dia) => {
     setUsuario((prev) => {
       const dias = [...prev.dias_laborables];
@@ -75,13 +67,10 @@ export default function UsForm() {
       if (existe) {
         return { ...prev, dias_laborables: dias.filter((d) => d.dia !== dia) };
       } else {
-        // Añadir con horarios por defecto
         return { ...prev, dias_laborables: [...dias, { dia, inicio: "09:00", fin: "18:00" }] }; 
       }
     });
   };
-
-  // Cambiar horarios de un día
   const handleHorarioChange = (dia, campo, valor) => {
     setUsuario((prev) => ({
       ...prev,
@@ -90,27 +79,26 @@ export default function UsForm() {
       ),
     }));
   };
+  // ----------------------------------------------------
 
-  // Guardar usuario
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 💡 Limpiar el payload: si no se cambia la contraseña, no enviarla
       const payload = { ...usuario };
-      if (isEditing && !payload.password) {
+      if (isEditing && !payload.password) { // No enviar pass vacío al editar
         delete payload.password;
       }
 
       if (isEditing) {
-        await updateUsuario(id, payload);
+        await updateUsuario(userId, payload);
         toast.success("Usuario modificado correctamente");
       } else {
         await createUsuario(payload);
         toast.success("Usuario creado correctamente");
       }
       
-      // Cerrar el modal y volver a la lista
-      navigate("/admin/dashboard/usuarios"); 
+      // 💡 4. Llama a onClose(true) para cerrar y refrescar la lista
+      onClose(true); 
     } catch (error) {
       console.error("Error al guardar el usuario:", error.response?.data || error);
       toast.error("Error al guardar el usuario");
@@ -118,155 +106,155 @@ export default function UsForm() {
   };
 
   const isEmpleado = usuario.role === "empleado" || usuario.role === "admin";
-  const userFullName = `${usuario.first_name || 'Nuevo'} ${usuario.last_name || 'Usuario'}`;
   
-  // Función para cerrar el modal
-  const handleCancel = () => navigate("/admin/dashboard/usuarios");
-
-
-  // Estructura del Modal
+  // 💡 5. El componente ahora retorna el <Modal> genérico
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <Modal
+      isOpen={true} // Siempre está abierto si se renderiza
+      onClose={() => onClose(false)} // Llama a onClose(false) si se cancela
+      title={isEditing ? `Editar Usuario: ${usuario.first_name}` : "Crear Nuevo Usuario"}
+      footer={
+        <>
+          <button type="button" className="btn btn-secondary" onClick={() => onClose(false)}>
+            Cancelar
+          </button>
+          {/* 💡 El botón de submit debe apuntar al <form> */}
+          <button type="submit" form="user-form-id" className="btn btn-primary">
+            {isEditing ? "Guardar Cambios" : "Crear Usuario"}
+          </button>
+        </>
+      }
+    >
+      {/* 💡 6. El formulario ahora usa clases globales */}
+      <form id="user-form-id" onSubmit={handleSubmit} className="form-container-modal">
         
-        {/* Encabezado del Perfil (como en la imagen) */}
-        <div className="profile-header">
-          <div className="profile-avatar-large">
-            {/* Simulación de Avatar */}
-            {usuario.first_name ? usuario.first_name[0] : 'U'} 
+        {/* SECCIÓN PRINCIPAL (Grid 2 columnas) */}
+        <div className="form-grid-2">
+          <div className="form-group">
+            <label htmlFor="first_name">Nombre</label>
+            <input id="first_name" type="text" name="first_name" value={usuario.first_name} onChange={handleChange} placeholder="Nombre" className="form-input" />
           </div>
-          <div className="profile-info-text">
-            <h3 className="profile-name">{userFullName}</h3>
-            <p className="profile-email-display">{usuario.email || 'email@dominio.com'}</p>
-          </div>
-          <div className="profile-actions-top">
-          
-            <button className="btn btn-view-profile">Perfil</button>
+          <div className="form-group">
+            <label htmlFor="last_name">Apellido</label>
+            <input id="last_name" type="text" name="last_name" value={usuario.last_name} onChange={handleChange} placeholder="Apellido" className="form-input" />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="user-form">
-          {/* SECCIÓN PRINCIPAL DE INFORMACIÓN (Grid de dos columnas) */}
-          <div className="form-section-grid">
-            
-            {/* Nombre (Amélie) */}
-            <div className="form-group-inline">
-              <label>Nombre</label>
-              <input type="text" name="first_name" value={usuario.first_name} onChange={handleChange} placeholder="Nombre" />
-            </div>
+        {/* Email */}
+        <div className="form-group">
+          <label htmlFor="email">Correo electrónico</label>
+          <input id="email" type="email" name="email" value={usuario.email} onChange={handleChange} required placeholder="email@ejemplo.com" className="form-input" />
+        </div>
+        
+        {/* Username */}
+        <div className="form-group">
+          <label htmlFor="username">Nombre de Usuario</label>
+          <input id="username" type="text" name="username" value={usuario.username} onChange={handleChange} required className="form-input" />
+        </div>
+        
+        {/* Contraseña */}
+        <div className="form-group">
+          <label htmlFor="password">{isEditing ? "Nueva Contraseña (dejar en blanco para no cambiar)" : "Contraseña"}</label>
+          <input id="password" type="password" name="password" value={usuario.password} onChange={handleChange} required={!isEditing} className="form-input" />
+        </div>
 
-            {/* Apellido (Laurent) */}
-            <div className="form-group-inline">
-              <label>Apellido</label>
-              <input type="text" name="last_name" value={usuario.last_name} onChange={handleChange} placeholder="Apellido" />
-            </div>
-
-            {/* Email address */}
-            <div className="form-group-full">
-              <label>Correo electrónico</label>
-              <div className="input-with-icon">
-                
-                <input type="email" name="email" value={usuario.email} onChange={handleChange} required placeholder="email@ejemplo.com" />
-              </div>
-            </div>
-
-            {/* Username */}
-            <div className="form-group-full">
-              <label>Nombre de Usuario</label>
-              <div className="username-input-group">
-               {/* <span className="username-base">mitiempo.com/</span>*/}
-                <input type="text" name="username" value={usuario.username} onChange={handleChange} required />
-                
-              </div>
+        {/* --- SECCIÓN ROLES Y PROFESIÓN --- */}
+        <div className="form-section">
+          <h4>Permisos y Rol</h4>
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label htmlFor="role">Rol de Usuario</label>
+              <select id="role" name="role" value={usuario.role} onChange={handleChange} required className="form-select">
+                {roles.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
             </div>
             
-            {/* Contraseña (Solo para creación o cambio) */}
-            {(!isEditing || usuario.password) && (
-                 <div className="form-group-full">
-                    <label>{isEditing ? "Nueva Contraseña" : "Contraseña"}</label>
-                    <input type="password" name="password" value={usuario.password} onChange={handleChange} required={!isEditing} />
-                </div>
-            )}
-          </div>
-          
-          {/* Profile Photo (Simulación) */}
-          <div className="form-group-full profile-photo-section">
-            <label>Foto de Perfil</label>
-            <div className="photo-upload-box">
-              <div className="current-photo">
-                {/* Asume que tienes un campo de avatar en Profile */}
-                <div className="profile-avatar-small">A</div> 
-              </div>
-             {/* <button type="button" className="btn btn-replace">Click to replace</button>*/}
-            </div>
-          </div>
-          
-          {/* SECCIÓN DE ROLES Y PROFESIÓN (Nuevos campos) */}
-          <div className="form-section-fields">
-              <label className="section-title-label">Permisos y Rol</label>
-              
-              {/* Rol */}
-              <div className="form-group-full">
-                <label>Rol de Usuario</label>
-                <select name="role" value={usuario.role} onChange={handleChange} required>
-                  {roles.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+            {/* Solo muestra Profesión si es Empleado o Admin */}
+            {isEmpleado && (
+              <div className="form-group">
+                <label htmlFor="rol_profesional">Rol Profesional</label>
+                <select id="rol_profesional" name="rol_profesional" value={usuario.rol_profesional || ""} onChange={handleChange} className="form-select">
+                  <option value="">Sin asignar</option>
+                  {profesiones.map((p) => (
+                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
                   ))}
                 </select>
               </div>
-
-              {/* Profesión (solo admin o empleado) */}
-              {isEmpleado && (
-                <div className="form-group-full">
-                  <label>Rol Profesional</label>
-                  <select name="rol_profesional" value={usuario.rol_profesional || ""} onChange={handleChange}>
-                    <option value="">Sin asignar</option>
-                    {profesiones.map((p) => (
-                      <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+            )}
           </div>
-          
-          {/* SECCIÓN DE DÍAS Y HORARIOS (Moderno) */}
-          {isEmpleado && (
-            <div className="form-section-fields">
-              <label className="section-title-label">Días y Horarios Laborales</label>
+        </div>
+
+        {/* --- SECCIÓN HORARIOS (Tu lógica) --- */}
+        {isEmpleado && (
+          <div className="form-section">
+            <h4>Días y Horarios Laborales</h4>
+            {diasSemana.map((dia) => {
+              const seleccionado = usuario.dias_laborables?.find((d) => d.dia === dia);
+              const isChecked = !!seleccionado;
               
-              {diasSemana.map((dia) => {
-                const seleccionado = usuario.dias_laborables?.find((d) => d.dia === dia);
-                const isChecked = !!seleccionado;
-                
-                return (
-                  <div key={dia} className={`dia-horario-row ${isChecked ? 'active-day' : ''}`}>
-                    <div className="dia-toggle">
-                      <input type="checkbox" checked={isChecked} onChange={() => handleDiaToggle(dia)} id={`check-${dia}`}/>
-                      <label htmlFor={`check-${dia}`}>{dia}</label>
-                    </div>
-                    {isChecked && (
-                      <div className="horarios-inputs-group">
-                        <input type="time" value={seleccionado.inicio} onChange={(e) => handleHorarioChange(dia, "inicio", e.target.value)} required />
-                        <span>a</span>
-                        <input type="time" value={seleccionado.fin} onChange={(e) => handleHorarioChange(dia, "fin", e.target.value)} required />
-                      </div>
-                    )}
+              return (
+                <div key={dia} className={`dia-horario-row ${isChecked ? 'active' : ''}`}>
+                  <div className="checkbox-group">
+                    <input type="checkbox" checked={isChecked} onChange={() => handleDiaToggle(dia)} id={`check-${dia}`}/>
+                    <label htmlFor={`check-${dia}`}>{dia}</label>
                   </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Botones del pie del modal */}
-          <div className="modal-footer">
-          
-            <div className="footer-actions">
-              <button type="button" className="btn btn-modal-cancel" onClick={handleCancel}>Cancelar</button>
-              <button type="submit" className="btn btn-modal-save">Guardar</button>
-            </div>
+                  {isChecked && (
+                    <div className="horarios-inputs-group">
+                      <input type="time" value={seleccionado.inicio} onChange={(e) => handleHorarioChange(dia, "inicio", e.target.value)} required className="form-input" />
+                      <span>a</span>
+                      <input type="time" value={seleccionado.fin} onChange={(e) => handleHorarioChange(dia, "fin", e.target.value)} required className="form-input" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+      </form>
+      
+      {/* 💡 7. CSS local para este formulario específico (coherente con el tema) */}
+      <style>{`
+        .form-container-modal { 
+          /* Contenedor dentro del modal */
+        }
+        .form-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+        .form-section {
+          border-top: 1px solid var(--border-color);
+          padding-top: 1rem;
+          margin-top: 1rem;
+        }
+        .form-section h4 {
+          color: var(--text-color);
+          margin-bottom: 1rem;
+        }
+        .dia-horario-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid var(--border-color);
+        }
+        .dia-horario-row:last-child { border-bottom: none; }
+        .dia-horario-row .checkbox-group { margin: 0; }
+        .dia-horario-row.active { background-color: rgba(251, 91, 91, 0.05); } 
+        
+        .horarios-inputs-group { display: flex; align-items: center; gap: 8px; }
+        .horarios-inputs-group span { color: var(--text-color-muted); }
+        .horarios-inputs-group .form-input { 
+          width: 120px; 
+          padding: 8px;
+        }
+        @media (max-width: 600px) {
+          .form-grid-2 { grid-template-columns: 1fr; }
+          .horarios-inputs-group { flex-direction: column; align-items: flex-end; }
+        }
+      `}</style>
+    </Modal>
   );
 }

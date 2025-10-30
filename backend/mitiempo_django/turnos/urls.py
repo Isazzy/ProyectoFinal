@@ -1,26 +1,19 @@
+# turnos/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ServicioViewSet,
     TurnosViewSet,
-    TurnosXServicosViewSet,
     horarios_disponibles
 )
 
-# 🔁 Router principal para los ViewSets REST
 router = DefaultRouter()
-
-# 🗓️ Gestión de turnos
 router.register(r'turnos', TurnosViewSet, basename='turnos')
+# Ya no necesitamos TurnosXServicosViewSet, se maneja anidado en TurnoSerializer
 
-# 🧰 Gestión de servicios
-router.register(r'servicios', ServicioViewSet, basename='servicios')
-
-# 🔗 Relación entre turnos y servicios
-router.register(r'turnosxservicios', TurnosXServicosViewSet, basename='turnosxservicios')
-
-# 📅 Consulta de horarios disponibles
 urlpatterns = [
+    # Endpoint para calcular disponibilidad
     path('horarios_disponibles/', horarios_disponibles, name='horarios_disponibles'),
-    path('', include(router.urls)),  # incluye todos los endpoints del router
+    
+    # Endpoints del ViewSet (CRUD de Turnos)
+    path('', include(router.urls)),
 ]

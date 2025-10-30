@@ -1,0 +1,57 @@
+/* src/CSS/AdminAgenda.css */
+.admin-agenda .calendar-container {
+  background-color: var(--bg-color-light);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+/* --- Estilos FullCalendar Dark Theme --- */
+/* (Hereda de index.css y App.css, aquí los afinamos) */
+
+/* Texto y bordes */
+.fc {
+  color: var(--text-color) !important;
+}
+.fc th, .fc td, .fc hr, .fc thead, .fc tbody, .fc-scrollgrid {
+  border-color: var(--border-color) !important;
+}
+.fc .fc-non-business {
+  background: var(--bg-color) !important; /* Fondo más oscuro */
+}
+
+/* Botones Header */
+.fc .fc-button-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+.fc .fc-button-primary:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+.fc .fc-button-primary:disabled {
+  background-color: var(--border-color) !important;
+}
+/* Botón "Hoy" */
+.fc .fc-today-button {
+  background-color: var(--bg-color) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Slots de tiempo */
+.fc .fc-timegrid-slot {
+  background-color: var(--bg-color-light);
+}
+/* Día de Hoy */
+.fc .fc-day-today {
+  background: var(--bg-color) !important; /* Fondo oscuro sutil */
+}
+
+/* Evento (Turno) - Hereda colores del serializer */
+.fc-event {
+  cursor: pointer;
+  border: none !important;
+  padding: 4px;
+  box-shadow: var(--shadow-soft);
+  font-weight: 500;
+}

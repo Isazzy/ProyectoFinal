@@ -1,4 +1,3 @@
-//Admin/AdminLayout.jsx
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
@@ -13,9 +12,16 @@ export default function AdminLayout() {
         isOpen={sidebarOpen}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className={`admin-content ${sidebarOpen ? "expanded" : "collapsed"}`}>
+      
+      {/* 💡 Actualización: 
+          Cambiamos <div> por <main> para mejor semántica HTML.
+          <main> le indica al navegador que este es el contenido 
+          principal de la página.
+      */}
+      <main className={`admin-content ${sidebarOpen ? "expanded" : "collapsed"}`}>
         <Outlet /> {/* Aquí se cargan las páginas hijas */}
-      </div>
+      </main>
+      
     </div>
   );
 }

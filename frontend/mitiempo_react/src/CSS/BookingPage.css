@@ -1,0 +1,222 @@
+/* src/CSS/BookingPage.css */
+
+.reserva-container {
+  background-color: var(--bg-color-light);
+  border-radius: var(--border-radius);
+  padding: 1.5rem 2rem;
+}
+
+.step-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.header-title {
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+/* Stepper (indicador de paso) */
+.stepper-visual {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+.stepper-visual span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  transition: background-color 0.3s;
+}
+.stepper-visual span.active {
+  background-color: var(--primary-color);
+}
+
+/* --- PASO 1: Servicios --- */
+.categoria-grupo {
+  margin-bottom: 2rem;
+}
+.categoria-titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.servicios-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.servicio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+.servicio-item.selected {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color-light);
+  box-shadow: 0 2px 8px rgba(251, 91, 91, 0.1);
+}
+.servicio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.servicio-nombre {
+  font-weight: 600;
+  color: var(--text-color);
+}
+.servicio-precio {
+  font-size: 0.9rem;
+  color: var(--success-color); /* Verde para precio */
+  font-weight: 500;
+}
+.servicio-duracion {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+.footer-accion {
+  text-align: right;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- PASO 2: Fecha y Hora --- */
+.step-datetime-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.calendar-wrapper, .slots-wrapper {
+  background-color: var(--bg-color);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+}
+.step-datetime-container h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Estilos del Calendario (Dark Theme) */
+.react-calendar {
+  width: 100% !important;
+  background: var(--bg-color) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius);
+}
+.react-calendar__navigation button {
+  color: var(--primary-color) !important;
+  background: none !important;
+  font-weight: bold;
+}
+.react-calendar__navigation button:hover {
+  background: var(--bg-color-light) !important;
+}
+.react-calendar__month-view__weekdays__weekday {
+  color: var(--text-color-muted); /* Días de la semana */
+}
+.react-calendar__tile {
+  color: var(--text-color) !important;
+  border-radius: var(--border-radius);
+}
+.react-calendar__tile:disabled {
+  background: var(--bg-color-light) !important;
+  color: #666 !important;
+}
+.react-calendar__tile--now { /* Hoy */
+  background: var(--primary-color-light) !important;
+  color: var(--primary-color) !important;
+  font-weight: bold;
+}
+.react-calendar__tile--active { /* Seleccionado */
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background: var(--border-color) !important;
+}
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #666 !important;
+}
+
+/* Grilla de Horarios */
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.slot-btn.btn-secondary {
+  /* Estilo por defecto */
+  background-color: var(--bg-color-light);
+  border-color: var(--border-color);
+}
+.slot-btn.btn-secondary:hover {
+  border-color: var(--primary-color);
+}
+.slot-btn.btn-primary {
+  /* Estilo seleccionado */
+  box-shadow: 0 0 10px rgba(251, 91, 91, 0.5);
+}
+
+.navigation-buttons {
+  grid-column: 1 / -1; /* Ocupa ambas columnas */
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- PASO 3: Confirmación --- */
+.step-confirm-container {
+  background-color: var(--bg-color);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+}
+.step-confirm-container h3 {
+  color: var(--text-color);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.resumen-detalle p {
+  font-size: 1.1rem;
+  color: var(--text-color-muted);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.resumen-detalle p strong {
+  color: var(--text-color);
+  min-width: 180px;
+  display: inline-block;
+}
+
+/* --- Responsividad --- */
+@media (max-width: 768px) {
+  .step-datetime-container {
+    grid-template-columns: 1fr; /* Apila calendario y horarios */
+  }
+  .reserva-container {
+    padding: 1rem;
+  }
+  .servicios-lista {
+    grid-template-columns: 1fr; /* Una columna */
+  }
+}
