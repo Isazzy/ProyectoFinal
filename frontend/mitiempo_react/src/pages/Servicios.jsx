@@ -14,7 +14,13 @@ function Servicios() {
     const fetchServicios = async () => {
       try {
         const res = await getServicios();
-        const activos = res.data.filter((s) => s.activado && s.disponible_serv);
+        
+        // --- CORRECCIÓN ---
+        // El backend ya filtra los servicios 'activos' para los clientes,
+        // pero esta doble verificación (solo por 'activado') es segura.
+        // Se eliminó la referencia a 'disponible_serv' que ya no existe.
+        const activos = res.data.filter((s) => s.activado);
+        
         setServicios(activos);
       } catch (error) {
         console.error("Error al obtener servicios:", error);
@@ -25,7 +31,7 @@ function Servicios() {
     fetchServicios();
   }, []);
 
-  // Agrupar por tipo_serv (valor exacto desde la base de datos)
+  
   const serviciosPorTipo = servicios.reduce((grupos, serv) => {
     const tipo = serv.tipo_serv || "Sin categoría";
     if (!grupos[tipo]) grupos[tipo] = [];
@@ -68,7 +74,8 @@ function Servicios() {
         </p>
       </div>
 
-      {/* Sección 2 - Categorías reales desde la BD */}
+      
+      {/* Sección 2 - Lista de Servicios */}
       <div
         style={{
           backgroundImage: `url(${serviciofondo2})`,
@@ -88,7 +95,11 @@ function Servicios() {
             <ul style={{ listStyle: "none", padding: 0 }}>
               {serviciosPorTipo[tipo].map((s) => (
                 <li key={s.id_serv} style={{ marginBottom: "6px" }}>
-                  {s.nombre_serv} - ${s.precio_serv} - ~{s.duracion_serv} Aprox
+                  
+                  {/* --- MEJORA DE LEGIBILIDAD --- */}
+                  {/* Usamos 'duracion_minutos' del serializer en lugar de 'duracion_serv' ("01:30:00") */}
+                  {s.nombre_serv} - ${s.precio_serv} 
+                  {s.duracion_minutos > 0 && ` - ~${s.duracion_minutos} min. Aprox`}
                 </li>
               ))}
             </ul>
@@ -96,10 +107,10 @@ function Servicios() {
         ))}
       </div>
 
-      {/* Sección 3 - Grilla general */}
+      {/* Sección 3 - Grilla general (Contenido pendiente) */}
       {!loading && servicios.length > 0 && (
         <div className="p-8 bg-white">
-          
+          {/* Aquí puedes agregar más contenido si es necesario */}
         </div>
       )}
 

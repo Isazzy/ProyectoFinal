@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.contrib.auth import get_user_model
-
+from productos.models import Productos
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -67,39 +67,8 @@ class Clientes(models.Model):
         return f"{self.nombre_cli} {self.apellido_cli}"
 
 
-class Proveedores(models.Model):
-    id_prov = models.AutoField(primary_key=True)
-    nombre_prov = models.CharField(max_length=100)
-    tipo_prov = models.CharField(max_length=50, blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    correo = models.CharField(max_length=150, blank=True, null=True)
-    direccion = models.CharField(max_length=150, blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'proveedores'
-
-    def __str__(self):
-        return self.nombre_prov
 
 
-class Productos(models.Model):
-    id_prod = models.AutoField(primary_key=True)
-    nombre_prod = models.CharField(max_length=100)
-    precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
-    precio_compra = models.DecimalField(max_digits=10, decimal_places=2)
-    stock_min_prod = models.IntegerField()
-    stock_act_prod = models.IntegerField()
-    reposicion_prod = models.IntegerField()
-    stock_max_prod = models.IntegerField()
-    tipo_prod = models.CharField(max_length=50)
-
-    class Meta:
-        managed = True
-        db_table = 'productos'
-
-    def __str__(self):
-        return self.nombre_prod
 
 
 class Cajas(models.Model):
@@ -127,41 +96,7 @@ class Cajas(models.Model):
         return f"Caja #{self.id_caja}"
 
 
-class Compras(models.Model):
-    id_compra = models.AutoField(primary_key=True)
-    id_caja = models.ForeignKey(Cajas, models.DO_NOTHING, db_column='id_caja')
-    nro_comp = models.IntegerField()
-    fecha_hs_comp = models.DateTimeField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
-    estado = models.CharField(max_length=9)
 
-    class Meta:
-        managed = True
-        db_table = 'compras'
-
-
-class DetCompras(models.Model):
-    id_det_comp = models.AutoField(primary_key=True)
-    id_comp = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_comp')
-    cantidad = models.IntegerField()
-    precio_uni = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        managed = True
-        db_table = 'det_compras'
-
-
-class ProductosXProveedores(models.Model):
-    id_prod_x_prov = models.AutoField(primary_key=True)
-    id_prod = models.ForeignKey(Productos, models.DO_NOTHING, db_column='id_prod')
-    id_prov = models.ForeignKey(Proveedores, models.DO_NOTHING, db_column='id_prov')
-    id_compra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_compra')
-
-    class Meta:
-        managed = True
-        db_table = 'productos_x_proveedores'
 
 
 

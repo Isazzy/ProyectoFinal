@@ -5,7 +5,7 @@ import "../CSS/header.css";
 export default function Header() {
   const navigate = useNavigate();
 
-  // 🔹 Verificar si hay sesión activa
+  
   const token = localStorage.getItem("access");
   const userData = localStorage.getItem("user");
   const user = userData ? JSON.parse(userData) : null;
@@ -28,7 +28,7 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/login");
+    navigate("/nosotros");
   };
 
   return (
@@ -39,7 +39,7 @@ export default function Header() {
           Romina Magallanez
         </Link>
 
-        {/* Navegación visible para todos */}
+        {/* Navegación principal */}
         <nav className="nav-links">
           <Link to="/nosotros">Inicio</Link>
           <Link to="/servicios">Servicios</Link>
@@ -47,20 +47,17 @@ export default function Header() {
             Turnos
           </button>
 
-          {/* Mostrar "Ingresar" o "Perfil" según sesión */}
+          {/* Autenticación */}
           {!token ? (
-            <Link to="/login" className="btn-login">
-              Ingresar
-            </Link>
+            <div className="nav-links">
+              <Link to="/login">Ingresar</Link>
+              <Link to="/register">Registrarse</Link>
+            </div>
           ) : (
-            <>
-              <button onClick={handlePerfilClick} className="btn-login">
-                Perfil
-              </button>
-              <button onClick={handleLogout} className="btn-logout">
-                Cerrar sesión
-              </button>
-            </>
+            <div className="nav-links">
+              <Link onClick={handlePerfilClick}>Mi perfil</Link>
+              <Link onClick={handleLogout}>Cerrar sesión</Link>
+            </div>
           )}
         </nav>
       </div>

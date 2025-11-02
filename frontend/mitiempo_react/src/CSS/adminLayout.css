@@ -1,0 +1,19 @@
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f1f5f9;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  transition: margin-left 0.3s ease;
+}
+
+.admin-content.expanded {
+  margin-left: 220px; /* ancho del sidebar */
+}
+
+.admin-content.collapsed {
+  margin-left: 70px;
+}

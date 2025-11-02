@@ -1,4 +1,3 @@
-// src/components/Servicios/ServiciosForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -6,17 +5,16 @@ import {
   updateServicio,
   getServicioById,
 } from "../../api/servicios";
-import "../../CSS/serviciosForm.css";
+import "../../CSS/serviciosForm.css"; // Asegúrate que este CSS exista
 
 export default function ServiciosForm() {
   const [servicio, setServicio] = useState({
     nombre_serv: "",
     tipo_serv: "",
     precio_serv: "",
-    duracion_serv: "",
+    duracion_serv: "", // Se maneja como "HH:mm"
     descripcion_serv: "",
-    disponible_serv: 1,
-    activado: true,
+    activado: true, // Este es el único interruptor
     rol_requerido: "",
   });
 
@@ -34,8 +32,14 @@ export default function ServiciosForm() {
       if (id) {
         try {
           const res = await getServicioById(id);
-          console.log("Servicio cargado:", res.data);
-          setServicio(res.data);
+          const data = res.data;
+
+          // CORRECCIÓN: Convertir "HH:mm:ss" a "HH:mm" para el input
+          if (data.duracion_serv && data.duracion_serv.length === 8) { // "01:30:00"
+            data.duracion_serv = data.duracion_serv.substring(0, 5); // "01:30"
+          }
+
+          setServicio(data);
         } catch (err) {
           console.error("Error al cargar servicio:", err);
           setError("Error al cargar el servicio.");
@@ -64,28 +68,29 @@ export default function ServiciosForm() {
       return;
     }
 
+    // CORRECCIÓN: Convertir "HH:mm" de vuelta a "HH:mm:ss" para Django
+    let duracion_formateada = null;
+    // Solo formatear si el string tiene el formato HH:mm
+    if (servicio.duracion_serv && servicio.duracion_serv.length === 5) { 
+      duracion_formateada = `${servicio.duracion_serv}:00`; // "01:30:00"
+    }
+
     const payload = {
       ...servicio,
       precio_serv: parseFloat(servicio.precio_serv),
+      duracion_serv: duracion_formateada,
+      // 'disponible_serv' ya no existe
     };
 
     try {
       if (id) {
-        console.log("Actualizando servicio:", id, payload);
         await updateServicio(id, payload);
-        console.log("Servicio actualizado correctamente");
       } else {
-        console.log("Creando servicio:", payload);
         await createServicio(payload);
-        console.log("Servicio creado correctamente");
       }
-
       navigate("/admin/dashboard/servicios");
     } catch (err) {
-      console.error("Error al guardar servicio:", err);
-      if (err.response?.data) {
-        console.error("Detalles del error:", err.response.data);
-      }
+      console.error("Error al guardar servicio:", err.response?.data || err);
       setError("Error al guardar el servicio.");
     }
   };
@@ -148,12 +153,12 @@ export default function ServiciosForm() {
         />
 
         {/* Duración */}
-        <label>Duración</label>
+        <label>Duración (HH:mm)</label>
         <input
           name="duracion_serv"
           value={servicio.duracion_serv || ""}
           onChange={handleChange}
-          type="time"
+          type="time" // type="time" requiere el formato HH:mm
         />
 
         {/* Descripción */}
@@ -165,7 +170,7 @@ export default function ServiciosForm() {
           placeholder="Breve descripción del servicio..."
         />
 
-        {/* Activo */}
+        {/* Activo (Este es el único interruptor) */}
         <label className="checkbox-label">
           <input
             type="checkbox"

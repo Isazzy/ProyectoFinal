@@ -1,0 +1,231 @@
+/* src/CSS/AgendaAdmin.css */
+
+.agenda-container {
+    /* Asumiendo que el fondo de tu admin es oscuro */
+    background-color: #1a1a1a; 
+    padding: 20px;
+    border-radius: 8px;
+    color: #e0e0e0; /* Texto claro por defecto */
+}
+
+.agenda-loading {
+    color: white;
+    padding: 20px;
+}
+
+/* --- Anulación de Estilos de FullCalendar para Tema Oscuro --- */
+
+/* Texto de los botones (Mes, Semana, Hoy) */
+.fc .fc-button {
+    background-color: #fb5b5b; /* Color principal de tu admin */
+    border: none;
+    color: white;
+    text-transform: capitalize;
+}
+.fc .fc-button:hover {
+    background-color: #e24e4e;
+}
+.fc .fc-button-primary:disabled {
+    background-color: #555;
+}
+
+/* Título (ej. "Octubre 2025") */
+.fc .fc-toolbar-title {
+    color: #ffffff;
+    font-size: 1.5em;
+}
+
+/* Días de la semana (LUN, MAR, etc.) */
+.fc .fc-col-header-cell-cushion {
+    color: #a0a0a0;
+    text-decoration: none;
+}
+
+/* Números de los días */
+.fc .fc-daygrid-day-number {
+    color: #d0d0d0;
+    text-decoration: none;
+}
+
+/* Horas en la vista semanal (9 AM, 10 AM) */
+.fc .fc-timegrid-slot-label-cushion {
+    color: #a0a0a0;
+}
+
+/* Color de fondo de la grilla */
+.fc .fc-view, 
+.fc .fc-scrollgrid, 
+.fc .fc-timegrid-body, 
+.fc .fc-daygrid-body {
+    background-color: transparent !important;
+}
+
+/* Líneas de la grilla (hacerlas más sutiles) */
+.fc .fc-scrollgrid,
+.fc th,
+.fc td {
+    border-color: #444 !important;
+}
+
+/* Evento (Turno) */
+.fc-event {
+    border: 1px solid #111 !important;
+    font-weight: 600;
+}
+
+/* src/CSS/AgendaAdmin.css (Añadir al final) */
+
+/* Contenedor principal de la página de Agenda Admin */
+.agenda-admin-container {
+    background-color: #1f2937; /* Fondo oscuro (ajustar a tu color exacto) */
+    color: #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.agenda-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #4b5563;
+    padding-bottom: 15px;
+}
+
+.agenda-header h2 {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Botón "Agregar Turno" */
+.btn-nueva-reserva {
+    background-color: #fb5b5b; /* Color principal (rosa/rojo) */
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-nueva-reserva:hover {
+    background-color: #e24e4e; /* Un tono más oscuro */
+}
+
+
+/* --- Tema Oscuro para FullCalendar (Anulación de estilos) --- */
+.agenda-wrapper.dark-theme {
+    /* (El resto de los estilos que te di antes) */
+}
+
+.dark-theme .fc .fc-button {
+    background-color: #fb5b5b;
+    border: none;
+}
+.dark-theme .fc .fc-button:hover {
+    background-color: #e24e4e;
+}
+.dark-theme .fc .fc-toolbar-title {
+    color: #ffffff;
+}
+.dark-theme .fc .fc-col-header-cell-cushion,
+.dark-theme .fc .fc-daygrid-day-number,
+.dark-theme .fc .fc-timegrid-slot-label-cushion {
+    color: #d1d5db;
+    text-decoration: none;
+}
+.dark-theme .fc th,
+.dark-theme .fc td {
+    border-color: #4b5563 !important; /* Líneas de la grilla más oscuras */
+}
+/* src/CSS/modalForm.css */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo más oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Centrar verticalmente */
+    z-index: 1000;
+    padding: 20px; /* Espacio por si el contenido es muy alto */
+    overflow-y: auto; /* Permitir scroll si el modal es muy alto */
+}
+
+.modal-content {
+    background: #1f2937; /* Fondo oscuro del modal */
+    color: #e5e7eb; /* Texto claro */
+    padding: 30px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 750px; /* Ancho base del modal */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative; /* Para posicionar el botón de cierre si lo añades */
+}
+
+/* Footer del modal */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #4b5563; /* Línea separadora oscura */
+    margin-top: 20px; /* Separación del contenido */
+}
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Estilos base de botones (puedes personalizarlos más) */
+.btn-modal-cancel, .btn-modal-save, .btn-delete-user {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+.btn-modal-cancel:disabled, .btn-modal-save:disabled, .btn-delete-user:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-modal-cancel { 
+    background-color: #4b5563;
+    color: #e5e7eb;
+}
+.btn-modal-cancel:hover:not(:disabled) {
+    background-color: #6b7280;
+}
+
+.btn-modal-save { 
+    background-color: #fb5b5b; /* Color principal */
+    color: white;
+}
+.btn-modal-save:hover:not(:disabled) {
+    background-color: #e24e4e;
+}
+
+.btn-delete-user { 
+    background: none;
+    color: #fca5a5; /* Rojo claro */
+    padding-left: 0; /* Alinear a la izquierda */
+}
+.btn-delete-user:hover:not(:disabled) {
+    color: #ef4444; /* Rojo más intenso */
+}
+
+/* Título del modal */
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #4b5563;
+    text-align: center;
+}

@@ -1,121 +1,73 @@
-// src/components/TurnoResumen.jsx
 import React from "react";
+// Importa los estilos si los tienes en un archivo separado
+// import "../../CSS/TurnoResumen.css"; 
 
+// Asume que recibe: resumen = { servicioName, profName, fecha, hora, precio, duracion }
+// y las funciones onBack, onConfirm, saving
 export default function TurnoResumen({ resumen, onBack, onConfirm, saving }) {
-  if (!resumen) return null;
 
-  // Función para formatear duración (de "01:30:00" → "1h 30m")
-  const formatDuration = (duracion) => {
-    if (!duracion) return "-";
-    const [h, m, s] = duracion.split(":").map(Number);
-    let result = "";
-    if (h) result += `${h}h `;
-    if (m) result += `${m}m`;
-    return result.trim() || `${s}s`;
-  };
+    if (!resumen) {
+        return <p>Error: No hay datos para mostrar el resumen.</p>;
+    }
 
-  // Total precio y duración si hay varios servicios
-  const totalPrecio = Array.isArray(resumen.servicios)
-    ? resumen.servicios.reduce((acc, s) => acc + (s.precio_serv || 0), 0)
-    : resumen.precio;
+    return (
+        <div className="turno-resumen-container"> {/* Usa una clase CSS para estilo */}
+            <h3>Resumen de tu Turno</h3>
+            
+            <div className="resumen-detalle">
+                <p>
+                    <strong>Servicio(s):</strong> 
+                    {/* Usa el campo 'servicioName' que es un string */}
+                    {resumen.servicioName || "No especificado"} 
+                </p>
+                <p>
+                    <strong>Fecha:</strong> 
+                    {resumen.fecha || "No especificada"}
+                </p>
+                <p>
+                    <strong>Hora:</strong> 
+                    {resumen.hora || "No especificada"}
+                </p>
+                <p>
+                    <strong>Duración Estimada:</strong> 
+                    {resumen.duracion || "N/A"}
+                </p>
+                <p>
+                    <strong>Precio Total Estimado:</strong> 
+                    ${resumen.precio ? resumen.precio.toFixed(2) : '0.00'}
+                </p>
+            </div>
 
-  const totalDuracion = Array.isArray(resumen.servicios)
-    ? resumen.servicios
-        .map((s) => s.duracion_serv)
-        .filter(Boolean)
-        .reduce((acc, d) => {
-          const [h, m, s] = d.split(":").map(Number);
-          return acc + h * 60 + m + s / 60;
-        }, 0)
-    : resumen.duracion;
-
-  return (
-    <div style={styles.card}>
-      <h3 style={styles.title}>Confirmar Turno</h3>
-
-      <div style={styles.infoGroup}>
-        <p>
-          <strong>Servicios:</strong>{" "}
-          {Array.isArray(resumen.servicios)
-            ? resumen.servicios.map((s) => s.nombre_serv).join(", ")
-            : resumen.servicioName}
-        </p>
-        <p>
-          <strong>Profesional:</strong> {resumen.profName}
-        </p>
-        <p>
-          <strong>Fecha:</strong> {resumen.fecha}
-        </p>
-        <p>
-          <strong>Hora:</strong> {resumen.hora}
-        </p>
-        {totalPrecio && (
-          <p>
-            <strong>Total:</strong> ${totalPrecio}
-          </p>
-        )}
-        {totalDuracion && (
-          <p>
-            <strong>Duración:</strong> {Math.floor(totalDuracion / 60)}h{" "}
-            {Math.round(totalDuracion % 60)}m
-          </p>
-        )}
-      </div>
-
-      <div style={styles.buttons}>
-        <button onClick={onBack} style={styles.btnBack}>
-          Volver
-        </button>
-        <button
-          onClick={onConfirm}
-          disabled={saving}
-          style={styles.btnConfirm}
-        >
-          {saving ? "Guardando..." : "Confirmar turno"}
-        </button>
-      </div>
-    </div>
-  );
+            {/* Botones de acción */}
+            <div className="navigation-buttons resumen-buttons">
+                <button 
+                    onClick={onBack} 
+                    disabled={saving} 
+                    className="btn-secondary"
+                >
+                    Volver
+                </button>
+                <button 
+                    onClick={onConfirm} 
+                    disabled={saving}
+                >
+                    {saving ? "Confirmando..." : "Confirmar Turno"}
+                </button>
+            </div>
+        </div>
+    );
 }
 
+// Puedes añadir estilos básicos aquí o en un CSS
 const styles = {
-  card: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "20px",
-    background: "#fff",
-    maxWidth: "400px",
-    margin: "20px auto",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: "15px",
-  },
-  infoGroup: {
-    lineHeight: "1.8",
-    fontSize: "1rem",
-  },
-  buttons: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: "20px",
-  },
-  btnBack: {
-    background: "#ccc",
-    border: "none",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "0.2s",
-  },
-  btnConfirm: {
-    background: "#4CAF50",
-    color: "white",
-    border: "none",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "0.2s",
-  },
+    // (Ejemplo si no usas CSS externo)
+    turnoResumenContainer: {
+        padding: '20px',
+        border: '1px solid #eee',
+        borderRadius: '8px',
+        maxWidth: '400px',
+        margin: 'auto',
+        textAlign: 'left',
+    },
+    
 };

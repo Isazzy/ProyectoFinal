@@ -67,9 +67,13 @@ INSTALLED_APPS = [
     "corsheaders", #para poder comunicarnos con otro backend
     "rest_framework", #con esto creamos APIS, crud, seguridad
     "rest_framework_simplejwt",
+    #"django_filters",
+    "pytz",
     'mitiempo_enloderomi',
     'turnos',
-    
+    'productos',
+    'proveedores',
+    'compras',
 ]
 
 MIDDLEWARE = [
