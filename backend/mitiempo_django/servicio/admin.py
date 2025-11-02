@@ -1,8 +1,6 @@
 from django.contrib import admin
-
-# servicios/admin.py
-from django.contrib import admin
-from .models import Servicio, ServicioProfesional
+# Importamos solo el modelo que estamos usando
+from .models import Servicio
 
 @admin.register(Servicio)
 class ServicioAdmin(admin.ModelAdmin):
@@ -10,24 +8,17 @@ class ServicioAdmin(admin.ModelAdmin):
         "nombre_serv", 
         "tipo_serv", 
         "precio_serv", 
-        "duracion_serv", 
-        "rol_requerido", 
+        "duracion_minutos", # Campo actualizado
+        "dias_disponibles", # Campo nuevo
         "activado"
     )
-    list_filter = ("tipo_serv", "activado", "rol_requerido")
+    list_filter = ("tipo_serv", "activado") # 'rol_requerido' eliminado
     search_fields = ("nombre_serv", "tipo_serv")
-    list_editable = ("precio_serv", "duracion_serv", "activado")
+    
+    # Actualizado a 'duracion_minutos'
+    list_editable = ("precio_serv", "duracion_minutos", "activado")
 
-@admin.register(ServicioProfesional)
-class ServicioProfesionalAdmin(admin.ModelAdmin):
-    """
-    Panel para asignar Servicios a Profesionales.
-    """
-    list_display = ("profesional", "servicio", "rol")
-    list_filter = ("profesional", "servicio__tipo_serv")
-    search_fields = ("profesional__username", "servicio__nombre_serv")
-    autocomplete_fields = ("profesional", "servicio") # Facilita la búsqueda
-
-    def get_queryset(self, request):
-        # Optimiza la consulta
-        return super().get_queryset(request).select_related('profesional', 'servicio')
+# 
+# El 'ServicioProfesionalAdmin' se elimina 
+# porque el modelo 'ServicioProfesional' ya no existe en esta lógica.
+#

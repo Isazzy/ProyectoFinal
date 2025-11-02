@@ -1,36 +1,34 @@
-# servicios/serializers.py
 from rest_framework import serializers
-from .models import Servicio, ServicioProfesional
+# Importamos solo el modelo Servicio
+from .models import Servicio
 
-class ServicioProfesionalSerializer(serializers.ModelSerializer):
-    """ Muestra qué profesional puede hacer un servicio """
-    profesional_username = serializers.CharField(source='profesional.username', read_only=True)
-    profesional_id = serializers.IntegerField(source='profesional.id', read_only=True)
-    
-    class Meta:
-        model = ServicioProfesional
-        fields = ['profesional_id', 'profesional_username', 'rol']
+#
+# 'ServicioProfesionalSerializer' se elimina por completo 
+# porque el modelo 'ServicioProfesional' ya no se usa.
+#
 
 class ServicioSerializer(serializers.ModelSerializer):
-    """ Serializer principal para los Servicios """
-    # Muestra la lista de profesionales que pueden hacer este servicio
-    profesionales = ServicioProfesionalSerializer(
-        source='servicioprofesional_set', 
-        many=True, 
-        read_only=True
-    )
-    # Devuelve la duración en minutos (más fácil para el frontend)
-    duracion_minutos = serializers.SerializerMethodField()
+    """ 
+    Serializer principal para los Servicios.
+    Muestra los detalles del servicio para el frontend.
+    """
+
+    # 'profesionales' se elimina porque ya no existe el modelo intermedio.
+    
+    # 'duracion_minutos' ahora es un campo directo del modelo,
+    # por lo que no necesitamos un 'SerializerMethodField'.
 
     class Meta:
         model = Servicio
+        # Actualizamos los campos para que coincidan con el modelo
         fields = [
-            'id_serv', 'tipo_serv', 'nombre_serv', 'precio_serv', 
-            'duracion_serv', 'duracion_minutos', 'descripcion_serv', 
-            'activado', 'rol_requerido', 'profesionales'
+            'id_serv', 
+            'tipo_serv', 
+            'nombre_serv', 
+            'precio_serv', 
+            'duracion_minutos', # <-- Campo actualizado
+            'dias_disponibles', # <-- Campo nuevo
+            'descripcion_serv', 
+            'activado',
+            # 'rol_requerido' y 'profesionales' se eliminan.
         ]
-
-    def get_duracion_minutos(self, obj):
-        if obj.duracion_serv:
-            return int(obj.duracion_serv.total_seconds() / 60)
-        return 0

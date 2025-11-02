@@ -1,7 +1,7 @@
 from django.db import models
-#from productos.models import Productos
+from productos.models import Productos
 from proveedores.models import Proveedores
-from mitiempo_enloderomi.models import Cajas
+from cajas.models import Cajas
 
 # Create your models here.
 class Compras(models.Model):

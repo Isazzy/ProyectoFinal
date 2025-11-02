@@ -52,43 +52,6 @@ class Profile(models.Model):
 User = get_user_model()
 
 
-class Clientes(models.Model):
-    id_cli = models.AutoField(primary_key=True)
-    nombre_cli = models.CharField(max_length=50)
-    apellido_cli = models.CharField(max_length=50)
-    correo_cli = models.EmailField(max_length=255)
-    telefono_cli = models.CharField(max_length=30, blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'clientes'
-
-    def __str__(self):
-        return f"{self.nombre_cli} {self.apellido_cli}"
-
-
-
-
-
-
-class Cajas(models.Model):
-    id_caja = models.AutoField(primary_key=True)
-    id_usuario = models.ForeignKey(User, models.DO_NOTHING, db_column='id_usuario', null=True, blank=True)
-
-    fech_hrs_ape = models.DateTimeField()
-    fech_hrs_cie = models.DateTimeField(blank=True, null=True)
-    monto_ini = models.DecimalField(max_digits=10, decimal_places=2)
-    total_ingreso = models.DecimalField(max_digits=10, decimal_places=2)
-    total_egreso = models.DecimalField(max_digits=10, decimal_places=2)
-    total_caja = models.DecimalField(max_digits=10, decimal_places=2)
-    estado_caja = models.IntegerField()
-
-    class Meta:
-        managed = True
-        db_table = 'cajas'
-
-    def __str__(self):
-        return f"Caja #{self.id_caja}"
 
 
 
@@ -96,50 +59,4 @@ class Cajas(models.Model):
 
 
 
-# =====================================================
-#  VENTAS
-# =====================================================
 
-class Ventas(models.Model):
-    id_venta = models.AutoField(primary_key=True)
-    id_caja = models.ForeignKey(Cajas, models.DO_NOTHING, db_column='id_caja')
-    cliente = models.ForeignKey(Clientes, models.DO_NOTHING)
-    fech_hs_vent = models.DateTimeField()
-    tipo_venta = models.CharField(max_length=100)
-    total_venta = models.DecimalField(max_digits=10, decimal_places=2)
-    tipo_pago = models.CharField(max_length=100)
-
-    class Meta:
-        managed = True
-        db_table = 'ventas'
-
-
-class DetVentas(models.Model):
-    id_det_venta = models.AutoField(primary_key=True)
-    id_venta = models.ForeignKey(Ventas, models.DO_NOTHING, db_column='id_venta')
-    
-    # --- ¡COMENTA ESTO TEMPORALMENTE! ---
-    id_prod = models.ForeignKey(
-         'productos.Productos',
-         models.DO_NOTHING, 
-         db_column='id_prod', 
-         blank=True, null=True
-    )
-   
-    
-    # Te corrijo también el de servicios para el futuro
-    id_serv = models.ForeignKey(
-        'servicio.Servicio',   # <--- ASÍ (asumiendo tu app es 'servicios' y el modelo 'Servicio')
-        models.DO_NOTHING, 
-        db_column='id_serv', 
-        blank=True, null=True
-    )
-    # --- FIN DE CAMBIOS ---
-
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    cantidad_venta = models.IntegerField()
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        managed = True
-        db_table = 'det_ventas'
