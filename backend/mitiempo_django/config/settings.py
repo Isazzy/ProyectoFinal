@@ -95,11 +95,16 @@ INSTALLED_APPS = [
 <<<<<<< HEAD
     'proveedores',
     'compras',
+<<<<<<< HEAD
 =======
     'compras',
     'cajas',
     'ventas',
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+    'cajas',
+    'ventas',
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
 ]
 
 MIDDLEWARE = [

@@ -1,18 +1,19 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # servicios/serializers.py
+=======
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
 from rest_framework import serializers
-from .models import Servicio, ServicioProfesional
+# Importamos solo el modelo Servicio
+from .models import Servicio
 
-class ServicioProfesionalSerializer(serializers.ModelSerializer):
-    """ Muestra qué profesional puede hacer un servicio """
-    profesional_username = serializers.CharField(source='profesional.username', read_only=True)
-    profesional_id = serializers.IntegerField(source='profesional.id', read_only=True)
-    
-    class Meta:
-        model = ServicioProfesional
-        fields = ['profesional_id', 'profesional_username', 'rol']
+#
+# 'ServicioProfesionalSerializer' se elimina por completo 
+# porque el modelo 'ServicioProfesional' ya no se usa.
+#
 
 class ServicioSerializer(serializers.ModelSerializer):
+<<<<<<< HEAD
     """ Serializer principal para los Servicios """
     # Muestra la lista de profesionales que pueden hacer este servicio
     profesionales = ServicioProfesionalSerializer(
@@ -33,6 +34,8 @@ from .models import Servicio
 #
 
 class ServicioSerializer(serializers.ModelSerializer):
+=======
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
     """ 
     Serializer principal para los Servicios.
     Muestra los detalles del servicio para el frontend.
@@ -42,12 +45,16 @@ class ServicioSerializer(serializers.ModelSerializer):
     
     # 'duracion_minutos' ahora es un campo directo del modelo,
     # por lo que no necesitamos un 'SerializerMethodField'.
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
 
     class Meta:
         model = Servicio
         # Actualizamos los campos para que coincidan con el modelo
         fields = [
+<<<<<<< HEAD
 <<<<<<< HEAD
             'id_serv', 'tipo_serv', 'nombre_serv', 'precio_serv', 
             'duracion_serv', 'duracion_minutos', 'descripcion_serv', 
@@ -59,6 +66,8 @@ class ServicioSerializer(serializers.ModelSerializer):
             return int(obj.duracion_serv.total_seconds() / 60)
         return 0
 =======
+=======
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
             'id_serv', 
             'tipo_serv', 
             'nombre_serv', 
@@ -68,5 +77,9 @@ class ServicioSerializer(serializers.ModelSerializer):
             'descripcion_serv', 
             'activado',
             # 'rol_requerido' y 'profesionales' se eliminan.
+<<<<<<< HEAD
         ]
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+        ]
+>>>>>>> 5f5a7856 (Actualizacion de models.py)

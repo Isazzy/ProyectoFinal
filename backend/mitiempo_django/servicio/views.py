@@ -8,19 +8,24 @@ from .serializers import ServicioSerializer
 class ServicioViewSet(viewsets.ModelViewSet):
 <<<<<<< HEAD
     """
-    API endpoint para ver y editar Servicios.
-    - Clientes (no autenticados o rol 'cliente') solo ven servicios 'activados'.
-    - Admin/Empleados ven todos los servicios.
+    API endpoint para ver y gestionar Servicios.
     """
+    # El queryset base (usado por el admin)
     queryset = Servicio.objects.all().order_by('nombre_serv')
     serializer_class = ServicioSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly] # Usamos JWTAuthentication globalmente
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
+        """
+        Sobrescribimos este método para filtrar lo que ve el usuario.
+        - Clientes/Invitados: Solo ven servicios 'activados'.
+        - Admin/Staff: Ven todos los servicios.
+        """
         user = self.request.user
         
-        # Filtramos para clientes o usuarios no logueados
+        # Si el usuario es un cliente o no está logueado
         if not user.is_authenticated or getattr(user, 'role', 'cliente') == 'cliente':
+<<<<<<< HEAD
             return Servicio.objects.filter(activado=True).prefetch_related('servicioprofesional_set__profesional')
         
         # Admin/Empleados ven todo
@@ -38,3 +43,10 @@ class ServicioViewSet(viewsets.ModelViewSet):
         # Si es admin/staff, devolvemos el queryset completo (todos los servicios)
         return self.queryset 
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+            # Devolvemos solo los servicios activos
+            return Servicio.objects.filter(activado=True) # <-- .prefetch_related eliminado
+
+        # Si es admin/staff, devolvemos el queryset completo (todos los servicios)
+        return self.queryset # <-- .prefetch_related eliminado
+>>>>>>> 5f5a7856 (Actualizacion de models.py)
