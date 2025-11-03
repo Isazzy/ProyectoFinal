@@ -6,8 +6,10 @@
 =======
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
+<<<<<<< HEAD
 <<<<<<< HEAD
 from datetime import timedelta
 <<<<<<< HEAD
@@ -16,90 +18,46 @@ from django.conf import settings
 =======
 from datetime import datetime, timedelta
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+from datetime import timedelta
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
 
-# Importamos los nuevos modelos de turnos
 from .models import Turno, TurnoServicio, ConfiguracionLocal
-# Importamos el modelo Servicio
 from servicio.models import Servicio
-# Asumimos que tienes un Serializer básico para Servicio
-# (si no, crea uno simple en servicio/serializers.py)
-try:
-    from servicio.serializers import ServicioSerializer
-except ImportError:
-    # Fallback por si no existe el serializer de Servicio
-    class ServicioSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Servicio
-            fields = ['id_serv', 'nombre_serv'] # Ajusta según tu modelo
 
-# --- Helper de Días ---
-# (Necesario para la validación)
-def get_dia_semana_es(fecha):
-    """
-    Devuelve el nombre del día de la semana en español, minúsculas y sin tildes.
-    """
-    dias = {
-        'Monday': 'lunes',
-        'Tuesday': 'martes',
-        'Wednesday': 'miercoles',
-        'Thursday': 'jueves',
-        'Friday': 'viernes',
-        'Saturday': 'sabado',
-        'Sunday': 'domingo'
-    }
-    # .strftime('%A') devuelve el nombre en inglés (locale-dependent)
-    # Lo normalizamos a nuestro estándar.
-    return dias.get(fecha.strftime('%A'), '').lower()
+User = get_user_model()
 
-# --- Serializer para la tabla intermedia (Lectura) ---
 
 class TurnoServicioSerializer(serializers.ModelSerializer):
-    """
-    Serializer para MOSTRAR los servicios asignados a un turno.
-    Muestra el detalle del servicio y la duración específica de ese turno.
-    """
-    # Muestra los detalles del servicio (nombre, etc.)
-    servicio = ServicioSerializer(read_only=True) 
-    
+    servicio = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = TurnoServicio
-        # Muestra solo los campos relevantes de la tabla intermedia
         fields = ['servicio', 'duracion_servicio']
 
+    def get_servicio(self, obj):
+        return {
+            'id_serv': obj.servicio.id_serv,
+            'nombre_serv': obj.servicio.nombre_serv,
+            'duracion_minutos': obj.servicio.duracion_minutos
+        }
 
-# --- Serializer Principal de Turno ---
 
 class TurnoSerializer(serializers.ModelSerializer):
-    """
-    Serializer principal para crear, ver y actualizar Turnos.
-    Toda la lógica de validación (horarios, solapamientos) 
-    ocurre aquí.
-    """
-
-    # --- CAMPOS DE ESCRITURA (para POST/PUT) ---
-
-    # El cliente se asignará automáticamente desde el usuario logueado en la vista
-    # No es necesario enviarlo en el JSON, pero lo mantenemos por si se crea
-    # desde el admin.
     cliente = serializers.PrimaryKeyRelatedField(
-        read_only=True, 
+        queryset=User.objects.filter(role='cliente'),
+        required=False,
         default=serializers.CurrentUserDefault()
     )
-    
-    # Campo clave para CREAR: El frontend solo envía una lista de IDs [1, 2]
     servicios_ids = serializers.PrimaryKeyRelatedField(
         queryset=Servicio.objects.all(),
         many=True,
         write_only=True,
-        required=True,
-        allow_empty=False,
-        label="Servicios a reservar"
+        required=False  # <-- no obligatorio en update
     )
-
-    # --- CAMPOS DE LECTURA (para GET) ---
-
-    # Muestra el nombre del cliente en lugar de su ID
+    servicios_asignados = TurnoServicioSerializer(many=True, read_only=True)
     cliente_nombre = serializers.StringRelatedField(source='cliente', read_only=True)
+<<<<<<< HEAD
     
 <<<<<<< HEAD
     # Campo 'fecha_hora_fin' es solo de lectura, lo calculamos nosotros
@@ -154,6 +112,8 @@ class TurnoSerializer(serializers.ModelSerializer):
     )
     
     # Muestra los campos calculados por las @property del modelo
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
     duracion_total_minutos = serializers.ReadOnlyField()
     fecha_hora_fin = serializers.ReadOnlyField()
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
@@ -161,6 +121,7 @@ class TurnoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Turno
         fields = [
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             'id_turno', 
@@ -184,11 +145,16 @@ class TurnoSerializer(serializers.ModelSerializer):
             # --- Campos Calculados ---
             'duracion_total_minutos', # (Read-Only)
             'fecha_hora_fin',       # (Read-Only)
+=======
+            'id_turno', 'cliente', 'cliente_nombre', 'fecha_hora_inicio', 'estado',
+            'observaciones', 'servicios_ids', 'servicios_asignados',
+            'duracion_total_minutos', 'fecha_hora_fin'
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         ]
-        read_only_fields = ['id', 'estado']
+        read_only_fields = ['id_turno']
 
-    
     def validate(self, data):
+<<<<<<< HEAD
         """
         Validación central para crear o actualizar un turno.
         Comprueba la configuración global del local.
@@ -293,20 +259,26 @@ class TurnoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id_turno']
 
     def validate(self, data):
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         servicios_objs = data.pop('servicios_ids', None)
         if servicios_objs is not None:
             if not servicios_objs:
                 raise serializers.ValidationError("Debe seleccionar al menos un servicio.")
             data['servicios_a_guardar'] = servicios_objs
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
         # Guardamos los servicios para usarlos en create/update
         data['servicios_a_guardar'] = servicios_objs
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         return data
 
     @transaction.atomic
     def create(self, validated_data):
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         # 'servicios_incluidos' ya viene como una lista de objetos gracias a 'source'
@@ -317,10 +289,11 @@ class TurnoSerializer(serializers.ModelSerializer):
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
         
         # Quitamos los servicios del dict principal
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         servicios_objs = validated_data.pop('servicios_a_guardar')
-        
-        # 1. Creamos el Turno
         turno = Turno.objects.create(**validated_data)
+<<<<<<< HEAD
         
         # 2. Creamos las relaciones en TurnoServicio
         for servicio in servicios_objs:
@@ -337,10 +310,15 @@ class TurnoSerializer(serializers.ModelSerializer):
         for s in servicios_objs:
             TurnoServicio.objects.create(turno=turno, servicio=s)
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+        for s in servicios_objs:
+            TurnoServicio.objects.create(turno=turno, servicio=s)
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         return turno
 
     @transaction.atomic
     def update(self, instance, validated_data):
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         servicios = validated_data.pop('servicios_incluidos', None)
@@ -351,12 +329,13 @@ class TurnoSerializer(serializers.ModelSerializer):
 
         # 1. Actualiza los campos simples del Turno (ej: fecha_hora_inicio)
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+        servicios_objs = validated_data.pop('servicios_a_guardar', None)
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         instance = super().update(instance, validated_data)
-
-        # 2. Si el payload incluía una *nueva* lista de servicios
-        if servicios_objs_list is not None:
-            # Borramos los servicios anteriores
+        if servicios_objs is not None:
             instance.servicios_asignados.all().delete()
+<<<<<<< HEAD
             
 <<<<<<< HEAD
         # Guardamos la instancia (super() ya lo hace, pero por claridad)
@@ -367,10 +346,13 @@ class TurnoSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         if servicios_objs is not None:
             instance.servicios_asignados.all().delete()
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
             for s in servicios_objs:
                 TurnoServicio.objects.create(turno=instance, servicio=s)
         instance.refresh_from_db()
         return instance
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
             # Creamos los nuevos
@@ -385,3 +367,5 @@ class TurnoSerializer(serializers.ModelSerializer):
         instance.refresh_from_db() 
         return instance
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))

@@ -1,6 +1,9 @@
 from django.contrib import admin
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
 from .models import Marca, Categoria, Productos, StockHistory
 
 @admin.register(Marca)
@@ -45,6 +48,8 @@ class StockHistoryAdmin(admin.ModelAdmin):
     search_fields = ("producto__nombre_prod", "razon")
     ordering = ("-fecha_movimiento",)
     date_hierarchy = "fecha_movimiento"
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
 
-# Register your models here.

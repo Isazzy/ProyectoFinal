@@ -289,6 +289,7 @@ class TurnoServicio(models.Model):
     # --- MÉTODO SAVE ACTUALIZADO ---
     def save(self, *args, **kwargs):
 <<<<<<< HEAD
+<<<<<<< HEAD
         if (not self.duracion_servicio or self.duracion_servicio == 30) and hasattr(self, 'servicio') and self.servicio:
 
             if hasattr(self.servicio, 'duracion_minutos') and self.servicio.duracion_minutos > 0:
@@ -301,14 +302,19 @@ class TurnoServicio(models.Model):
         intenta obtener la duración *correcta* del modelo Servicio.
         """
         # Comprobamos 'hasattr' por si el servicio aún no está asignado
+=======
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
         if (not self.duracion_servicio or self.duracion_servicio == 30) and hasattr(self, 'servicio') and self.servicio:
-            
-            # Asumimos que tu modelo Servicio tiene 'duracion_minutos'
+
             if hasattr(self.servicio, 'duracion_minutos') and self.servicio.duracion_minutos > 0:
                  self.duracion_servicio = self.servicio.duracion_minutos
+<<<<<<< HEAD
             
             # Fallback por si acaso el modelo Servicio usa 'duracion' (DurationField)
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
             elif hasattr(self.servicio, 'duracion') and self.servicio.duracion.total_seconds() > 0:
                  self.duracion_servicio = int(self.servicio.duracion.total_seconds() / 60)
         

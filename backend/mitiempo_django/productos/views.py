@@ -1,5 +1,6 @@
 # productos/views.py
 <<<<<<< HEAD
+<<<<<<< HEAD
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -48,55 +49,78 @@ class ProveedorViewSet(viewsets.ModelViewSet):
 =======
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+=======
+from rest_framework import viewsets, mixins, status
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated # Opcional: para proteger tu API
-from .models import Productos, Marca, Categoria, StockHistory
+from django.db import transaction
+from django.db.models import F, Q
+from .models import Marca, Categoria, Productos, StockHistory
 from .serializer import (
-    ProductosSerializer, 
-    MarcaSerializer, 
-    CategoriaSerializer,
-    StockAjusteSerializer
+    MarcaSerializer, CategoriaSerializer,
+    ProductosSerializer, ProductosCreateUpdateSerializer,
+    StockHistorySerializer
 )
 
 class MarcaViewSet(viewsets.ModelViewSet):
-    """API endpoint para Marcas."""
-    queryset = Marca.objects.all().order_by('nombre')
+    queryset = Marca.objects.all()
     serializer_class = MarcaSerializer
-    # permission_classes = [IsAuthenticated] # Descomenta para proteger
 
 class CategoriaViewSet(viewsets.ModelViewSet):
-    """API endpoint para Categorías."""
-    queryset = Categoria.objects.all().order_by('nombre')
+    queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    # permission_classes = [IsAuthenticated] # Descomenta para proteger
 
 class ProductosViewSet(viewsets.ModelViewSet):
-    """API endpoint para Productos."""
-    queryset = Productos.objects.all().order_by('nombre_prod')
-    serializer_class = ProductosSerializer
-    # permission_classes = [IsAuthenticated] # Descomenta para proteger
+    queryset = Productos.objects.select_related('marca', 'categoria').all()
+    filterset_fields = [
+        'marca', 'categoria', 'nombre_prod',
+        'stock_act_prod', 'stock_min_prod', 'precio_venta', 'reposicion_prod'
+    ]
 
-    @action(detail=True, methods=['post'], url_path='ajustar-stock')
-    def ajustar_stock(self, request, pk=None):
-        """
-        Acción personalizada para ajustar el stock de un producto.
-        Recibe: { "cantidad": -5, "razon": "Producto vencido" }
-        o:      { "cantidad": 10, "razon": "Inventario inicial" }
-        """
-        producto = self.get_object() # Obtiene el producto (ej: /api/productos/1/ajustar-stock/)
-        serializer = StockAjusteSerializer(data=request.data)
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ProductosCreateUpdateSerializer
+        return ProductosSerializer
 
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Alertas por bajo stock: devolver productos bajo mínimo
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        bajo_stock = request.query_params.get("bajo_stock")
+        if bajo_stock == "1":
+            queryset = queryset.filter(stock_act_prod__lte=F('stock_min_prod'))
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
-        cantidad = serializer.validated_data['cantidad']
-        razon = serializer.validated_data.get('razon', 'Ajuste manual')
-        
-        if cantidad == 0:
-            return Response(
-                {'error': 'La cantidad no puede ser cero.'}, 
-                status=status.HTTP_400_BAD_REQUEST
+class StockHistoryViewSet(viewsets.GenericViewSet,
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin):
+    queryset = StockHistory.objects.select_related("producto", "usuario").all()
+    serializer_class = StockHistorySerializer
+    filterset_fields = ["producto", "tipo_movimiento"]
+
+    # Registra un ajuste de stock manual
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        producto_id = data.get("producto")
+        tipo = data.get("tipo_movimiento", "AJUSTE")
+        cantidad = int(data.get("cantidad_movida", 0))
+        razon = data.get("razon", "")
+        usuario = request.user if request.user.is_authenticated else None
+        with transaction.atomic():
+            prod = Productos.objects.select_for_update().get(id_prod=producto_id)
+            stock_anterior = prod.stock_act_prod
+            prod.stock_act_prod += cantidad
+            prod.save(update_fields=["stock_act_prod"])
+            movimiento = StockHistory.objects.create(
+                producto=prod,
+                tipo_movimiento=tipo,
+                cantidad_movida=cantidad,
+                stock_anterior=stock_anterior,
+                stock_actual=prod.stock_act_prod,
+                razon=razon,
+                usuario=usuario
             )
+<<<<<<< HEAD
 
         stock_anterior = producto.stock_act_prod
         stock_actual = stock_anterior + cantidad
@@ -130,3 +154,7 @@ class ProductosViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 >>>>>>> 874e3164 (reestructuracion de archivos)
+=======
+        serializer = self.get_serializer(movimiento)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+>>>>>>> 67ec8a26 (Producto terminado (Creo))

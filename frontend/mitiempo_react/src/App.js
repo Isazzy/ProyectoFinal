@@ -22,8 +22,8 @@ import Servicios from "./pages/Servicios";
 
 // Cliente
 import BookingPage from "./components/Booking/BookingPage"; 
-import DashboardCliente from "./pages/Cliente/DashboardCliente";
-import PerfilCliente from "./pages/Cliente/PerfilCliente";
+import ProfilePage from "./components/Booking/ProfilePage";
+
 
 // Admin
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -32,8 +32,9 @@ import AgendaAdmin from "./pages/Admin/AgendaAdmin";
 import UsList from "./components/Usuarios/UsList";
 import UsForm from "./components/Usuarios/UsFrom";
 import ServiciosForm from "./components/Servicios/ServiciosForm";
-import ProductoList from "./components/Productos/ProductoList";
+import AdminProductos from "./pages/Admin/AdminProductos";
 import ProductoForm from "./components/Productos/ProductoForm";
+import StockHistoryPage from "./pages/Admin/StockHistoryPage";
 
 // Rutas protegidas
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
@@ -78,18 +79,11 @@ function Layout() {
           path="/perfil"
           element={
             <PrivateRoute roles={["cliente"]}>
-              <PerfilCliente />
+              <ProfilePage />
             </PrivateRoute>
           }
         />
-        <Route
-          path="/perfil_cliente"
-          element={
-            <PrivateRoute roles={["cliente"]}>
-              <DashboardCliente />
-            </PrivateRoute>
-          }
-        />
+        
 
         {/* RUTAS ADMIN */}
         <Route
@@ -108,9 +102,10 @@ function Layout() {
           <Route path="servicios" element={<AdminServicios />} />
           <Route path="servicios/create" element={<ServiciosForm />} />
           <Route path="servicios/edit/:id" element={<ServiciosForm />} />
-          <Route path="productos" element={<ProductoList />} />
+          <Route path="productos" element={<AdminProductos />} />
           <Route path="productos/create" element={<ProductoForm />} />
           <Route path="productos/edit/:id" element={<ProductoForm />} />
+          <Route path="stock-history" element={<StockHistoryPage />} />
         </Route>
       </Routes>
     </>

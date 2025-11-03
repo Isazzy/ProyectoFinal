@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/', include('turnos.urls')),
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     path('api/productos/', include('productos.urls')),
 =======
     path('api/', include('productos.urls')),
@@ -36,4 +37,8 @@ urlpatterns = [
     path('api/', include('compras.urls')),
     
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+    path('api/', include('productos.urls')),
+    
+>>>>>>> 67ec8a26 (Producto terminado (Creo))
 ]
