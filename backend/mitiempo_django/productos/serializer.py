@@ -1,23 +1,20 @@
 # productos/serializers.py
 from rest_framework import serializers
-from .models import Productos, StockHistory
+from .models import Productos, Proveedores, ProductosXProveedores, DetVentas, DetCompras
 
-class ProductosSerializer(serializers.ModelSerializer):
-    # The 'precio_venta' and 'precio_compra' fields will be serialized as strings 
-    # to maintain precision due to DecimalField
+class ProveedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Proveedores
+        fields = '__all__'
 
+class ProductoSerializer(serializers.ModelSerializer):
+    proveedor_ids = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True, source='proveedor_rel'
+    )
     class Meta:
         model = Productos
-        # Include all fields from your model
         fields = '__all__'
-        # Or list them explicitly:
-        # fields = ['id_prod', 'nombre_prod', 'precio_venta', 'precio_compra', 'stock_min_prod', 'stock_act_prod', 'reposicion_prod', 'stock_max_prod', 'tipo_prod']
 
-# productos/serializers.py (continúa)
-
-class StockHistorySerializer(serializers.ModelSerializer):
-    producto_nombre = serializers.ReadOnlyField(source='producto.nombre_prod')
-    
-    class Meta:
-        model = StockHistory
-        fields = '__all__'
+class ProductoStockAjusteSerializer(serializers.Serializer):
+    delta = serializers.IntegerField()  # positivo suma stock, negativo descuenta
+    motivo = serializers.CharField(required=False, allow_blank=True)

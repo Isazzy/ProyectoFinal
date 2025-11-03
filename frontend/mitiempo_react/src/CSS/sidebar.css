@@ -167,3 +167,34 @@
 .profile-menu button:hover {
   color: #fb5b5b;
 }
+
+/* sidebar.css (fragmento) */
+.sidebar .sidebar-menu a[data-tooltip],
+.sidebar .footer-link[data-tooltip] {
+  position: relative;
+}
+
+.sidebar.collapsed .sidebar-menu a[data-tooltip]:hover::after,
+.sidebar.collapsed .footer-link[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 48px; /* separa del ícono */
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  background: #111827;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* estado activo con NavLink */
+.sidebar .sidebar-menu a.active,
+.sidebar .footer-link.active {
+  background: #0ea5e9; /* ajusta a tu paleta */
+  color: #fff;
+}
