@@ -133,19 +133,11 @@ class TurnoServicio(models.Model):
 
     # --- MÉTODO SAVE ACTUALIZADO ---
     def save(self, *args, **kwargs):
-        """
-        Autocompleta la duración del servicio al guardar.
-        Si la duración es 0, None, o el default (30),
-        intenta obtener la duración *correcta* del modelo Servicio.
-        """
-        # Comprobamos 'hasattr' por si el servicio aún no está asignado
         if (not self.duracion_servicio or self.duracion_servicio == 30) and hasattr(self, 'servicio') and self.servicio:
-            
-            # Asumimos que tu modelo Servicio tiene 'duracion_minutos'
+
             if hasattr(self.servicio, 'duracion_minutos') and self.servicio.duracion_minutos > 0:
                  self.duracion_servicio = self.servicio.duracion_minutos
-            
-            # Fallback por si acaso el modelo Servicio usa 'duracion' (DurationField)
+
             elif hasattr(self.servicio, 'duracion') and self.servicio.duracion.total_seconds() > 0:
                  self.duracion_servicio = int(self.servicio.duracion.total_seconds() / 60)
         

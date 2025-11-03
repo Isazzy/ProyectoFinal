@@ -1,24 +1,33 @@
-// src/components/Turnos/TurnoFormAdmin.jsx
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import Modal from "../Common/Modal"; // 💡 1. Usa el Modal genérico
+import Modal from "../Common/Modal";
 import { getServicios } from "../../api/servicios";
-import { getTurnos, createTurno, updateTurno } from "../../api/turnos"; // 💡 2. API de Turnos
-import api from "../../api/axiosConfig"; // Para la API de usuarios
+// 1. Importamos la función correcta
+import { getTurnoById, createTurno, updateTurno } from "../../api/turnos"; 
+import api from "../../api/axiosConfig"; 
 
 const initialState = {
-  id_cli: "",
-  id_prof: "",
-  fecha_turno: "",
-  hora_turno: "", // Guardará HH:mm
+  cliente: "", 
+  fecha_turno: "", 
+  hora_turno: "", 
   observaciones: "",
-  id_servicios: [], // Array de IDs
+  servicios_ids: [], 
+};
+
+const getFechaFromISO = (iso) => iso.split("T")[0];
+
+const getHoraFromISO = (iso) => {
+  const dt = new Date(iso);
+  return dt.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
 };
 
 export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
   const [turnoData, setTurnoData] = useState(initialState);
   const [serviciosList, setServiciosList] = useState([]);
-  const [profesionalesList, setProfesionalesList] = useState([]);
   const [clientesList, setClientesList] = useState([]);
   
   const [loading, setLoading] = useState(true);
@@ -26,20 +35,17 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
   
   const isEditing = !!turnoIdToEdit;
 
-  // --- Carga de datos (tu lógica era excelente) ---
   useEffect(() => {
     const loadDropdownData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [servRes, profRes, cliRes] = await Promise.all([
+        const [servRes, cliRes] = await Promise.all([
           getServicios(),
-          api.get("/usuarios/empleados/"),
-          api.get("/usuarios/"), // Obtiene todos, filtraremos
+          api.get("/usuarios/"), 
         ]);
         
         setServiciosList(servRes.data.filter(s => s.activado));
-        setProfesionalesList(profRes.data);
         setClientesList(cliRes.data.filter(u => u.role === 'cliente'));
 
       } catch (err) {
@@ -53,24 +59,26 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
     loadDropdownData();
   }, [isEditing]);
 
-  // --- Carga del Turno Específico (si se edita) ---
+  
   useEffect(() => {
-    if (isEditing && profesionalesList.length > 0 && clientesList.length > 0) {
+    if (isEditing && clientesList.length > 0) {
       const loadTurno = async () => {
         try {
-          const res = await getTurnos(turnoIdToEdit); // Asumo que getTurnos(id) funciona
-          const data = res.data;
+          // 2. Usamos la función correcta
+          const res = await getTurnoById(turnoIdToEdit); 
+          const data = res.data; 
 
-          const horaFormateada = data.hora_turno.substring(0, 5);
-          const idsServiciosActuales = data.servicios.map(s => s.servicio.id_serv);
+          const fecha = getFechaFromISO(data.fecha_hora_inicio);
+          const hora = getHoraFromISO(data.fecha_hora_inicio);
+
+          const idsServiciosActuales = data.servicios_asignados.map(s => s.servicio.id_serv);
 
           setTurnoData({
-            id_cli: String(data.id_cli), 
-            id_prof: String(data.id_prof),
-            fecha_turno: data.fecha_turno,
-            hora_turno: horaFormateada,
+            cliente: String(data.cliente), 
+            fecha_turno: fecha,
+            hora_turno: hora,
             observaciones: data.observaciones || "",
-            id_servicios: idsServiciosActuales,
+            servicios_ids: idsServiciosActuales,
           });
 
         } catch (err) {
@@ -81,9 +89,9 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
       };
       loadTurno();
     }
-  }, [isEditing, turnoIdToEdit, profesionalesList, clientesList]);
+  }, [isEditing, turnoIdToEdit, clientesList]);
 
-  // --- Handlers (tu lógica era perfecta) ---
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setTurnoData(prev => ({ ...prev, [name]: value }));
@@ -93,31 +101,35 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
     const { value, checked } = e.target;
     const servicioId = parseInt(value);
     setTurnoData(prev => {
-      let currentServicios = [...prev.id_servicios];
+      let currentServicios = [...prev.servicios_ids];
       if (checked) {
         currentServicios.push(servicioId);
       } else {
         currentServicios = currentServicios.filter(id => id !== servicioId);
       }
-      return { ...prev, id_servicios: currentServicios.sort((a, b) => a - b) };
+      return { ...prev, servicios_ids: currentServicios.sort((a, b) => a - b) };
     });
   };
 
-  // --- Submit ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null); 
 
-    if (!turnoData.id_cli || !turnoData.id_prof || !turnoData.fecha_turno || !turnoData.hora_turno || turnoData.id_servicios.length === 0) {
-      setError("Cliente, Profesional, Servicios, Fecha y Hora son obligatorios.");
+    if (!turnoData.cliente || !turnoData.fecha_turno || !turnoData.hora_turno || turnoData.servicios_ids.length === 0) {
+      setError("Cliente, Servicios, Fecha y Hora son obligatorios.");
       return;
     }
 
     setLoading(true);
+
+    const localDateTimeString = `${turnoData.fecha_turno}T${turnoData.hora_turno}:00`;
+    const fechaHoraInicio = new Date(localDateTimeString).toISOString();
+
     const payload = {
-      ...turnoData,
-      id_cli: parseInt(turnoData.id_cli),
-      id_prof: parseInt(turnoData.id_prof),
+      cliente: parseInt(turnoData.cliente), 
+      fecha_hora_inicio: fechaHoraInicio, 
+      observaciones: turnoData.observaciones,
+      servicios_ids: turnoData.servicios_ids, 
     };
 
     try {
@@ -128,11 +140,13 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
         await createTurno(payload);
         toast.success("Turno creado");
       }
-      onClose(true); // Cierra modal y refresca agenda
+      onClose(true); 
 
     } catch (err) {
       const apiError = err.response?.data;
-      if (apiError?.hora_turno) setError(`Horario: ${apiError.hora_turno[0]}`);
+      if (apiError?.fecha_hora_inicio) setError(`Horario: ${apiError.fecha_hora_inicio[0]}`);
+      else if (apiError?.cliente) setError(`Cliente: ${apiError.cliente[0]}`);
+      else if (apiError?.servicios_ids) setError(`Servicios: ${apiError.servicios_ids[0]}`);
       else if (apiError?.detail) setError(`Error: ${apiError.detail}`);
       else setError("Error de validación. Revisa los campos.");
       toast.error("Error al guardar.");
@@ -141,7 +155,7 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
     }
   };
 
-  // --- Renderizado del Modal ---
+  
   return (
     <Modal
       isOpen={true}
@@ -161,30 +175,18 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
       {loading ? (
         <p>Cargando datos...</p>
       ) : (
-        // 💡 3. Formulario con clases globales
+    
         <form id="turno-form-admin" onSubmit={handleSubmit} className="form-container-modal">
           
           {error && <p className="message error">{error}</p>}
 
           <div className="form-group">
-            <label htmlFor="id_cli">Cliente:</label>
-            <select id="id_cli" name="id_cli" value={turnoData.id_cli} onChange={handleChange} required className="form-select">
+            <label htmlFor="cliente">Cliente:</label>
+            <select id="cliente" name="cliente" value={turnoData.cliente} onChange={handleChange} required className="form-select">
               <option value="" disabled>Seleccionar Cliente...</option>
               {clientesList.map(cli => (
                 <option key={cli.id} value={cli.id}>
                   {cli.first_name} {cli.last_name} ({cli.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="id_prof">Profesional:</label>
-            <select id="id_prof" name="id_prof" value={turnoData.id_prof} onChange={handleChange} required className="form-select">
-              <option value="" disabled>Seleccionar Profesional...</option>
-              {profesionalesList.map(prof => (
-                <option key={prof.id} value={prof.id}>
-                  {prof.first_name} {prof.last_name} ({prof.rol_profesional})
                 </option>
               ))}
             </select>
@@ -209,7 +211,7 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
                   <input 
                     type="checkbox"
                     value={s.id_serv}
-                    checked={turnoData.id_servicios.includes(s.id_serv)}
+                    checked={turnoData.servicios_ids.includes(s.id_serv)}
                     onChange={handleServicioChange}
                   />
                   {s.nombre_serv} ({s.duracion_minutos} min)
@@ -230,7 +232,7 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
         </form>
       )}
       
-      {/* 💡 4. CSS local para el formulario */}
+      
       <style>{`
         .form-grid-2 {
           display: grid;

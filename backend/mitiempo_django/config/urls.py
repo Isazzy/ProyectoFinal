@@ -27,5 +27,6 @@ urlpatterns = [
     # API de Turnos
     path('api/', include('turnos.urls')),
 
-    path('api/productos/', include('productos.urls')),
+    path('api/', include('productos.urls')),
+    
 ]

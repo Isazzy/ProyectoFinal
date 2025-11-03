@@ -1,105 +1,102 @@
-// src/pages/Admin/AgendaAdmin.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction'; // Para clicks
+import interactionPlugin from '@fullcalendar/interaction';
 import toast from 'react-hot-toast';
 
 import { getTurnos, deleteTurno, updateTurno } from '../../api/turnos';
 import Modal from '../../components/Common/Modal';
-import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; // Componente de solo lectura
-import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin'; // Formulario de Cread/Edición
+import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; 
+import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin'; 
 
-// --- Estilos CSS (integrados al final del archivo) ---
 import "../../CSS/AdminAgenda.css"; 
-// ----------------------------------------------------
+
+const ESTADO_COLORS = {
+  'pendiente': '#f0ad4e', 
+  'confirmado': '#5cb85c', 
+  'completado': '#5bc0de', 
+  'cancelado': '#d9534f',  
+};
 
 export default function AgendaAdmin() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const calendarRef = useRef(null);
 
-  // --- Estado de Modales ---
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   
-  const [selectedTurno, setSelectedTurno] = useState(null); // Objeto de turno completo
-  const [selectedTurnoId, setSelectedTurnoId] = useState(null); // Solo ID
+  const [selectedTurno, setSelectedTurno] = useState(null); 
+  const [selectedTurnoId, setSelectedTurnoId] = useState(null); 
   
-  // --- Carga inicial de turnos ---
   useEffect(() => {
     loadTurnos();
   }, []);
 
   const loadTurnos = () => {
     setLoading(true);
-    getTurnos() // El backend ya filtra por rol (admin/empleado)
+    getTurnos() 
       .then(response => {
-        // Tu serializer de Django ya prepara los datos para FullCalendar
+        
         const calendarEvents = response.data.map(turno => ({
-          ...turno,
-          id: turno.id_turno, // FullCalendar usa 'id'
+          id: turno.id_turno, // <- Corregido para usar id_turno
+          title: turno.cliente_nombre, 
+          start: turno.fecha_hora_inicio, 
+          end: turno.fecha_hora_fin, 
+          backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
+          borderColor: ESTADO_COLORS[turno.estado] || '#777',
+          extendedProps: { ...turno } 
         }));
+        
         setEvents(calendarEvents);
       })
       .catch(err => toast.error("Error al cargar la agenda."))
       .finally(() => setLoading(false));
   };
 
-  // --- Handlers de Interacción del Calendario ---
-
-  // Al hacer clic en un evento (turno) existente
   const handleEventClick = (clickInfo) => {
-    const turnoId = clickInfo.event.id;
-    const turnoCompleto = events.find(e => e.id_turno == turnoId);
+    const turnoCompleto = clickInfo.event.extendedProps;
     
     if (turnoCompleto) {
       setSelectedTurno(turnoCompleto);
-      setViewModalOpen(true); // Abre el modal de VISTA
+      setViewModalOpen(true); 
     }
   };
 
-  // Al hacer clic en un día vacío
   const handleDateClick = (arg) => {
-    setSelectedTurnoId(null); // Modo "Crear"
-    setFormModalOpen(true); // Abre el modal de FORMULARIO
-    // Opcional: pasar la fecha
-    // setInitialDate(arg.dateStr); 
+    setSelectedTurnoId(null); 
+    setFormModalOpen(true); 
   };
   
-  // --- Handlers de Acciones del Modal ---
-
   const handleCloseViewModal = () => {
     setViewModalOpen(false);
     setSelectedTurno(null);
   };
   
-  // Cierra el formulario (el form llama a esto con 'true' si guardó)
   const handleCloseFormModal = (didSave = false) => {
     setFormModalOpen(false);
     setSelectedTurnoId(null);
     if (didSave) {
-      loadTurnos(); // Recarga la agenda si se guardó
+      loadTurnos(); 
     }
   };
 
-  // Cuando el modal de VISTA presiona "Editar"
   const handleEditFromView = () => {
-    setSelectedTurnoId(selectedTurno.id_turno); // Pasa el ID al formulario
-    setViewModalOpen(false); // Cierra modal de vista
-    setFormModalOpen(true); // Abre modal de formulario
+    setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+    setViewModalOpen(false); 
+    setFormModalOpen(true); 
   };
 
-  // Cuando el modal de VISTA presiona "Confirmar" o "Cancelar"
   const handleUpdateStatus = async (nuevoEstado) => {
     if (!selectedTurno) return;
     setLoading(true);
+    
     try {
-      await updateTurno(selectedTurno.id_turno, { estado_turno: nuevoEstado });
+      await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado }); // <- Corregido para usar id_turno
       toast.success(`Turno ${nuevoEstado}`);
-      loadTurnos(); // Recarga
+      loadTurnos(); 
     } catch (err) {
       toast.error("Error al actualizar estado.");
     } finally {
@@ -108,11 +105,10 @@ export default function AgendaAdmin() {
     }
   };
 
-  // Cuando el modal de VISTA presiona "Eliminar"
   const handleDeleteRequest = () => {
-    setSelectedTurnoId(selectedTurno.id_turno); // Guarda el ID a borrar
-    setViewModalOpen(false); // Cierra modal de vista
-    setDeleteModalOpen(true); // Abre modal de confirmación
+    setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+    setViewModalOpen(false); 
+    setDeleteModalOpen(true); 
   };
   
   const handleDeleteConfirm = async () => {
@@ -139,20 +135,20 @@ export default function AgendaAdmin() {
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek" // Vista semanal
+          initialView="timeGridWeek" 
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
           }}
-          events={events}
-          eventClick={handleEventClick} // Abrir modal de vista
-          dateClick={handleDateClick} // Abrir modal de creación
-          editable={false} // Deshabilitamos drag-and-drop
+          events={events} 
+          eventClick={handleEventClick} 
+          dateClick={handleDateClick} 
+          editable={false} 
           selectable={true}
           allDaySlot={false}
-          slotMinTime="08:00:00"
-          slotMaxTime="20:00:00"
+          slotMinTime="08:00:00" 
+          slotMaxTime="20:00:00" 
           locale="es"
           buttonText={{
             today: 'Hoy',
@@ -160,16 +156,13 @@ export default function AgendaAdmin() {
             week: 'Semana',
             day: 'Día',
           }}
-          height="auto" // Ajusta altura al contenedor
+          height="auto" 
         />
       </div>
 
-      {/* --- Modales --- */}
-
-      {/* Modal de Vista (Solo Lectura) */}
       {viewModalOpen && (
         <TurnoDetailModal
-          turno={selectedTurno}
+          turno={selectedTurno} 
           onClose={handleCloseViewModal}
           onEdit={handleEditFromView}
           onDelete={handleDeleteRequest}
@@ -178,7 +171,6 @@ export default function AgendaAdmin() {
         />
       )}
       
-      {/* Modal de Formulario (Crear/Editar) */}
       {formModalOpen && (
         <TurnoFormAdmin
           turnoIdToEdit={selectedTurnoId}
@@ -186,7 +178,6 @@ export default function AgendaAdmin() {
         />
       )}
       
-      {/* Modal de Confirmar Eliminación */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

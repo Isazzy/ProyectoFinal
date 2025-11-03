@@ -1,6 +1,5 @@
-// src/components/Turnos/TurnoDetailModal.jsx
 import React from 'react';
-import Modal from '../Common/Modal'; // 💡 Usa el Modal genérico
+import Modal from '../Common/Modal';
 
 // Función auxiliar
 const formatDuration = (minutes) => {
@@ -15,8 +14,8 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
 
   if (!turno) return null;
 
-  const duracionTotalMinutos = turno.servicios?.reduce((total, s) => 
-    total + (s.servicio?.duracion_minutos || 0), 0) || 0;
+  // La duración ya viene calculada por el backend
+  const duracionTotalMinutos = turno.duracion_total_minutos || 0;
 
   return (
     <Modal 
@@ -26,7 +25,7 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
       footer={
         <div className="modal-footer-admin">
           <button 
-            className="btn btn-danger-text" // Botón de texto rojo
+            className="btn btn-danger-text" 
             onClick={onDelete} 
             disabled={loading}
           >
@@ -43,23 +42,22 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
         </div>
       }
     >
-      {/* 💡 Contenido del modal con estilos del tema oscuro */}
       <div className="turno-detalle-info">
-        <p><strong>Cliente:</strong> {turno.cliente || "No asignado"}</p>
-        <p><strong>Profesional:</strong> {turno.profesional || "No asignado"}</p>
-        <p><strong>Fecha:</strong> {new Date(turno.start).toLocaleDateString('es-AR')}</p>
-        <p><strong>Hora Inicio:</strong> {new Date(turno.start).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</p>
-        <p><strong>Hora Fin:</strong> {new Date(turno.end).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</p>
+        <p><strong>Cliente:</strong> {turno.cliente_nombre || "No asignado"}</p>
+        {/* El campo 'profesional' ya no existe en este modal */}
+        <p><strong>Fecha:</strong> {new Date(turno.fecha_hora_inicio).toLocaleDateString('es-AR')}</p>
+        <p><strong>Hora Inicio:</strong> {new Date(turno.fecha_hora_inicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</p>
+        <p><strong>Hora Fin:</strong> {new Date(turno.fecha_hora_fin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</p>
         <p><strong>Duración:</strong> {formatDuration(duracionTotalMinutos)}</p>
         <p><strong>Estado:</strong> 
-          <span className={`badge estado-${turno.estado_turno}`}>
-            {turno.estado_turno}
+          <span className={`badge estado-${turno.estado}`}>
+            {turno.estado}
           </span>
         </p>
 
         {/* Botones de cambio de estado rápido */}
         <div className="estado-actions">
-          {turno.estado_turno === 'pendiente' && (
+          {turno.estado === 'pendiente' && (
             <button 
               onClick={() => onUpdateStatus('confirmado')} 
               disabled={loading}
@@ -68,7 +66,7 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
               Confirmar Turno
             </button>
           )}
-          {turno.estado_turno === 'confirmado' && (
+          {turno.estado === 'confirmado' && (
              <button 
                 onClick={() => onUpdateStatus('completado')} 
                 disabled={loading}
@@ -77,7 +75,7 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
                 Marcar Completado
             </button>
           )}
-          {turno.estado_turno !== 'cancelado' && (
+          {turno.estado !== 'cancelado' && (
              <button 
                 onClick={() => onUpdateStatus('cancelado')} 
                 disabled={loading}
@@ -89,12 +87,13 @@ export default function TurnoDetailModal({ turno, onClose, onEdit, onDelete, onU
         </div>
         
         <h4>Servicios Incluidos:</h4>
-        {turno.servicios && turno.servicios.length > 0 ? (
+        {turno.servicios_asignados && turno.servicios_asignados.length > 0 ? (
           <ul>
-            {turno.servicios.map((item) => (
-              <li key={item.id_turno_servicio}>
+            {turno.servicios_asignados.map((item) => (
+              <li key={item.servicio.id_serv}>
                 {item.servicio?.nombre_serv || 'Servicio Desconocido'} 
                 (${item.servicio?.precio_serv || 'N/A'})
+                - ({item.duracion_servicio} min)
               </li>
             ))}
           </ul>

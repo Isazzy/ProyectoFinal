@@ -13,8 +13,7 @@ api.interceptors.request.use(
     const isPublic =
       config.method === "get" &&
       (config.url.startsWith("/servicios") || 
-       // --- CORRECCIÓN AQUÍ ---
-       // Tu service llama a "/horarios_disponibles/", no "/turnos/horarios_disponibles/"
+      
        config.url.startsWith("/horarios_disponibles"));
 
     if (isPublic) {
@@ -41,22 +40,22 @@ api.interceptors.response.use(
     // 401 y no es un reintento
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refresh"); // Usamos 'refresh'
+      const refreshToken = localStorage.getItem("refresh"); 
 
       if (refreshToken) {
         try {
-          // Llamada directa a axios, NO a 'api' para evitar bucle de interceptor
+          
           const res = await axios.post(`${BASE_API_URL}/token/refresh/`, {
             refresh: refreshToken,
           });
 
           const newAccess = res.data.access;
-          localStorage.setItem("access", newAccess); // Guardamos el nuevo 'access'
+          localStorage.setItem("access", newAccess);
 
           originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-          return api(originalRequest); // Reintentamos la llamada original con la instancia 'api'
+          return api(originalRequest); 
         } catch {
-          // Si el refresh token falla (expiró, etc.)
+    
           localStorage.clear();
           window.location.href = "/login";
         }

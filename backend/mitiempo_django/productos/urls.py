@@ -1,18 +1,23 @@
-# productos/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductosViewSet, MarcaViewSet, CategoriaViewSet
+from .views import (
+    ProductosViewSet, 
+    MarcaViewSet, 
+    CategoriaViewSet, 
+    StockHistoryViewSet
+)
 
-# Creamos un router de DRF
 router = DefaultRouter()
 
-# Registramos nuestras vistas. DRF crea las URLs automáticamente
-# ej: /productos/, /productos/1/, /marcas/, /categorias/
-router.register(r'', ProductosViewSet, basename='producto')
-router.register(r'marcas', MarcaViewSet, basename='marca')
-router.register(r'categorias', CategoriaViewSet, basename='categoria')
+# --- CAMBIO ---
+# Rutas registradas correctamente con sus nombres base
+router.register(r'productos', ProductosViewSet, basename='productos')
+router.register(r'marcas', MarcaViewSet, basename='marcas')
+router.register(r'categorias', CategoriaViewSet, basename='categorias')
+# --- CAMBIO (AÑADIDO) ---
+# Registro del ViewSet de historial de stock
+router.register(r'stockhistory', StockHistoryViewSet, basename='stockhistory')
 
-# Las URLs de la API son generadas por el router
 urlpatterns = [
     path('', include(router.urls)),
 ]
