@@ -155,14 +155,18 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
 <<<<<<< HEAD
+<<<<<<< HEAD
         'NAME':'mitiem',
 =======
         'NAME':'mitiempo',
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+        'NAME':'mitiem',
+>>>>>>> d8b7e6dc (Arreglé horarios de turnos-cliente)
         'USER': 'root',
-        'PASSWORD' : 'root',
+        'PASSWORD' : 'mx525',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '3307',
         
     }
 }
