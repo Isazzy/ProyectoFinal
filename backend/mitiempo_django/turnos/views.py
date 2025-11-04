@@ -9,7 +9,7 @@ from .serializers import TurnoSerializer
 from servicio.models import Servicio
 
 
-# --- Función auxiliar para obtener día de la semana en español ---
+# --- Función auxiliar ---
 def get_dia_semana_es(fecha):
     dias = {
         'Monday': 'lunes', 'Tuesday': 'martes', 'Wednesday': 'miercoles',
@@ -21,7 +21,7 @@ def get_dia_semana_es(fecha):
 
 # --- API: horarios disponibles ---
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def horarios_disponibles(request):
     fecha_str = request.query_params.get('fecha')
     servicios_ids_str = request.query_params.get('servicios_ids')
@@ -32,7 +32,7 @@ def horarios_disponibles(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # --- Parseo de fecha y servicios ---
+    # --- Parseo ---
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
         servicios_ids = [int(sid) for sid in servicios_ids_str.split(',') if sid]
@@ -43,53 +43,34 @@ def horarios_disponibles(request):
 
     dia_semana_str = get_dia_semana_es(fecha)
 
-    # --- Validar servicios y calcular duración total ---
+    # --- Servicios ---
     try:
         servicios = Servicio.objects.filter(pk__in=servicios_ids, activado=True)
         if not servicios.exists():
             return Response({'error': 'Ninguno de los servicios solicitados fue encontrado.'}, status=status.HTTP_404_NOT_FOUND)
-        
-        duracion_total_minutos = 0
-        for s in servicios:
-            dias_servicio = [dia.lower().strip() for dia in s.dias_disponibles]
-            if dia_semana_str not in dias_servicio:
-                return Response({
-                    'disponibilidad': [],
-                    'mensaje': f'El servicio "{s.nombre_serv}" no se ofrece los días {dia_semana_str}.'
-                }, status=status.HTTP_200_OK)
-
-            duracion_total_minutos += getattr(s, 'duracion_minutos', 30)
-
-        if duracion_total_minutos <= 0:
-            duracion_total_minutos = 30
-
-        duracion_necesaria = timedelta(minutes=duracion_total_minutos)
-        
+        duracion_total_minutos = sum(getattr(s, 'duracion_minutos', 30) for s in servicios)
+        duracion_necesaria = timedelta(minutes=duracion_total_minutos or 30)
     except Exception as e:
         return Response({'error': f'Error al calcular duración: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- Configuración del local ---
+    # --- Configuración local ---
     try:
         config = ConfiguracionLocal.objects.first()
         if not config:
             raise ConfiguracionLocal.DoesNotExist
-
-        dias_abiertos = [dia.lower().strip() for dia in config.dias_abiertos]
+        dias_abiertos = [d.lower().strip() for d in config.dias_abiertos]
         if dia_semana_str not in dias_abiertos:
             return Response({'disponibilidad': [], 'mensaje': f'El local está cerrado los días {dia_semana_str}.'})
-
         tz = timezone.get_current_timezone()
         inicio_jornada = datetime.combine(fecha, config.hora_apertura).replace(tzinfo=tz)
         fin_jornada = datetime.combine(fecha, config.hora_cierre).replace(tzinfo=tz)
-
         INTERVALO_PASO = timedelta(minutes=config.tiempo_intervalo or 30)
-
     except ConfiguracionLocal.DoesNotExist:
         return Response({'error': 'No se ha configurado el horario del local.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': f'Error al procesar horario laboral: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # --- Obtener turnos ocupados ---
+    # --- Turnos ocupados ---
     try:
         turnos_ocupados_qs = Turno.objects.filter(
             fecha_hora_inicio__date=fecha,
@@ -99,52 +80,35 @@ def horarios_disponibles(request):
         bloqueos = []
         for t in turnos_ocupados_qs:
             inicio = t.fecha_hora_inicio
-            # Calcular duración del turno sumando duración de servicios asignados
-            duracion_total_minutos_turno = sum(
-                getattr(sa.servicio, 'duracion_minutos', 30) for sa in t.servicios_asignados.all()
+            duracion_total_turno = timedelta(
+                minutes=sum(getattr(sa.servicio, 'duracion_minutos', 30) for sa in t.servicios_asignados.all())
             )
-            duracion_total_turno = timedelta(minutes=duracion_total_minutos_turno)
-            fin = inicio + duracion_total_turno if inicio else None
-
-            if inicio and fin:
-                if timezone.is_naive(inicio):
-                    inicio = inicio.replace(tzinfo=tz)
-                if timezone.is_naive(fin):
-                    fin = fin.replace(tzinfo=tz)
-                bloqueos.append((inicio, fin))
+            fin = inicio + duracion_total_turno
+            if timezone.is_naive(inicio):
+                inicio = inicio.replace(tzinfo=tz)
+            if timezone.is_naive(fin):
+                fin = fin.replace(tzinfo=tz)
+            bloqueos.append((inicio, fin))
     except Exception as e:
         return Response({'error': f'Error al obtener turnos ocupados: {e}'}, status=500)
 
-    # --- Generar slots disponibles ---
+    # --- Slots disponibles ---
     try:
         slots_disponibles = []
-        slot_potencial = inicio_jornada
-        ahora = timezone.now()
-        if slot_potencial < ahora:
-            slot_potencial = ahora.replace(second=0, microsecond=0)
-            # Redondear al próximo intervalo
-            minutos_sobrantes = slot_potencial.minute % (INTERVALO_PASO.total_seconds() / 60)
-            if minutos_sobrantes > 0:
-                slot_potencial += (INTERVALO_PASO - timedelta(minutes=minutos_sobrantes))
+        slot_potencial = max(datetime.now(tz), inicio_jornada)
 
-        # Revisar bloqueos
         for inicio_bloqueo, fin_bloqueo in bloqueos:
             while slot_potencial + duracion_necesaria <= inicio_bloqueo:
                 slots_disponibles.append(slot_potencial.strftime('%H:%M'))
                 slot_potencial += INTERVALO_PASO
             slot_potencial = max(slot_potencial, fin_bloqueo)
 
-        # Agregar slots después del último turno
         while slot_potencial + duracion_necesaria <= fin_jornada:
             slots_disponibles.append(slot_potencial.strftime('%H:%M'))
             slot_potencial += INTERVALO_PASO
 
         mensaje = "" if slots_disponibles else "No hay horarios disponibles."
-
-        return Response({
-            'disponibilidad': slots_disponibles,
-            'mensaje': mensaje
-        })
+        return Response({'disponibilidad': slots_disponibles, 'mensaje': mensaje})
 
     except Exception as e:
         return Response({'error': f'Error al generar horarios: {e}'}, status=500)
@@ -159,9 +123,14 @@ class TurnosViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         qs = Turno.objects.all().select_related('cliente').prefetch_related('servicios_asignados__servicio')
-        if getattr(user, 'role', '') == 'cliente':
+        role = getattr(user, 'role', '').lower()
+
+        if role == 'cliente':
             return qs.filter(cliente=user)
-        if user.is_staff or user.is_superuser:
+        elif role == 'empleado':
+            # Empleado puede ver todos los turnos (pendientes, confirmados, cancelados)
+            return qs
+        elif role == 'admin':
             return qs
         return qs.none()
 
