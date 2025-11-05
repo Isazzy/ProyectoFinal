@@ -1,11 +1,11 @@
+// src/components/Header/Header.jsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../CSS/header.css";
+import "../CSS/header.css"; // Usaremos el nuevo CSS de abajo
 
 export default function Header() {
   const navigate = useNavigate();
 
-  
   const token = localStorage.getItem("access");
   const userData = localStorage.getItem("user");
   const user = userData ? JSON.parse(userData) : null;
@@ -28,13 +28,13 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/nosotros");
+    navigate("/nosotros"); // Redirige a inicio tras cerrar sesión
   };
 
   return (
     <header className="header">
       <div className="header-container">
-        {/* Logo */}
+        {/* Logo (Usará 'Great Vibes' desde CSS) */}
         <Link to="/" className="logo">
           Romina Magallanez
         </Link>
@@ -47,17 +47,29 @@ export default function Header() {
             Turnos
           </button>
 
-          {/* Autenticación */}
+          {/* --- CORRECCIÓN DE JSX AQUÍ ---
+              Quitamos los <div> anidados y usamos React.Fragment (<>) 
+              para agrupar los links condicionales. 
+          */}
           {!token ? (
-            <div className="nav-links">
-              <Link to="/login">Ingresar</Link>
-              <Link to="/register">Registrarse</Link>
-            </div>
+            <>
+              <Link to="/login" className="btn btn-secondary btn-small">
+                Ingresar
+              </Link>
+              <Link to="/register" className="btn btn-primary btn-small">
+                Registrarse
+              </Link>
+            </>
           ) : (
-            <div className="nav-links">
-              <Link onClick={handlePerfilClick}>Mi perfil</Link>
-              <Link onClick={handleLogout}>Cerrar sesión</Link>
-            </div>
+            <>
+              <button onClick={handlePerfilClick} className="link-btn">
+                Mi perfil
+              </button>
+              {/* Es mejor usar un <button> para acciones como logout */}
+              <button onClick={handleLogout} className="link-btn link-danger">
+                Cerrar sesión
+              </button>
+            </>
           )}
         </nav>
       </div>

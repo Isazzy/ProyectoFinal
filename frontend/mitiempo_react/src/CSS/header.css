@@ -1,63 +1,101 @@
+/* src/CSS/header.css */
+
 .header {
-  background-color: #111;
-  color: #fff;
-  padding: 12px 30px;
+  /* Fondo blanco, elevado con sombra suave */
+  background-color: var(--color-bg-card);
+  padding: 16px 40px; /* Más padding vertical */
+  box-shadow: var(--shadow-soft);
+  border-bottom: 1px solid var(--color-border);
+  
+  /* Opcional: para que se quede fijo al hacer scroll */
+  position: sticky; 
+  top: 0;
+  z-index: 100;
 }
 
 .header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: 1200px; /* Para alinear con .app-container */
+  margin: 0 auto;
 }
 
+/* 1. El Logo (¡Importante!) */
 .logo {
-  font-size: 1.5rem;
-  color: #fff;
+  font-family: var(--font-brand); /* ¡Usamos 'Great Vibes'! */
+  font-size: 2.25rem;
+  font-weight: 400;
+  color: var(--color-text-dark);
   text-decoration: none;
-  font-weight: bold;
+  padding-bottom: 5px; /* Ajuste visual de la fuente */
 }
 
+/* 2. Contenedor de Links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px; /* Más espacio entre links */
 }
 
+/* 3. Estilo de Links y Botones-Links */
 .nav-links a,
 .link-btn {
-  color: #fff;
+  font-family: var(--font-body); /* 'Poppins' */
+  font-size: 1rem;
+  font-weight: 500; /* Medium */
+  color: var(--color-text-secondary); /* Gris sutil */
   text-decoration: none;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  padding: 8px 4px; /* Espacio para la animación */
+  position: relative; /* Para la animación de borde inferior */
+  transition: color var(--transition-speed);
+}
+
+/* 4. Animación de Hover (Línea elegante) */
+.nav-links a::after,
+.link-btn::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-primary); /* Usa el color protagonista */
+  transition: width 0.3s ease;
 }
 
 .nav-links a:hover,
 .link-btn:hover {
-  color: #00c3ff;
+  color: var(--color-text-dark); /* Texto más oscuro al pasar */
 }
 
-.btn-login {
-  background-color: #141414;
-  padding: 6px 14px;
-  border-radius: 1px;
-  font-weight: 600;
+.nav-links a:hover::after,
+.link-btn:hover::after {
+  width: 100%; /* Expande la línea al pasar el mouse */
 }
 
-.btn-login:hover {
-  background-color: #009bd4;
+/* 5. Modificadores para Botones de CTA */
+
+/* Clase para hacer los botones de App.css más pequeños */
+.btn-small {
+  padding: 8px 20px !important;
+  font-size: 0.9rem !important;
 }
 
-.btn-logout {
-  background-color: #e63946;
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+/* Clase para el botón "Cerrar Sesión" (sutil pero rojo) */
+.link-danger {
+  color: var(--color-danger); /* Variable de App.css */
 }
 
-.btn-logout:hover {
-  background-color: #c92c3b;
+.link-danger:hover {
+  color: var(--color-danger); /* Mantiene el color en hover */
+}
+
+/* La línea de animación también será roja */
+.link-danger::after {
+   background-color: var(--color-danger);
 }

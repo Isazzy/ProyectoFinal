@@ -1,11 +1,13 @@
+// src/components/Login/Login.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Necesitas: npm install react-icons
-import { useAuth } from "../../Context/AuthContext"; // Importa el hook de Auth
-import api from "../../api/axiosConfig"; // Importa tu instancia de API
-import "../../CSS/Login.css"; // Usa el CSS que te proporcioné
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
+import { useAuth } from "../../Context/AuthContext"; 
+import api from "../../api/axiosConfig"; 
+// 💡 Importamos el CSS rediseñado
+import "../../CSS/Login.css"; 
 import fondo from "../../imagenes/fondo.png";
-import ForgotPasswordModal from "./ForgotPasswordModal"; // Dependencia del modal
+import ForgotPasswordModal from "./ForgotPasswordModal"; 
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,11 +20,10 @@ export default function Login() {
   
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  // Obtiene la función 'login' del contexto
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Efecto para "Recordar Usuario"
+  // --- Lógica (sin cambios, es correcta) ---
   useEffect(() => {
     const rememberedEmail = localStorage.getItem("rememberedUser");
     if (rememberedEmail) {
@@ -32,10 +33,9 @@ export default function Login() {
   }, []);
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Previene el refresh del formulario
+    e.preventDefault(); 
     setError("");
 
-    // Validación de campos vacíos
     if (!email || !password) {
       setError("Por favor ingresa correo y contraseña");
       return;
@@ -43,28 +43,20 @@ export default function Login() {
 
     setLoading(true);
     try {
-      
-      // --- ¡CORRECCIÓN CRÍTICA! ---
-      // Tu backend espera 'email' porque USERNAME_FIELD = 'email'
       const response = await api.post("/login/", {
-        email: email, // <-- Envía 'email'
+        email: email, 
         password: password,
       });
-      // -----------------------------
       
       const data = response.data;
 
-      // Valida que el token exista en la respuesta
       if (!data.access) {
         console.error("Respuesta exitosa de la API, pero no se recibió 'access token'.");
         throw new Error("Error inesperado al iniciar sesión.");
       }
 
-      // Llama a la función 'login' del AuthContext.
-      // Esta función se encará de decodificar, guardar y redirigir.
       login(data.access, data.refresh);
 
-      // Lógica de "Recordar Usuario"
       if (rememberMe) {
         localStorage.setItem("rememberedUser", email);
       } else {
@@ -72,7 +64,6 @@ export default function Login() {
       }
       
     } catch (err) {
-      // Captura errores 401 (Credenciales incorrectas)
       const errorMsg = err.response?.data?.detail || "Correo o contraseña incorrectos";
       setError(errorMsg);
     } finally {
@@ -87,6 +78,7 @@ export default function Login() {
           className="login-left"
           style={{ backgroundImage: `url(${fondo})` }}
         >
+          {/* 🎨 Título con la fuente 'Great Vibes' */}
           <h1>Romina Magallanez</h1>
           <p>ESTILISTA</p>
         </div>
@@ -95,8 +87,12 @@ export default function Login() {
           <form className="login-card" onSubmit={handleLogin}>
             <h2>Iniciar Sesión</h2>
             
-            {/* Mensaje de error amigable */}
-            {error && <p className="message error">{error}</p>}
+            {/* 💡 1. Mensaje de error actualizado */}
+            {error && (
+              <div className="alert alert-error" role="alert">
+                {error}
+              </div>
+            )}
 
             {/* Grupo de Email */}
             <div className="form-group">
@@ -107,6 +103,10 @@ export default function Login() {
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                // 💡 2. Clase de formulario global
+                className="form-input" 
+                required
+                autoFocus
               />
             </div>
 
@@ -120,8 +120,10 @@ export default function Login() {
                   placeholder="Tu contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  // 💡 2. Clase de formulario global
+                  className="form-input" 
+                  required
                 />
-                {/* Botón de Ver/Ocultar Contraseña */}
                 <button
                   type="button"
                   className="password-toggle-btn"
@@ -144,7 +146,6 @@ export default function Login() {
                 <label htmlFor="rememberMe">Recordar usuario</label>
               </div>
               
-              {/* Link para abrir el modal */}
               <button
                 type="button"
                 className="link-button"
@@ -154,7 +155,7 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Botón de Submit */}
+            {/* Botón de Submit (usa .btn y .btn-primary global) */}
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? "Ingresando..." : "Iniciar Sesión"}
             </button>
@@ -169,7 +170,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Renderiza el Modal */}
+      {/* Renderiza el Modal (ya estilizado) */}
       <ForgotPasswordModal
         isOpen={isForgotModalOpen}
         onClose={() => setIsForgotModalOpen(false)}

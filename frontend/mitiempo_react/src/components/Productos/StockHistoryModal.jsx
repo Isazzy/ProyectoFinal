@@ -1,7 +1,12 @@
+// src/components/Productos/StockHistoryModal.jsx
+//PUEDE SER QUE LO ELIMINE
 import React, { useState, useEffect } from 'react';
 import Modal from '../Common/Modal';
 import { getStockHistoryByProducto } from '../../api/productos';
 import toast from 'react-hot-toast';
+
+// 💡 1. Importamos el nuevo archivo CSS
+import '../../CSS/StockHistoryModal.css';
 
 export default function StockHistoryModal({ productoId, onClose }) {
   const [history, setHistory] = useState([]);
@@ -29,7 +34,9 @@ export default function StockHistoryModal({ productoId, onClose }) {
       {loading ? (
         <p>Cargando historial...</p>
       ) : (
-        <table className="styled-table" style={{ margin: 0 }}>
+        // 💡 2. Se elimina style={{ margin: 0 }} 
+        //    y se añade la clase 'history-table'
+        <table className="styled-table history-table">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -47,6 +54,7 @@ export default function StockHistoryModal({ productoId, onClose }) {
                 </td>
                 <td data-label="Tipo">{mov.tipo_movimiento}</td>
                 <td data-label="Cantidad" 
+                    // 💡 3. Estas clases ahora se definen en el CSS
                     className={mov.cantidad_movida > 0 ? 'stock-in' : 'stock-out'}>
                   {mov.cantidad_movida > 0 ? `+${mov.cantidad_movida}` : mov.cantidad_movida}
                 </td>
@@ -57,10 +65,7 @@ export default function StockHistoryModal({ productoId, onClose }) {
           </tbody>
         </table>
       )}
-      <style>{`
-        .stock-in { color: var(--success-color); font-weight: 600; }
-        .stock-out { color: var(--danger-color); font-weight: 600; }
-      `}</style>
+      {/* 💡 4. El bloque <style> se ha eliminado */}
     </Modal>
   );
 }

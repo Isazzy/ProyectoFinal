@@ -1,0 +1,20 @@
+/* src/CSS/DashboardAlerts.css */
+/* 🎨 Estilos para la alerta del dashboard */
+
+.dashboard-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  /* 🎨 Anulamos el borde izquierdo grueso de .alert
+     para un look más limpio en esta barra */
+  border-left-width: 1px; 
+  
+  /* 🎨 Damos un margen inferior estándar */
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-alert p {
+  margin: 0;
+  /* El color y font-weight se heredan de .alert */
+}

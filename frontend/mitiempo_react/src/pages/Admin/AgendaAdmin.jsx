@@ -1,11 +1,15 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 // src/pages/Admin/AgendaAdmin.jsx
 =======
 // front/src/pages/Admin/AgendaAdmin.jsx
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+// front/src/pages/Admin/AgendaAdmin.jsx
+>>>>>>> 632fee59 (Cambios)
 import React, { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -44,6 +48,7 @@ import "../../CSS/AdminAgenda.css";
 
 // 🎨 --- COLORES ACTUALIZADOS --- 
 // Colores más elegantes y alineados con el nuevo tema.
+<<<<<<< HEAD
 const ESTADO_COLORS = {
   'pendiente': '#f59e0b', // Ámbar (para advertencia)
   'confirmado': '#059669', // Verde (éxito)
@@ -53,11 +58,13 @@ const ESTADO_COLORS = {
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 
+=======
+>>>>>>> 632fee59 (Cambios)
 const ESTADO_COLORS = {
-  'pendiente': '#f0ad4e', 
-  'confirmado': '#5cb85c', 
-  'completado': '#5bc0de', 
-  'cancelado': '#d9534f',  
+  'pendiente': '#f59e0b', // Ámbar (para advertencia)
+  'confirmado': '#059669', // Verde (éxito)
+  'completado': '#3b82f6', // Azul (informativo)
+  'cancelado': '#777777',  // Gris (color secundario de texto)
 };
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
 
@@ -110,15 +117,21 @@ export default function AgendaAdmin() {
         
         const calendarEvents = response.data.map(turno => ({
           id: turno.id_turno,
+<<<<<<< HEAD
 =======
           id: turno.id_turno, // <- Corregido para usar id_turno
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+>>>>>>> 632fee59 (Cambios)
           title: turno.cliente_nombre, 
           start: turno.fecha_hora_inicio, 
           end: turno.fecha_hora_fin, 
           backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
           borderColor: ESTADO_COLORS[turno.estado] || '#777',
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 632fee59 (Cambios)
           textColor: '#ffffff', // 🎨 Aseguramos texto blanco en eventos
           extendedProps: { ...turno } 
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
@@ -135,6 +148,7 @@ export default function AgendaAdmin() {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // --- Handlers de Interacción del Calendario ---
 
   // Al hacer clic en un evento (turno) existente
@@ -148,6 +162,8 @@ export default function AgendaAdmin() {
 <<<<<<< HEAD
       setViewModalOpen(true); // Abre el modal de VISTA
 =======
+=======
+>>>>>>> 632fee59 (Cambios)
   // --- El resto de los manejadores (sin cambios) ---
 
   const handleEventClick = (clickInfo) => {
@@ -217,11 +233,15 @@ export default function AgendaAdmin() {
   const handleEditFromView = () => {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     setSelectedTurnoId(selectedTurno.id_turno); // Pasa el ID al formulario
     setViewModalOpen(false); // Cierra modal de vista
     setFormModalOpen(true); // Abre modal de formulario
 =======
     setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+=======
+    setSelectedTurnoId(selectedTurno.id_turno);
+>>>>>>> 632fee59 (Cambios)
     setViewModalOpen(false); 
     setFormModalOpen(true); 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
@@ -232,7 +252,7 @@ export default function AgendaAdmin() {
     setLoading(true);
     
     try {
-      await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado }); // <- Corregido para usar id_turno
+      await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado });
       toast.success(`Turno ${nuevoEstado}`);
 <<<<<<< HEAD
       loadTurnos(); // Recarga
@@ -265,6 +285,7 @@ export default function AgendaAdmin() {
   const handleDeleteRequest = () => {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     setSelectedTurnoId(selectedTurno.id_turno); // Guarda el ID a borrar
     setViewModalOpen(false); // Cierra modal de vista
     setDeleteModalOpen(true); // Abre modal de confirmación
@@ -275,6 +296,9 @@ export default function AgendaAdmin() {
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
     setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+=======
+    setSelectedTurnoId(selectedTurno.id_turno);
+>>>>>>> 632fee59 (Cambios)
     setViewModalOpen(false); 
     setDeleteModalOpen(true); 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
@@ -297,11 +321,23 @@ export default function AgendaAdmin() {
   };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   return (
     <div className="admin-page-container admin-agenda">
       {loading && <p>Cargando agenda...</p>}
+=======
+  // --- Renderizado ---
+>>>>>>> 632fee59 (Cambios)
 
-      <div className="calendar-container">
+  return (
+    // 💡 Contenedor genérico. El layout ya da el padding.
+    <div className="admin-agenda"> 
+      {loading && (
+        <div className="loading-spinner">Cargando agenda...</div>
+      )}
+
+      {/* 🎨 Contenedor de la tarjeta del calendario */}
+      <div className="calendar-container card">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -371,6 +407,7 @@ export default function AgendaAdmin() {
           }}
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           height="auto" // Ajusta altura al contenedor
         />
       </div>
@@ -379,6 +416,8 @@ export default function AgendaAdmin() {
 
       {/* Modal de Vista (Solo Lectura) */}
 =======
+=======
+>>>>>>> 632fee59 (Cambios)
           height="auto" // Se ajusta al contenedor
           // 💡 Propiedades para zona horaria y formato
           timeZone="local" 
@@ -394,6 +433,7 @@ export default function AgendaAdmin() {
             meridiem: false,
             hour12: false
           }}
+<<<<<<< HEAD
         />
       </div>
 
@@ -406,6 +446,13 @@ export default function AgendaAdmin() {
       </div>
 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+        />
+      </div>
+
+      {/* --- Modales (usando el nuevo estilo de index.css y App.css) --- */}
+
+>>>>>>> 632fee59 (Cambios)
       {viewModalOpen && (
         <TurnoDetailModal
           turno={selectedTurno} 
@@ -445,9 +492,13 @@ export default function AgendaAdmin() {
         footer={
           <>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             {/* 🎨 Clases de botones del nuevo sistema de diseño */}
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+            {/* 🎨 Clases de botones del nuevo sistema de diseño */}
+>>>>>>> 632fee59 (Cambios)
             <button onClick={() => setDeleteModalOpen(false)} className="btn btn-secondary" disabled={loading}>Cancelar</button>
             <button onClick={handleDeleteConfirm} className="btn btn-danger" disabled={loading}>
               {loading ? "Eliminando..." : "Eliminar Turno"}

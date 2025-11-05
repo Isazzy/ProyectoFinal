@@ -1,8 +1,15 @@
 /* src/CSS/BookingPage.css */
+/* 🎨 Estilos para la página de Reservas (Tema Claro) */
 
+/* NOTA: .app-container, .card, .alert, .btn, .btn-primary, 
+  .btn-secondary, .form-group, .form-textarea, .slot-btn
+  se heredan de los archivos CSS globales.
+*/
+
+/* .reserva-container ahora es un .card
+  (fondo blanco, sombra, borde redondeado)
+*/
 .reserva-container {
-  background-color: var(--bg-color-light);
-  border-radius: var(--border-radius);
   padding: 1.5rem 2rem;
 }
 
@@ -10,11 +17,12 @@
   text-align: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
 }
 .header-title {
-  color: var(--text-color);
+  color: var(--color-text-dark); /* 🎨 NEW */
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 /* Stepper (indicador de paso) */
@@ -27,11 +35,11 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: var(--border-color);
+  background-color: var(--color-border); /* 🎨 NEW */
   transition: background-color 0.3s;
 }
 .stepper-visual span.active {
-  background-color: var(--primary-color);
+  background-color: var(--color-primary); /* 🎨 NEW */
 }
 
 /* --- PASO 1: Servicios --- */
@@ -40,8 +48,8 @@
 }
 .categoria-titulo {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-weight: 600;
+  color: var(--color-primary); /* 🎨 NEW */
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -55,15 +63,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-color);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border); /* 🎨 NEW */
+  background-color: var(--color-bg); /* 🎨 NEW (Gris claro) */
+  border-radius: var(--border-radius-sm); /* 🎨 NEW (8px) */
   transition: all 0.2s ease;
 }
 .servicio-item.selected {
-  border-color: var(--primary-color);
-  background-color: var(--primary-color-light);
-  box-shadow: 0 2px 8px rgba(251, 91, 91, 0.1);
+  border-color: var(--color-primary); /* 🎨 NEW */
+  background-color: var(--color-bg-cream); /* 🎨 NEW (Crema) */
+  box-shadow: var(--shadow-glow); /* 🎨 NEW */
 }
 .servicio-info {
   display: flex;
@@ -72,22 +80,22 @@
 }
 .servicio-nombre {
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-dark); /* 🎨 NEW */
 }
 .servicio-precio {
   font-size: 0.9rem;
-  color: var(--success-color); /* Verde para precio */
+  color: var(--color-success); /* 🎨 NEW (Verde) */
   font-weight: 500;
 }
 .servicio-duracion {
   font-size: 0.85rem;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary); /* 🎨 NEW */
 }
 .footer-accion {
   text-align: right;
   margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--color-border); /* 🎨 NEW */
 }
 
 /* --- PASO 2: Fecha y Hora --- */
@@ -97,60 +105,67 @@
   gap: 2rem;
 }
 .calendar-wrapper, .slots-wrapper {
-  background-color: var(--bg-color);
+  background-color: var(--color-bg); /* 🎨 NEW (Gris claro) */
   padding: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-md); /* 🎨 NEW (16px) */
+  border: 1px solid var(--color-border);
 }
 .step-datetime-container h4 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-dark); /* 🎨 NEW */
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
 }
 
-/* Estilos del Calendario (Dark Theme) */
+/* Estilos del Calendario (Tema Claro) */
 .react-calendar {
   width: 100% !important;
-  background: var(--bg-color) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius);
+  background: var(--color-bg) !important; /* 🎨 Fondo gris claro */
+  border: none !important; /* 🎨 Sin borde, el wrapper lo tiene */
+  font-family: var(--font-body) !important;
 }
 .react-calendar__navigation button {
-  color: var(--primary-color) !important;
+  color: var(--color-primary) !important; /* 🎨 Rosa */
   background: none !important;
   font-weight: bold;
+  border-radius: var(--border-radius-sm) !important;
 }
 .react-calendar__navigation button:hover {
-  background: var(--bg-color-light) !important;
+  background: var(--color-bg-card) !important; /* 🎨 Blanco */
 }
 .react-calendar__month-view__weekdays__weekday {
-  color: var(--text-color-muted); /* Días de la semana */
+  color: var(--color-text-secondary); /* 🎨 Gris sutil */
+  text-decoration: none;
+  font-weight: 600;
 }
 .react-calendar__tile {
-  color: var(--text-color) !important;
-  border-radius: var(--border-radius);
+  color: var(--color-text-dark) !important; /* 🎨 Texto oscuro */
+  border-radius: var(--border-radius-sm) !important;
 }
 .react-calendar__tile:disabled {
-  background: var(--bg-color-light) !important;
-  color: #666 !important;
+  background: var(--color-bg) !important; /* 🎨 Fondo gris claro */
+  color: var(--color-text-secondary) !important; /* 🎨 Texto sutil */
+  opacity: 0.6;
 }
 .react-calendar__tile--now { /* Hoy */
-  background: var(--primary-color-light) !important;
-  color: var(--primary-color) !important;
+  background: var(--color-bg-cream) !important; /* 🎨 Crema */
+  color: var(--color-primary) !important; /* 🎨 Rosa */
   font-weight: bold;
 }
 .react-calendar__tile--active { /* Seleccionado */
-  background: var(--primary-color) !important;
+  background: var(--color-primary) !important; /* 🎨 Rosa */
   color: white !important;
+  box-shadow: var(--shadow-glow) !important; /* 🎨 Sombra rosa */
 }
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus {
-  background: var(--border-color) !important;
+  background: var(--color-bg-cream) !important; /* 🎨 Crema en hover */
 }
 .react-calendar__month-view__days__day--neighboringMonth {
-  color: #666 !important;
+  color: var(--color-text-secondary) !important; /* 🎨 Gris sutil */
+  opacity: 0.6;
 }
 
 /* Grilla de Horarios */
@@ -162,18 +177,9 @@
   overflow-y: auto;
   padding-right: 5px;
 }
-.slot-btn.btn-secondary {
-  /* Estilo por defecto */
-  background-color: var(--bg-color-light);
-  border-color: var(--border-color);
-}
-.slot-btn.btn-secondary:hover {
-  border-color: var(--primary-color);
-}
-.slot-btn.btn-primary {
-  /* Estilo seleccionado */
-  box-shadow: 0 0 10px rgba(251, 91, 91, 0.5);
-}
+/* 🎨 NOTA: Los estilos de .slot-btn y .slot-btn.selected 
+  ahora se heredan de App.css
+*/
 
 .navigation-buttons {
   grid-column: 1 / -1; /* Ocupa ambas columnas */
@@ -181,31 +187,38 @@
   justify-content: space-between;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--color-border); /* 🎨 NEW */
 }
 
 /* --- PASO 3: Confirmación --- */
 .step-confirm-container {
-  background-color: var(--bg-color);
+  background-color: var(--color-bg); /* 🎨 Fondo gris claro */
   padding: 2rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-md); /* 🎨 NEW (16px) */
+  border: 1px solid var(--color-border);
 }
 .step-confirm-container h3 {
-  color: var(--text-color);
+  color: var(--color-text-dark); /* 🎨 NEW */
   text-align: center;
   margin-bottom: 1.5rem;
 }
 .resumen-detalle p {
   font-size: 1.1rem;
-  color: var(--text-color-muted);
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-secondary); /* 🎨 NEW */
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
+  display: flex;
+  flex-wrap: wrap;
+}
+.resumen-detalle p:last-of-type {
+  border-bottom: none;
 }
 .resumen-detalle p strong {
-  color: var(--text-color);
+  color: var(--color-text-dark); /* 🎨 NEW */
   min-width: 180px;
   display: inline-block;
+  font-weight: 500;
 }
 
 /* --- Responsividad --- */

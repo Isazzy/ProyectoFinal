@@ -1,13 +1,17 @@
+// front/src/components/Booking/BookingPage.jsx
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import "react-calendar/dist/Calendar.css"; // Estilo base del calendario
 
 import { useAuth } from "../../Context/AuthContext";
 import { getServicios } from "../../api/servicios";
 import { getHorariosDisponibles, createTurno } from "../../api/turnos";
+
+// 💡 1. Importamos el CSS rediseñado
 import "../../CSS/BookingPage.css";
 
+// --- Lógica de helpers (sin cambios) ---
 const groupServicios = (servicios) => {
   return servicios.reduce((acc, srv) => {
     const tipo = srv.tipo_serv || "Varios";
@@ -16,7 +20,6 @@ const groupServicios = (servicios) => {
     return acc;
   }, {});
 };
-
 const formatDuration = (minutos) => {
   if (!minutos || minutos <= 0) return "";
   const h = Math.floor(minutos / 60);
@@ -24,6 +27,7 @@ const formatDuration = (minutos) => {
   if (h > 0) return m > 0 ? `~${h}h ${m}min` : `~${h}h`;
   return `~${m} min`;
 };
+// ------------------------------------
 
 export default function BookingPage() {
   const { user } = useAuth();
@@ -42,7 +46,7 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState("");
 
-  // Cargar servicios al iniciar
+  // --- Lógica de useEffect y Handlers (sin cambios) ---
   useEffect(() => {
     setLoading(true);
     getServicios()
@@ -54,21 +58,17 @@ export default function BookingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Cargar horarios disponibles cuando cambian fecha o servicios
   useEffect(() => {
     if (selectedServicios.length === 0 || !selectedDate) {
       setMergedSlots([]);
       return;
     }
-
     setLoadingSlots(true);
     const fechaISO = selectedDate.toISOString().split("T")[0];
-
     getHorariosDisponibles(fechaISO, selectedServicios)
       .then((res) => {
-         console.log("API horarios:", res.data);
-        const slots = (res.data.disponibilidad || []).map(s => s.hora || s); 
-        setMergedSlots(slots);
+         const slots = (res.data.disponibilidad || []).map(s => s.hora || s); 
+         setMergedSlots(slots);
       })
       .catch(() => setMergedSlots([]))
       .finally(() => setLoadingSlots(false));
@@ -79,12 +79,10 @@ export default function BookingPage() {
       prev.includes(id) ? prev.filter((s_id) => s_id !== id) : [...prev, id]
     );
   };
-
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setSelectedSlot(null);
   };
-
   const handleSlotClick = (slot) => setSelectedSlot(slot);
 
   const goToStep2 = () => {
@@ -102,7 +100,6 @@ export default function BookingPage() {
       return;
     }
     setError("");
-
     const allServicios = Object.values(servicios).flat();
     const serviciosSeleccionados = allServicios.filter((s) =>
       selectedServicios.includes(s.id_serv)
@@ -115,7 +112,6 @@ export default function BookingPage() {
       (acc, s) => acc + (s.duracion_minutos || 0),
       0
     );
-
     setResumen({
       nombres: serviciosSeleccionados.map((s) => s.nombre_serv).join(", "),
       fecha: selectedDate.toLocaleDateString("es-AR"),
@@ -124,29 +120,24 @@ export default function BookingPage() {
       duracion: formatDuration(totalDuracion),
       observaciones,
     });
-
     setStep(3);
   };
 
   const handleConfirmBooking = async () => {
     setLoading(true);
     setError("");
-
     if (!user) {
       setError("Error: No se encontró al cliente. Por favor, inicia sesión.");
       setLoading(false);
       return;
     }
-
     const fechaISO = selectedDate.toISOString().split("T")[0];
     const fechaHoraInicio = new Date(`${fechaISO}T${selectedSlot}:00`).toISOString();
-
     const turnoData = {
       fecha_hora_inicio: fechaHoraInicio,
       servicios_ids: selectedServicios,
       observaciones,
     };
-
     try {
       await createTurno(turnoData);
       toast.success("¡Turno reservado con éxito!");
@@ -172,6 +163,7 @@ export default function BookingPage() {
       setLoading(false);
     }
   };
+  // ------------------------------------
 
   const renderStep = () => {
     switch (step) {
@@ -198,6 +190,7 @@ export default function BookingPage() {
                         </span>
                       </div>
                       <button
+                        // 💡 Clases globales de botón
                         className={`btn ${
                           selectedServicios.includes(s.id_serv)
                             ? "btn-primary"
@@ -242,8 +235,10 @@ export default function BookingPage() {
                   {mergedSlots.map((slot) => (
                     <button
                       key={slot}
+                      // 💡 2. CORREGIDO: Usamos la clase .selected (de App.css)
+                      // en lugar de .btn-primary / .btn-secondary
                       className={`btn slot-btn ${
-                        selectedSlot === slot ? "btn-primary" : "btn-secondary"
+                        selectedSlot === slot ? "selected" : ""
                       }`}
                       onClick={() => handleSlotClick(slot)}
                     >
@@ -297,7 +292,7 @@ export default function BookingPage() {
               <textarea
                 id="observaciones"
                 name="observaciones"
-                className="form-textarea"
+                className="form-textarea" // Clase global
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
                 placeholder="Alergias, preferencias, etc."
@@ -329,19 +324,24 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="app-container reserva-container">
-      <div className="step-title">
-        <h2 className="header-title">Reserva tu Turno</h2>
-        <div className="stepper-visual">
-          <span className={step === 1 ? "active" : ""}></span>
-          <span className={step === 2 ? "active" : ""}></span>
-          <span className={step === 3 ? "active" : ""}></span>
+    // 💡 Usa la clase global .app-container
+    <div className="app-container"> 
+      {/* 💡 Y la clase .card para el fondo blanco */}
+      <div className="reserva-container card">
+        <div className="step-title">
+          <h2 className="header-title">Reserva tu Turno</h2>
+          <div className="stepper-visual">
+            <span className={step === 1 ? "active" : ""}></span>
+            <span className={step === 2 ? "active" : ""}></span>
+            <span className={step === 3 ? "active" : ""}></span>
+          </div>
         </div>
+
+        {/* 💡 3. CORREGIDO: Usa la clase de alerta global */}
+        {error && <div className="alert alert-error">{error}</div>}
+
+        {renderStep()}
       </div>
-
-      {error && <p className="message error">{error}</p>}
-
-      {renderStep()}
     </div>
   );
 }

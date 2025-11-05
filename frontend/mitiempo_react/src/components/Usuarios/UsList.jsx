@@ -4,11 +4,13 @@ import { getUsuarios, deleteUsuario } from "../../api/Usuarios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-// 💡 1. Importa los componentes de Modal y Formulario
 import Modal from "../../components/Common/Modal"; 
 import UsForm from "../../components/Usuarios/UsFrom"; 
 
-// 💡 (Tu componente de Badges está perfecto, lo movemos aquí)
+// 💡 1. Importamos el nuevo archivo CSS
+import "../../CSS/UsList.css";
+
+// --- Componente de Badges (ahora usa clases del new CSS) ---
 const AccessBadges = ({ role }) => {
   if (!role) return null;
   const accessMap = {
@@ -38,16 +40,24 @@ export default function UsList() {
   const [profesionFilter, setProfesionFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   
-  // 💡 2. Estado para manejar los modales
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null); // null para "Crear"
+  const [selectedUserId, setSelectedUserId] = useState(null); 
 
+  // --- Lógica de Opciones, fetch y Handlers (sin cambios) ---
   const roleOptions = [
-     { value: '', label: 'Todos los Roles' }, /* ... */
+     { value: '', label: 'Todos los Roles' },
+     { value: 'admin', label: 'Administrador' },
+     { value: 'empleado', label: 'Empleado' },
+     { value: 'cliente', label: 'Cliente' },
   ];
   const profesionOptions = [
-     { value: '', label: 'Todas las Profesiones' }, /* ... */
+     { value: '', label: 'Todas las Profesiones' },
+     { value: 'peluquera', label: 'Peluquera' },
+     { value: 'manicurista', label: 'Manicurista' },
+     { value: 'estilista', label: 'Estilista' },
+     { value: 'multi', label: 'Multi' },
+     { value: 'unassigned', label: 'Sin asignar (Empleado)' },
   ];
 
   const fetchUsuarios = async () => {
@@ -67,14 +77,13 @@ export default function UsList() {
     fetchUsuarios();
   }, []);
 
-  // 💡 3. Funciones para abrir los modales
   const handleOpenCreateModal = () => {
-    setSelectedUserId(null); // Pone el form en modo "Crear"
+    setSelectedUserId(null); 
     setIsFormModalOpen(true);
   };
 
   const handleOpenEditModal = (id) => {
-    setSelectedUserId(id); // Pone el form en modo "Editar"
+    setSelectedUserId(id); 
     setIsFormModalOpen(true);
   };
 
@@ -83,11 +92,10 @@ export default function UsList() {
     setIsDeleteModalOpen(true);
   };
 
-  // 💡 4. Función para cerrar y refrescar desde el modal
   const handleFormClose = (didSave) => {
     setIsFormModalOpen(false);
     setSelectedUserId(null);
-    if (didSave) { // Si el formulario guardó, refrescamos la lista
+    if (didSave) { 
       fetchUsuarios();
     }
   };
@@ -106,7 +114,6 @@ export default function UsList() {
     }
   };
 
-  // Tu lógica de filtrado (sin cambios, está perfecta)
   let filteredUsers = usuarios.filter(u => {
     const fullName = (u.first_name + ' ' + u.last_name).toLowerCase();
     const email = u.email.toLowerCase();
@@ -123,31 +130,31 @@ export default function UsList() {
     }
     return true;
   });
+  // ----------------------------------------------------
 
   if (loading) return <p>Cargando usuarios...</p>;
 
   return (
-    // 💡 5. Contenedor de página estándar (de AdminServicios)
     <div className="admin-page-container">
       {/* Encabezado */}
       <div className="admin-page-header">
         <h2>Gestión de Usuarios</h2>
         <button
-          onClick={handleOpenCreateModal} // 💡 Abre el modal de formulario
+          onClick={handleOpenCreateModal} 
           className="btn btn-primary" 
         >
           Agregar Usuario
         </button>
       </div>
 
-      {/* 💡 6. Barra de herramientas y filtros (re-estilizada) */}
+      {/* Barra de herramientas y filtros */}
       <div className="toolbar">
         <h3 className="toolbar-title">Usuarios ({filteredUsers.length})</h3>
         <div className="search-filter-group">
           <input 
             type="text" 
             placeholder="Buscar por Nombre o Email" 
-            className="form-input" // 💡 Clase global
+            className="form-input" // Clase global
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -160,7 +167,7 @@ export default function UsList() {
         </div>
       </div>
 
-      {/* 💡 7. Menú de filtros (re-estilizado) */}
+      {/* Menú de filtros */}
       {showFilters && (
         <div className="filters-menu">
           <div className="form-group">
@@ -186,25 +193,27 @@ export default function UsList() {
         </div>
       )}
 
-      {/* 💡 8. Tabla Estilizada (en lugar de <ul>) */}
+      {/* Tabla Estilizada */}
       <table className="styled-table">
         <thead>
           <tr>
             <th>Usuario</th>
             <th>Acceso</th>
             <th>Rol Profesional</th>
-            <th style={{ textAlign: "center" }}>Acciones</th>
+            {/* 💡 2. Usamos una clase en lugar de style */}
+            <th className="text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {filteredUsers.length === 0 ? (
             <tr>
-              <td colSpan="4" style={{ textAlign: "center" }}>No se encontraron usuarios.</td>
+              {/* 💡 2. Usamos una clase en lugar de style */}
+              <td colSpan="4" className="text-center">No se encontraron usuarios.</td>
             </tr>
           ) : (
             filteredUsers.map((u) => (
               <tr key={u.id}>
-                {/* Columna Usuario (Nombre y Email) */}
+                {/* Columna Usuario */}
                 <td data-label="Usuario">
                   <div className="user-info-cell">
                     <div className="profile-pic-small">
@@ -235,13 +244,13 @@ export default function UsList() {
                 <td data-label="Acciones" className="table-actions">
                   <button 
                     className="btn btn-secondary"
-                    onClick={() => handleOpenEditModal(u.id)} // 💡 Abre modal de edición
+                    onClick={() => handleOpenEditModal(u.id)} 
                   >
                     Editar
                   </button>
                   <button 
                     className="btn btn-danger"
-                    onClick={() => handleOpenDeleteModal(u.id)} // 💡 Abre modal de borrado
+                    onClick={() => handleOpenDeleteModal(u.id)} 
                   >
                     Eliminar
                   </button>
@@ -252,9 +261,9 @@ export default function UsList() {
         </tbody>
       </table>
       
-      {/* (Tu paginación) */}
+      {/* (Paginación iría aquí) */}
 
-      {/* 💡 9. MODALES (reemplazan a window.confirm y la página de formulario) */}
+      {/* --- MODALES --- */}
       
       {/* Modal para Crear/Editar */}
       {isFormModalOpen && (
@@ -279,67 +288,7 @@ export default function UsList() {
         <p>¿Estás seguro de que deseas eliminar a este usuario? Esta acción no se puede deshacer.</p>
       </Modal>
 
-      {/*  CSS Local para estilos específicos de esta página */}
-      <style>{`
-        /* --- Toolbar y Filtros --- */
-        .toolbar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border-color); 
-          margin-bottom: 1rem;
-        }
-        .toolbar-title {
-          font-size: 1.2rem;
-          font-weight: 600;
-          color: var(--text-color);
-          margin: 0;
-        }
-        .search-filter-group { display: flex; gap: 10px; }
-        .search-filter-group .form-input { 
-          background-color: var(--bg-color-light); 
-          width: 250px;
-        }
-        .filters-menu {
-          background-color: var(--bg-color-light);
-          border: 1px solid var(--border-color);
-          border-radius: var(--border-radius);
-          padding: 1rem;
-          margin-bottom: 1rem;
-          display: flex;
-          gap: 1rem;
-          align-items: flex-end;
-        }
-        .btn-reset-filters { background: var(--bg-color); }
-        .btn-reset-filters:hover { background: var(--border-color); }
-
-        /* --- Estilos de Celdas --- */
-        .user-info-cell { display: flex; align-items: center; gap: 10px; }
-        .profile-pic-small {
-          width: 32px; height: 32px;
-          border-radius: 50%;
-          background-color: var(--primary-color-light);
-          color: var(--primary-color);
-          display: flex; justify-content: center; align-items: center;
-          font-weight: 600; font-size: 0.9rem;
-          flex-shrink: 0;
-        }
-        .user-full-name { font-weight: 600; color: var(--text-color); }
-        .user-email { font-size: 0.85rem; color: var(--text-color-muted); }
-        
-        .access-badges { display: flex; gap: 5px; flex-wrap: wrap; }
-        .badge {
-          padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;
-          font-weight: 500; text-transform: capitalize;
-        }
-        .badge-admin { background-color: rgba(225, 29, 72, 0.1); color: var(--danger-color); }
-        .badge-empleado { background-color: rgba(202, 138, 4, 0.1); color: var(--warning-color); }
-        .badge-cliente { background-color: rgba(5, 150, 105, 0.1); color: var(--success-color); }
-
-        .rol-profesional-text { color: var(--text-color-muted); }
-        .text-muted { color: var(--text-color-muted); }
-      `}</style>
+      {/* 💡 3. El bloque <style> se ha eliminado */}
     </div>
   );
 }

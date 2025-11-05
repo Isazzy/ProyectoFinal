@@ -1,10 +1,13 @@
+// front/src/components/Turnos/TurnoFormAdmin.jsx
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Modal from "../Common/Modal";
 import { getServicios } from "../../api/servicios";
-// 1. Importamos la función correcta
 import { getTurnoById, createTurno, updateTurno } from "../../api/turnos"; 
 import api from "../../api/axiosConfig"; 
+
+// 💡 1. Importamos el nuevo CSS
+import "../../CSS/TurnoFormAdmin.css";
 
 const initialState = {
   cliente: "", 
@@ -14,6 +17,7 @@ const initialState = {
   servicios_ids: [], 
 };
 
+// --- Lógica de funciones (sin cambios) ---
 const getFechaFromISO = (iso) => iso.split("T")[0];
 
 const getHoraFromISO = (iso) => {
@@ -35,6 +39,7 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
   
   const isEditing = !!turnoIdToEdit;
 
+  // --- Lógica de useEffect y handlers (sin cambios) ---
   useEffect(() => {
     const loadDropdownData = async () => {
       setLoading(true);
@@ -64,7 +69,6 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
     if (isEditing && clientesList.length > 0) {
       const loadTurno = async () => {
         try {
-          // 2. Usamos la función correcta
           const res = await getTurnoById(turnoIdToEdit); 
           const data = res.data; 
 
@@ -163,6 +167,7 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
       title={isEditing ? "Editar Turno" : "Agregar Nuevo Turno"}
       footer={
         <>
+          {/* 💡 Estos botones ya usan las clases correctas del sistema de diseño */}
           <button type="button" className="btn btn-secondary" onClick={() => onClose(false)} disabled={loading}>
             Cancelar
           </button>
@@ -175,11 +180,16 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
       {loading ? (
         <p>Cargando datos...</p>
       ) : (
-    
-        <form id="turno-form-admin" onSubmit={handleSubmit} className="form-container-modal">
+        
+        // 💡 2. Usamos una clase simple para el formulario
+        <form id="turno-form-admin" onSubmit={handleSubmit} className="turno-form-admin">
           
-          {error && <p className="message error">{error}</p>}
+          {/* 💡 3. Se usa la nueva clase de alerta del sistema de diseño */}
+          {error && <div className="alert alert-error">{error}</div>}
 
+          {/* 💡 4. Los 'form-group', 'form-select', 'form-input' y 'form-textarea' 
+               ya tienen los estilos correctos de 'App.css'
+          */}
           <div className="form-group">
             <label htmlFor="cliente">Cliente:</label>
             <select id="cliente" name="cliente" value={turnoData.cliente} onChange={handleChange} required className="form-select">
@@ -232,39 +242,8 @@ export default function TurnoFormAdmin({ onClose, turnoIdToEdit = null }) {
         </form>
       )}
       
+      {/* 💡 5. El bloque <style> se ha eliminado */}
       
-      <style>{`
-        .form-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-        .checkbox-group-scroll {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          background-color: var(--bg-color);
-          border: 1px solid var(--border-color);
-          padding: 15px;
-          border-radius: var(--border-radius);
-          max-height: 150px;
-          overflow-y: auto;
-        }
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: var(--text-color-muted);
-        }
-        .checkbox-label input {
-           width: 16px; height: 16px;
-           accent-color: var(--primary-color);
-        }
-        @media (max-width: 600px) {
-          .form-grid-2 { grid-template-columns: 1fr; }
-          .checkbox-group-scroll { grid-template-columns: 1fr; }
-        }
-      `}</style>
     </Modal>
   );
 }

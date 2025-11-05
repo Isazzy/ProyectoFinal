@@ -1,7 +1,7 @@
 /* src/components/common/Modal.css */
-/* Este archivo usa las variables definidas en src/index.css */
+/* 🎨 Estilos adaptados al nuevo tema elegante (claro) */
 
-/* --- Animaciones de Entrada --- */
+/* --- Animaciones de Entrada (Sin cambios, son perfectas) --- */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -27,8 +27,8 @@
   right: 0;
   bottom: 0;
   
-  /* Fondo oscuro semi-transparente */
-  background-color: rgba(0, 0, 0, 0.7); 
+  /* 🎨 Fondo oscuro más suave */
+  background-color: rgba(50, 50, 50, 0.6); 
   
   /* ¡Efecto difuminado (Blur)! */
   backdrop-filter: blur(5px); 
@@ -38,35 +38,33 @@
   align-items: center;
   z-index: 1000;
   
-  /* Aplica animación de fundido */
   animation: fadeIn 0.2s ease-out;
-  
-  /* Para responsividad en móviles */
-  padding: 15px; 
+  padding: 15px; /* Para responsividad en móviles */
 }
 
 /* 2. El Contenedor (Contenido) */
 .modal-content {
-  /* Usa los colores del tema */
-  background-color: var(--bg-color-light); 
+  /* 🎨 Usa los colores del nuevo tema */
+  background-color: var(--color-bg-card); /* Blanco */
   
-  /* Usa bordes y sombras del tema */
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-soft);
+  /* 🎨 Usa bordes y sombras del nuevo tema */
+  border-radius: var(--border-radius-md); /* 16px */
+  box-shadow: var(--shadow-hover); /* Sombra más pronunciada */
   
-  width: 100%; /* Ocupa el 100% del padding del backdrop */
-  max-width: 500px; /* Límite de ancho */
+  width: 100%;
+  max-width: 500px;
   
-  /* Acento de color en la parte superior */
-  border-top: 4px solid var(--primary-color); 
+  /* 🎨 Acento de color protagonista */
+  border-top: 4px solid var(--color-primary); 
   
-  /* Aplica animación de deslizamiento */
   animation: slideIn 0.3s ease-out;
   
-  /* Evita desbordamiento en móviles */
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  
+  /* 🎨 Asegura que el footer respete los bordes redondeados */
+  overflow: hidden; 
 }
 
 /* 3. Encabezado (Header) */
@@ -74,49 +72,48 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
+  /* 🎨 Borde suave del nuevo tema */
+  border-bottom: 1px solid var(--color-border);
   padding: 1rem 1.5rem;
 }
 
 .modal-title {
-  margin-bottom: 0; /* Sobrescribe el h2 global */
-  font-size: 1.5rem;
+  margin-bottom: 0;
+  font-size: 1.5rem; /* Coincide con h3 */
+  color: var(--color-text-dark); /* 🎨 Color de texto oscuro */
 }
 
 .modal-close-btn {
   background: none;
   border: none;
-  font-size: 2rem;
+  font-size: 1.75rem; /* 🎨 Ligeramente más pequeño */
   font-weight: bold;
   line-height: 1;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary); /* 🎨 Gris sutil */
   cursor: pointer;
   padding: 0;
   transition: color var(--transition-speed);
 }
 
 .modal-close-btn:hover {
-  color: var(--text-color);
+  color: var(--color-primary); /* 🎨 Hover con color protagonista */
 }
 
 /* 4. Cuerpo (Body) */
 .modal-body {
   padding: 1.5rem;
-  overflow-y: auto; /* Permite scroll si el contenido es muy largo */
+  overflow-y: auto;
+  color: var(--color-text-secondary); /* 🎨 Color de texto por defecto */
 }
 
 /* 5. Pie de página (Footer) */
 .modal-footer {
   display: flex;
-  justify-content: flex-end; /* Alinea botones a la derecha */
+  justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--color-border); /* 🎨 Borde suave */
   padding: 1rem 1.5rem;
   
-  /* Fondo ligeramente diferente */
-  background-color: var(--bg-color);
-  
-  /* Bordes redondeados inferiores */
-  border-bottom-left-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
+  /* 🎨 Fondo gris claro (distinto al cuerpo blanco) */
+  background-color: var(--color-bg);
 }

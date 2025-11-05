@@ -1,3 +1,4 @@
+// front/src/components/Common/QuickCreateModal.jsx
 import React, { useState } from "react";
 import Modal from "./Modal";
 import toast from "react-hot-toast";
@@ -5,13 +6,7 @@ import toast from "react-hot-toast";
 /**
  * Un modal genérico para crear una nueva entidad (ej. Marca, Categoría)
  * que solo requiere un campo de 'nombre'.
- * * @param {boolean} isOpen - Si el modal está abierto.
- * @param {function} onClose - Función para cerrar el modal.
- * @param {string} title - Título del modal (ej. "Nueva Marca").
- * @param {string} label - Etiqueta del input (ej. "Nombre de la marca").
- * @param {function} onSubmit - Función async que se llama al guardar.
- * Recibe el objeto { nombre: "valor" }.
- * Debe retornar la entidad creada (o un ID).
+ * ... (resto de las JSDoc)
  */
 export default function QuickCreateModal({ isOpen, onClose, title, label, onSubmit }) {
   const [nombre, setNombre] = useState("");
@@ -55,6 +50,7 @@ export default function QuickCreateModal({ isOpen, onClose, title, label, onSubm
       title={title}
       footer={
         <>
+          {/* 🎨 Clases correctas del sistema de diseño */}
           <button onClick={handleClose} className="btn btn-secondary" disabled={loading}>
             Cancelar
           </button>
@@ -65,7 +61,15 @@ export default function QuickCreateModal({ isOpen, onClose, title, label, onSubm
       }
     >
       <form onSubmit={handleSubmit}>
-        {error && <p className="message error">{error}</p>}
+        
+        {/* 🎨 ¡ACTUALIZADO! Se usa la clase de alerta global */}
+        {error && (
+          <div className="alert alert-error" role="alert">
+            {error}
+          </div>
+        )}
+        
+        {/* 🎨 Clases correctas del sistema de diseño */}
         <div className="form-group">
           <label htmlFor="quick-create-nombre">{label}</label>
           <input

@@ -1,57 +1,149 @@
 /* src/CSS/AdminAgenda.css */
+/* 🎨 Estilos para integrar FullCalendar al Tema Claro Elegante */
+
+/* 1. Contenedor del Calendario (estilo Tarjeta) */
 .admin-agenda .calendar-container {
-  background-color: var(--bg-color-light);
-  padding: 1.5rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
+  /* .card ya viene de index.css, pero podemos ajustar */
+  padding: 2rem; /* Más espacio para el calendario */
+  overflow: hidden; /* Asegura que todo quede dentro de la tarjeta */
 }
 
-/* --- Estilos FullCalendar Dark Theme --- */
-/* (Hereda de index.css y App.css, aquí los afinamos) */
-
-/* Texto y bordes */
-.fc {
-  color: var(--text-color) !important;
-}
-.fc th, .fc td, .fc hr, .fc thead, .fc tbody, .fc-scrollgrid {
-  border-color: var(--border-color) !important;
-}
-.fc .fc-non-business {
-  background: var(--bg-color) !important; /* Fondo más oscuro */
+/* 2. Jerarquía: Título del Calendario */
+.fc .fc-toolbar-title {
+  font-family: var(--font-body);
+  font-size: 1.75rem; /* Tamaño de un <h2> */
+  font-weight: 600; /* Semibold */
+  color: var(--color-text-dark);
 }
 
-/* Botones Header */
-.fc .fc-button-primary {
-  background-color: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
+/* 3. Botones de la Barra de Herramientas (Prev, Next, Mes, Semana, Día) */
+.fc .fc-button {
+  font-family: var(--font-body);
+  font-weight: 500;
+  text-transform: none; /* Quitamos mayúsculas */
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-sm) !important; /* 8px */
+  transition: all var(--transition-speed);
+  
+  /* Estilo "neutro" por defecto */
+  background: var(--color-bg-cream);
+  color: var(--color-text-dark);
+  border: 1px solid var(--color-border) !important;
+  box-shadow: none !important;
 }
-.fc .fc-button-primary:hover {
-  background-color: var(--primary-color-hover) !important;
+
+/* Botones al pasar el mouse (no activos) */
+.fc .fc-button:not(:disabled):hover {
+  background: var(--color-bg-cream);
+  color: var(--color-primary);
+  border-color: var(--color-primary) !important;
 }
-.fc .fc-button-primary:disabled {
-  background-color: var(--border-color) !important;
+
+/* Botón Activo (Semana, Mes, etc.) */
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  /* 🎨 Estilo Primario (como .btn-primary) */
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light)) !important;
+  color: #ffffff !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-glow) !important;
 }
-/* Botón "Hoy" */
+.fc .fc-button-primary:not(:disabled).fc-button-active:hover {
+  transform: translateY(-2px);
+}
+
+/* Botón "Hoy" (Estilo Secundario) */
 .fc .fc-today-button {
-  background-color: var(--bg-color) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-color) !important;
+  background: var(--color-bg-card) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-primary) !important;
+}
+.fc .fc-today-button:hover {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-glow) !important;
 }
 
-/* Slots de tiempo */
-.fc .fc-timegrid-slot {
-  background-color: var(--bg-color-light);
+/* Botones deshabilitados (prev/next al límite) */
+.fc .fc-button:disabled {
+  background: var(--color-bg) !important; /* Fondo gris claro */
+  color: var(--color-text-secondary) !important;
+  opacity: 0.7;
 }
-/* Día de Hoy */
+
+/* 4. Estilos de la Grilla (Vista Semana/Día) */
+
+/* Encabezados de Día (Lunes, Martes...) */
+.fc .fc-col-header-cell {
+  background-color: var(--color-bg-cream); /* Crema suave */
+  color: var(--color-text-dark);
+  font-weight: 600; /* Semibold */
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
+  padding: 0.75rem 0;
+}
+.fc .fc-col-header-cell-cushion { /* Contenido del encabezado */
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Fondo del día "Hoy" */
 .fc .fc-day-today {
-  background: var(--bg-color) !important; /* Fondo oscuro sutil */
+  background-color: var(--color-bg-cream) !important; /* Crema muy sutil */
 }
 
-/* Evento (Turno) - Hereda colores del serializer */
+/* Celdas de tiempo y líneas */
+.fc .fc-timegrid-slot-label { /* Etiquetas de hora (09:00) */
+  color: var(--color-text-secondary);
+  border-bottom: 1px dashed var(--color-border);
+}
+.fc .fc-timegrid-slot-lane { /* Carriles de hora */
+  background-color: var(--color-bg-card); /* Blanco */
+  border-bottom: 1px dashed var(--color-border);
+}
+
+/* Línea de hora actual */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: var(--color-primary) !important;
+}
+.fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: var(--color-primary) !important;
+}
+
+/* 5. Eventos (Turnos) */
 .fc-event {
   cursor: pointer;
+  border-radius: var(--border-radius-sm) !important; /* 8px */
   border: none !important;
-  padding: 4px;
-  box-shadow: var(--shadow-soft);
+  padding: 4px 8px;
+  
+  /* 🎨 Sombra suave de las tarjetas */
+  box-shadow: var(--shadow-soft); 
+  
+  /* Los colores de fondo y texto se asignan desde el JSX */
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.fc-event:hover {
+  transform: scale(1.03);
+  box-shadow: var(--shadow-hover);
+}
+
+.fc-event .fc-event-main {
+  color: #ffffff !important; /* 🎨 Texto siempre blanco */
+}
+.fc-event .fc-event-time {
+  font-weight: 700;
+}
+
+/* 6. Vista de Mes */
+.fc-daygrid-day-number {
+  color: var(--color-text-dark);
+  font-weight: 500;
+  text-decoration: none;
+}
+.fc-daygrid-day:hover {
+  background-color: var(--color-bg-cream);
 }
