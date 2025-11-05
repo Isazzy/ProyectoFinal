@@ -1,55 +1,72 @@
-// front/src/pages/Admin/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FaUserCog, FaBars, FaTimes, FaChartBar, FaCalendarAlt, FaUsers,
-  FaBox, FaTruck, FaShoppingCart, FaClipboardList, FaSignOutAlt
+  FaClipboardList, FaSignOutAlt
 } from "react-icons/fa";
-import "../../CSS/sidebar.css"; 
+import "../../CSS/sidebar.css";
 import defaultUser from "../../imagenes/defaultUser.png";
-import { useAuth } from "../../Context/AuthContext"; 
+import { useAuth } from "../../Context/AuthContext";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const { user, logout: contextLogout } = useAuth(); 
-  const role = user?.role || "cliente"; 
+  const { user, logout } = useAuth();
+  const role = user?.role?.toLowerCase() || "cliente";
 
-  // --- Lógica de menús y handlers (sin cambios) ---
+  // --- MENÚ ADMIN ---
   const adminMenu = [
     { to: "reportes", label: "Reportes", icon: <FaChartBar /> },
     { to: "agenda", label: "Agenda", icon: <FaCalendarAlt /> },
     { to: "usuarios", label: "Usuarios", icon: <FaUsers /> },
     { to: "servicios", label: "Servicios", icon: <FaClipboardList /> },
-    { to: "productos", label: "Productos", icon: <FaBox /> },
-    { to: "proveedores", label: "Proveedores", icon: <FaTruck /> },
-    { to: "ventas", label: "Ventas", icon: <FaShoppingCart /> },
+    { to: "productos", label: "Productos", icon: <FaClipboardList /> },
+    { to: "proveedores", label: "Proveedores", icon: <FaClipboardList /> },
+    { to: "ventas", label: "Ventas", icon: <FaClipboardList /> },
     { to: "compras", label: "Compras", icon: <FaClipboardList /> },
   ];
+
+  // --- MENÚ EMPLEADO ---
   const employeeMenu = [
+    { to: "usuarios", label: "Clientes", icon: <FaUsers /> },
     { to: "agenda", label: "Agenda", icon: <FaCalendarAlt /> },
-    { to: "ventas", label: "Ventas", icon: <FaShoppingCart /> },
+    { to: "servicios", label: "Servicios", icon: <FaClipboardList /> },
   ];
-  const menuItems = role === "admin" ? adminMenu : (role === "empleado" ? employeeMenu : []);
+
+  // --- ROLE NORMALIZADO ---
+  const normalizedRole =
+    role === "administrador" ? "admin" : role === "empleado" ? "empleado" : "cliente";
+
+  // --- MENÚ SEGÚN ROL ---
+  const menuItems =
+    normalizedRole === "admin"
+      ? adminMenu
+      : normalizedRole === "empleado"
+      ? employeeMenu
+      : [];
+
+  // --- FUNCIONES ---
   const handleLogout = () => {
-    contextLogout();
-    navigate("/login"); 
+    logout();
+    navigate("/login");
   };
+
   const handleProfileNav = () => {
-    navigate("/admin/dashboard/perfil"); 
+    navigate("/admin/dashboard/perfil");
     setShowProfileMenu(false);
-  }
+  };
+
+  // --- CERRAR MENÚ DE PERFIL CUANDO SE CLICKEA AFUERA ---
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showProfileMenu && !event.target.closest('.profile-container')) {
+      if (showProfileMenu && !event.target.closest(".profile-container")) {
         setShowProfileMenu(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showProfileMenu]);
-  // --------------------------------------------------
 
   return (
     <aside className={`sidebar ${isOpen ? "open" : "collapsed"}`}>
@@ -62,7 +79,6 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           {isOpen && (
             <>
               <p className="R">Romina Magallanez</p>
-              {/* 💡 CAMBIO: Texto actualizado según tu solicitud */}
               <p className="M">M I T I E M P O</p>
             </>
           )}
@@ -74,9 +90,16 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           {menuItems.map((item) => (
             <li
               key={item.to}
-              className={location.pathname.startsWith(`/admin/dashboard/${item.to}`) ? "active" : ""}
+              className={
+                location.pathname.startsWith(`/admin/dashboard/${item.to}`)
+                  ? "active"
+                  : ""
+              }
             >
-              <Link to={item.to} title={!isOpen ? item.label : ""}>
+              <Link
+                to={`/admin/dashboard/${item.to}`}
+                title={!isOpen ? item.label : ""}
+              >
                 {item.icon}
                 {isOpen && <span>{item.label}</span>}
               </Link>
@@ -86,10 +109,9 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       </nav>
 
       <div className="sidebar-footer">
-        {/* ... (Contenido del footer sin cambios) ... */}
         <div className="profile-container">
           <img
-            src={user?.avatar || defaultUser} 
+            src={user?.avatar || defaultUser}
             alt="Perfil"
             className="profile-pic"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -107,12 +129,14 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               </button>
             </div>
           )}
-          
+
           {isOpen && (
-             <div className="profile-info-open">
-                <p className="username-open">{user?.first_name || user?.username}</p>
-                <p className="role-open">{user?.role}</p>
-             </div>
+            <div className="profile-info-open">
+              <p className="username-open">
+                {user?.first_name || user?.username}
+              </p>
+              <p className="role-open">{normalizedRole}</p>
+            </div>
           )}
         </div>
       </div>

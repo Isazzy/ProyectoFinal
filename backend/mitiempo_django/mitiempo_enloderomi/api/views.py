@@ -1,119 +1,102 @@
-from rest_framework import generics, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission, SAFE_METHODS
-from rest_framework.response import Response
+from rest_framework import viewsets, generics
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.models import Group
 from .serializers import RegisterSerializer, UserCRUDSerializer, CustomTokenObtainPairSerializer
 
 User = get_user_model()
 
 
-# ------------------ PERMISOS ------------------
-class IsAdminOrReadOnlyForEmpleado(BasePermission):
-    """
-    Admin: full access
-    Empleado: solo puede ver usuarios de rol 'cliente'
-    """
+# 🔹 Permisos personalizados
+class IsInGroup(BasePermission):
+    group_name = None
+
     def has_permission(self, request, view):
-        role = getattr(request.user, "role", "").lower()
-        if role == "admin":
-            return True
-        elif role == "empleado" and request.method in SAFE_METHODS:
-            return True
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        role = getattr(request.user, "role", "").lower()
-        if role == "admin":
-            return True
-        elif role == "empleado" and request.method in SAFE_METHODS:
-            # solo puede ver usuarios con rol 'cliente'
-            return getattr(obj, "role", "").lower() == "cliente"
-        return False
+        return (
+            request.user.is_authenticated
+            and request.user.groups.filter(name=self.group_name).exists()
+        )
 
 
-# ------------------ LOGIN / REGISTER ------------------
+class IsAdminGroup(IsInGroup):
+    group_name = "Administrador"
+
+
+class IsEmpleadoGroup(IsInGroup):
+    group_name = "Empleado"
+
+
+class IsClienteGroup(IsInGroup):
+    group_name = "Cliente"
+
+
+# 🔹 Login con JWT
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+# 🔹 Registro desde la web (clientes nuevos)
 class RegisterAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  # Cualquiera puede registrarse
+    permission_classes = [AllowAny]
 
 
-# ------------------ USER VIEWSET ------------------
-@method_decorator(csrf_exempt, name='dispatch')
+# 🔹 Panel (admin / empleado)
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("username")
     serializer_class = UserCRUDSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdminOrReadOnlyForEmpleado]
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return [AllowAny()]
+        if user.groups.filter(name="Administrador").exists():
+            return [IsAdminGroup()]
+        if user.groups.filter(name="Empleado").exists():
+            return [IsEmpleadoGroup()]
+        if user.groups.filter(name="Cliente").exists():
+            return [IsClienteGroup()]
+        return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return User.objects.none()
 
-        role = getattr(user, "role", "").lower()
-        if role == "admin":
+        if user.groups.filter(name="Administrador").exists():
             return User.objects.all().order_by("username")
-        elif role == "empleado":
-            # Empleado solo ve usuarios con rol 'cliente'
-            return User.objects.filter(role="cliente", is_active=True).order_by("username")
-        else:
-            return User.objects.none()
 
-    def perform_create(self, serializer):
-        # Solo Admin puede crear
-        serializer.save()
+        elif user.groups.filter(name="Empleado").exists():
+            # Empleado solo puede ver clientes
+            cliente_group, _ = Group.objects.get_or_create(name="Cliente")
+            return User.objects.filter(groups=cliente_group).order_by("username")
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def empleados(self, request):
-        """
-        Lista de empleados y admins activos.
-        Solo Admin puede acceder completo, empleado solo ve clientes.
-        """
-        user = request.user
-        role = getattr(user, "role", "").lower()
+        return User.objects.none()
 
-        if role == "admin":
-            queryset = User.objects.filter(role__in=["empleado", "admin"], is_active=True).order_by("first_name", "last_name")
-        elif role == "empleado":
-            queryset = User.objects.filter(role="cliente", is_active=True).order_by("first_name", "last_name")
-        else:
-            queryset = User.objects.none()
+    # 🔹 Bloquear creación, edición o eliminación si es empleado
+    def create(self, request, *args, **kwargs):
+        if request.user.groups.filter(name="Empleado").exists():
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response({"detail": "No tienes permiso para crear usuarios."},
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        if request.user.groups.filter(name="Empleado").exists():
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response({"detail": "No tienes permiso para editar usuarios."},
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
 
-
-# ------------------ LISTAR PROFESIONALES ------------------
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def listar_profesionales(request):
-    """
-    Lista de profesionales (empleados o admins) con rol profesional asignado.
-    Útil para seleccionar en formularios de turno.
-    """
-    profesionales = User.objects.filter(
-        role__in=["empleado", "admin"],
-        is_active=True
-    ).exclude(rol_profesional__isnull=True).exclude(rol_profesional__exact='')
-
-    data = [
-        {
-            "id": p.id,
-            "nombre": f"{p.first_name} {p.last_name}".strip() or p.username,
-            "profesion": p.rol_profesional,
-            "dias_laborables": p.dias_laborables if isinstance(p.dias_laborables, list) else [],
-        }
-        for p in profesionales
-    ]
-    return Response(data)
+    def destroy(self, request, *args, **kwargs):
+        if request.user.groups.filter(name="Empleado").exists():
+            from rest_framework.response import Response
+            from rest_framework import status
+            return Response({"detail": "No tienes permiso para eliminar usuarios."},
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// 💡 Tu URL base ya incluye /api, ¡perfecto!
+//  Tu URL base ya incluye /api, ¡perfecto!
 const BASE_API_URL = "http://127.0.0.1:8000/api";
 
 const api = axios.create({
@@ -9,7 +9,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // 💡 Asegura que los endpoints de lectura pública no necesiten token
+    //  Asegura que los endpoints de lectura pública no necesiten token
     const isPublic =
       config.method === "get" &&
       (config.url.startsWith("/servicios") );

@@ -11,16 +11,13 @@ import Modal from '../../components/Common/Modal';
 import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; 
 import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin'; 
 
-// 💡 Importamos el CSS rediseñado
 import "../../CSS/AdminAgenda.css"; 
 
-// 🎨 --- COLORES ACTUALIZADOS --- 
-// Colores más elegantes y alineados con el nuevo tema.
 const ESTADO_COLORS = {
-  'pendiente': '#f59e0b', // Ámbar (para advertencia)
-  'confirmado': '#059669', // Verde (éxito)
-  'completado': '#3b82f6', // Azul (informativo)
-  'cancelado': '#777777',  // Gris (color secundario de texto)
+  'pendiente': '#f59e0b',
+  'confirmado': '#059669',
+  'completado': '#3b82f6',
+  'cancelado': '#777777',
 };
 
 export default function AgendaAdmin() {
@@ -34,7 +31,10 @@ export default function AgendaAdmin() {
   
   const [selectedTurno, setSelectedTurno] = useState(null); 
   const [selectedTurnoId, setSelectedTurnoId] = useState(null); 
-  
+
+  // 🆕 Nuevo estado para manejar la fecha/hora seleccionada del calendario
+  const [selectedDateTime, setSelectedDateTime] = useState(null);
+
   useEffect(() => {
     loadTurnos();
   }, []);
@@ -43,7 +43,6 @@ export default function AgendaAdmin() {
     setLoading(true);
     getTurnos() 
       .then(response => {
-        
         const calendarEvents = response.data.map(turno => ({
           id: turno.id_turno,
           title: turno.cliente_nombre, 
@@ -51,28 +50,27 @@ export default function AgendaAdmin() {
           end: turno.fecha_hora_fin, 
           backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
           borderColor: ESTADO_COLORS[turno.estado] || '#777',
-          textColor: '#ffffff', // 🎨 Aseguramos texto blanco en eventos
+          textColor: '#ffffff',
           extendedProps: { ...turno } 
         }));
-        
         setEvents(calendarEvents);
       })
-      .catch(err => toast.error("Error al cargar la agenda."))
+      .catch(() => toast.error("Error al cargar la agenda."))
       .finally(() => setLoading(false));
   };
 
-  // --- El resto de los manejadores (sin cambios) ---
-
   const handleEventClick = (clickInfo) => {
     const turnoCompleto = clickInfo.event.extendedProps;
-    
     if (turnoCompleto) {
       setSelectedTurno(turnoCompleto);
       setViewModalOpen(true); 
     }
   };
 
+  // 🆕 Cuando se hace clic en el calendario, guardamos la fecha seleccionada
   const handleDateClick = (arg) => {
+    const clickedDate = new Date(arg.date);
+    setSelectedDateTime(clickedDate);
     setSelectedTurnoId(null); 
     setFormModalOpen(true); 
   };
@@ -85,9 +83,8 @@ export default function AgendaAdmin() {
   const handleCloseFormModal = (didSave = false) => {
     setFormModalOpen(false);
     setSelectedTurnoId(null);
-    if (didSave) {
-      loadTurnos(); 
-    }
+    setSelectedDateTime(null);
+    if (didSave) loadTurnos(); 
   };
 
   const handleEditFromView = () => {
@@ -104,7 +101,7 @@ export default function AgendaAdmin() {
       await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado });
       toast.success(`Turno ${nuevoEstado}`);
       loadTurnos(); 
-    } catch (err) {
+    } catch {
       toast.error("Error al actualizar estado.");
     } finally {
       setLoading(false);
@@ -125,7 +122,7 @@ export default function AgendaAdmin() {
       await deleteTurno(selectedTurnoId);
       toast.success("Turno eliminado.");
       loadTurnos();
-    } catch (err) {
+    } catch {
       toast.error("Error al eliminar el turno.");
     } finally {
       setLoading(false);
@@ -134,34 +131,28 @@ export default function AgendaAdmin() {
     }
   };
 
-  // --- Renderizado ---
-
   return (
-    // 💡 Contenedor genérico. El layout ya da el padding.
     <div className="admin-agenda"> 
-      {loading && (
-        <div className="loading-spinner">Cargando agenda...</div>
-      )}
+      {loading && <div className="loading-spinner">Cargando agenda...</div>}
 
-      {/* 🎨 Contenedor de la tarjeta del calendario */}
       <div className="calendar-container card">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek" 
+          initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
           }}
-          events={events} 
-          eventClick={handleEventClick} 
-          dateClick={handleDateClick} 
-          editable={false} 
+          events={events}
+          eventClick={handleEventClick}
+          dateClick={handleDateClick}
+          editable={false}
           selectable={true}
           allDaySlot={false}
-          slotMinTime="08:00:00" 
-          slotMaxTime="20:00:00" 
+          slotMinTime="08:00:00"
+          slotMaxTime="20:00:00"
           locale="es"
           buttonText={{
             today: 'Hoy',
@@ -169,9 +160,8 @@ export default function AgendaAdmin() {
             week: 'Semana',
             day: 'Día',
           }}
-          height="auto" // Se ajusta al contenedor
-          // 💡 Propiedades para zona horaria y formato
-          timeZone="local" 
+          height="auto"
+          timeZone="local"
           slotLabelFormat={{
             hour: '2-digit',
             minute: '2-digit',
@@ -187,11 +177,9 @@ export default function AgendaAdmin() {
         />
       </div>
 
-      {/* --- Modales (usando el nuevo estilo de index.css y App.css) --- */}
-
       {viewModalOpen && (
         <TurnoDetailModal
-          turno={selectedTurno} 
+          turno={selectedTurno}
           onClose={handleCloseViewModal}
           onEdit={handleEditFromView}
           onDelete={handleDeleteRequest}
@@ -199,11 +187,12 @@ export default function AgendaAdmin() {
           loading={loading}
         />
       )}
-      
+
       {formModalOpen && (
         <TurnoFormAdmin
           turnoIdToEdit={selectedTurnoId}
           onClose={handleCloseFormModal}
+          preselectedDateTime={selectedDateTime} // 🆕 Enviamos la fecha seleccionada
         />
       )}
       
@@ -213,7 +202,6 @@ export default function AgendaAdmin() {
         title="Confirmar Eliminación"
         footer={
           <>
-            {/* 🎨 Clases de botones del nuevo sistema de diseño */}
             <button onClick={() => setDeleteModalOpen(false)} className="btn btn-secondary" disabled={loading}>Cancelar</button>
             <button onClick={handleDeleteConfirm} className="btn btn-danger" disabled={loading}>
               {loading ? "Eliminando..." : "Eliminar Turno"}
@@ -223,7 +211,6 @@ export default function AgendaAdmin() {
       >
         <p>¿Estás seguro de que deseas eliminar este turno? Esta acción no se puede deshacer.</p>
       </Modal>
-
     </div>
   );
 }

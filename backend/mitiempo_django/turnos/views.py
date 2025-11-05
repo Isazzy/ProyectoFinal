@@ -28,13 +28,15 @@ def horarios_disponibles(request):
 
     if not all([fecha_str, servicios_ids_str]):
         return Response(
-            {'error': 'Faltan parámetros: fecha y servicios_ids son requeridos.'}, 
+            {'error': 'Faltan parámetros: fecha y servicios_ids son requeridos.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     # --- Parseo ---
     try:
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        if fecha < timezone.now().date():
+            return Response({'disponibilidad': [], 'mensaje': 'No se pueden reservar turnos en fechas pasadas.'})
         servicios_ids = [int(sid) for sid in servicios_ids_str.split(',') if sid]
         if not servicios_ids:
             raise ValueError("La lista de servicios no puede estar vacía.")
@@ -70,7 +72,7 @@ def horarios_disponibles(request):
     except Exception as e:
         return Response({'error': f'Error al procesar horario laboral: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # --- Turnos ocupados ---
+    # --- Turnos ocupados con conteo de concurrencia ---
     try:
         turnos_ocupados_qs = Turno.objects.filter(
             fecha_hora_inicio__date=fecha,
@@ -84,27 +86,43 @@ def horarios_disponibles(request):
                 minutes=sum(getattr(sa.servicio, 'duracion_minutos', 30) for sa in t.servicios_asignados.all())
             )
             fin = inicio + duracion_total_turno
-            if timezone.is_naive(inicio):
-                inicio = inicio.replace(tzinfo=tz)
-            if timezone.is_naive(fin):
-                fin = fin.replace(tzinfo=tz)
-            bloqueos.append((inicio, fin))
+            bloqueos.append((inicio, fin, t.cliente_id))
     except Exception as e:
         return Response({'error': f'Error al obtener turnos ocupados: {e}'}, status=500)
+
+    # --- Función auxiliar para contar clientes solapados ---
+    def clientes_en_slot(inicio_slot, fin_slot):
+        clientes = set()
+        for inicio_b, fin_b, cliente_id in bloqueos:
+            if inicio_b < fin_slot and fin_b > inicio_slot:  # solapa
+                clientes.add(cliente_id)
+        return len(clientes)
 
     # --- Slots disponibles ---
     try:
         slots_disponibles = []
-        slot_potencial = max(datetime.now(tz), inicio_jornada)
 
-        for inicio_bloqueo, fin_bloqueo in bloqueos:
-            while slot_potencial + duracion_necesaria <= inicio_bloqueo:
-                slots_disponibles.append(slot_potencial.strftime('%H:%M'))
-                slot_potencial += INTERVALO_PASO
-            slot_potencial = max(slot_potencial, fin_bloqueo)
+        # Si la fecha es hoy, el primer horario posible debe ser posterior a la hora actual
+        slot_potencial = inicio_jornada
 
         while slot_potencial + duracion_necesaria <= fin_jornada:
-            slots_disponibles.append(slot_potencial.strftime('%H:%M'))
+            fin_slot = slot_potencial + duracion_necesaria
+
+            # Si la fecha es hoy, saltar slots pasados
+            if fecha == timezone.now().date() and slot_potencial < timezone.now():
+                slot_potencial += INTERVALO_PASO
+                continue
+
+            if clientes_en_slot(slot_potencial, fin_slot) < 2:
+                slots_disponibles.append(slot_potencial.strftime('%H:%M'))
+
+            slot_potencial += INTERVALO_PASO
+
+
+        while slot_potencial + duracion_necesaria <= fin_jornada:
+            fin_slot = slot_potencial + duracion_necesaria
+            if clientes_en_slot(slot_potencial, fin_slot) < 2:  # máximo 2 clientes por horario
+                slots_disponibles.append(slot_potencial.strftime('%H:%M'))
             slot_potencial += INTERVALO_PASO
 
         mensaje = "" if slots_disponibles else "No hay horarios disponibles."
@@ -123,15 +141,17 @@ class TurnosViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         qs = Turno.objects.all().select_related('cliente').prefetch_related('servicios_asignados__servicio')
-        role = getattr(user, 'role', '').lower()
 
-        if role == 'cliente':
+        if not user.is_authenticated:
+            return qs.none()
+
+        if user.groups.filter(name='Cliente').exists():
             return qs.filter(cliente=user)
-        elif role == 'empleado':
-            # Empleado puede ver todos los turnos (pendientes, confirmados, cancelados)
+        elif user.groups.filter(name='Empleado').exists():
             return qs
-        elif role == 'admin':
+        elif user.groups.filter(name='Administrador').exists():
             return qs
+
         return qs.none()
 
     def get_serializer_context(self):
