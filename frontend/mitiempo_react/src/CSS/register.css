@@ -1,37 +1,38 @@
 /* src/CSS/register.css */
+/* 🎨 Estilos adaptados al nuevo tema elegante (claro) */
 
 .register-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  /* 💡 Usa el fondo oscuro */
-  background-color: var(--bg-color);
+  /* 🎨 Fondo gris claro (fallback) */
+  background-color: var(--color-bg);
   background: url('../imagenes/fondo.png') no-repeat center center/cover;
-  font-family: var(--font-family);
+  font-family: var(--font-body);
   padding: 2rem;
-  /* Filtro oscuro */
+  /* Filtro oscuro para que resalte la tarjeta */
   background-blend-mode: multiply;
   background-color: rgba(0,0,0,0.5);
 }
 
 /* Caja del formulario */
 .register-box {
-  /* 💡 Estilos coherentes con Login.css */
-  background: var(--bg-color-light);
-  padding: 2rem;
-  border-radius: var(--border-radius);
+  /* 🎨 Estilos coherentes con Login.css */
+  background: var(--color-bg-card); /* Blanco */
+  padding: 2.5rem;
+  border-radius: var(--border-radius-md); /* 16px */
   box-shadow: var(--shadow-soft);
   width: 100%;
   max-width: 700px;
   text-align: center;
-  border-top: 4px solid var(--primary-color);
+  border-top: 4px solid var(--color-primary); /* Rosa */
 }
 
 /* Título */
 .register-box h2 {
   font-size: 1.75rem;
-  color: var(--text-color);
+  color: var(--color-text-dark); /* Texto oscuro */
   margin-bottom: 1.5rem;
   font-weight: 700;
 }
@@ -40,11 +41,11 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
-/* Estilo de .form-group (de Login.css) */
+/* Estilo de .form-group (de App.css) */
 .form-group {
   text-align: left;
 }
@@ -52,24 +53,8 @@
   grid-column: 1 / -1; /* Ocupa todo el ancho */
 }
 
-/* Inputs (coherentes) */
-.form-grid input {
-  width: 100%;
-  padding: 12px;
-  font-family: var(--font-family);
-  font-size: 16px;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
-}
-
-.form-grid input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-color-light);
-}
+/* 🎨 ELIMINADO bloque .form-grid input. 
+   Ahora se usa .form-input desde el JSX. */
 
 /* Wrapper de contraseña (de Login.css) */
 .password-wrapper {
@@ -77,58 +62,49 @@
 }
 .password-toggle-btn {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary); /* Gris sutil */
   cursor: pointer;
   padding: 0;
   font-size: 1.1rem;
 }
 
-/* Botón principal (del sistema) */
+/* Botón principal (heredado de index.css) */
 .register-box .btn-primary {
   width: 100%;
   padding: 12px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600; /* Semibold */
 }
 
 /* Enlaces inferiores */
 .register-footer {
   margin-top: 1.5rem;
   font-size: 0.9rem;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary); /* Gris sutil */
 }
 .register-footer .link-button {
-  color: var(--primary-color);
+  color: var(--color-primary);
   margin-left: 5px;
   font-weight: 500;
 }
 .register-footer .link-button:hover {
-  color: var(--primary-color-hover);
+  color: var(--color-primary-light);
   text-decoration: underline;
 }
 
-/* Mensaje de error (de Login.css) */
-.message.error {
-  background: rgba(225, 29, 72, 0.1);
-  color: #fca5a5;
-  border-color: var(--danger-color);
-  margin-bottom: 1rem;
-  padding: 10px;
-  border-radius: var(--border-radius);
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: 1px solid var(--danger-color);
-}
+/* 🎨 ELIMINADO bloque .message.error. 
+   Ahora se usa .alert.alert-error desde el JSX. */
 
 /* Responsividad */
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr; /* Una columna en móviles */
+    gap: 0; /* .form-group ya tiene margen */
   }
   .register-box {
     padding: 1.5rem;

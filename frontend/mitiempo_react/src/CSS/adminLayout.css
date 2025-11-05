@@ -1,6 +1,6 @@
 /* src/CSS/adminLayout.css */
 /* Este CSS es el que hace que tu contenido no quede
-   DEBAJO del sidebar */
+   DEBAJO del sidebar y aplica el fondo correcto */
 
 .admin-layout {
   display: flex;
@@ -8,25 +8,31 @@
 
 .admin-content {
   flex-grow: 1;
-  /* 💡 Empieza con el padding del sidebar abierto */
-  padding-left: 240px; 
-  padding: 2rem;
   min-height: 100vh;
-  background-color: var(--bg-color); /* Fondo oscuro base */
+  
+  /* 🎨 Fondo gris claro del sistema de diseño */
+  background-color: var(--color-bg); 
+  
+  /* 💡 Padding base (T, R, B) y padding-left 
+     para la barra abierta */
+  padding: 2rem; 
+  padding-left: 240px; /* Ancho .sidebar.open */
+  
   transition: padding-left 0.3s ease;
 }
 
 .admin-content.collapsed {
   /* 💡 Padding cuando el sidebar está colapsado */
-  padding-left: 70px;
+  padding-left: 70px; /* Ancho .sidebar.collapsed */
 }
 
 /* Responsividad */
 @media (max-width: 768px) {
   .admin-content,
   .admin-content.collapsed {
-    /* En móvil el sidebar se superpone, no empuja el contenido */
-    padding-left: 0;
-    padding: 1rem;
+    /* En móvil el sidebar se superpone.
+      Reseteamos el padding para que sea uniforme.
+    */
+    padding: 1.5rem;
   }
 }

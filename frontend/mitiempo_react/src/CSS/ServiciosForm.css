@@ -1,0 +1,83 @@
+/* src/CSS/ServiciosForm.css */
+/* 🎨 Estilos para el formulario de Servicios (Tema Claro) */
+
+/* NOTA: .form-container, .form-group, .form-input, .form-select,
+   .btn, .btn-primary, .btn-secondary, .alert, .form-actions
+   se heredan de los archivos CSS globales (index.css, App.css) */
+
+/* Grilla de 2 columnas (reutilizada de otros forms) */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Grupo de checkboxes para Días Disponibles */
+.checkbox-group-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem; /* Más espacio */
+  
+  /* 🎨 Usando las variables del nuevo tema */
+  background-color: var(--color-bg); /* Fondo gris claro */
+  border: 1px solid var(--color-border);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-sm); /* 8px */
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-item label {
+  margin: 0;
+  font-weight: 500; /* Un poco más de peso */
+  color: var(--color-text-dark);
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 1.25rem; /* 🎨 Un poco más grande */
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--color-primary); /* 🎨 Color protagonista */
+}
+
+/* Grupo de checkbox simple (para "Activo") */
+/* (Esta clase también se usa en Login.css, Register.css, AdminProductos.css) */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem; /* Espacio antes de los botones de acción */
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+/* --- Responsividad --- */
+@media (max-width: 600px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0; /* .form-group ya tiene margen inferior */
+  }
+  
+  .checkbox-group-horizontal {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+}

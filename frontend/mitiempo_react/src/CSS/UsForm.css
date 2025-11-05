@@ -1,0 +1,116 @@
+/* src/CSS/UsForm.css */
+/* 🎨 Estilos para el formulario de Usuarios (Tema Claro) */
+
+/* NOTA: .form-group, .form-input, .form-select
+   se heredan de los archivos CSS globales (index.css, App.css) */
+
+.form-container-modal { 
+  /* Esta clase es un placeholder. 
+    El padding y layout vienen del .modal-body
+  */
+  width: 100%;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-section {
+  border-top: 1px solid var(--color-border); /* 🎨 NEW */
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.form-section h4 {
+  color: var(--color-text-dark); /* 🎨 NEW */
+  font-size: 1.25rem; /* 🎨 h4 */
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* --- Estilos de Horarios --- */
+
+.dia-horario-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
+  transition: background-color var(--transition-speed);
+}
+.dia-horario-row:last-child { 
+  border-bottom: none; 
+}
+
+/* 🎨 Fondo rosa pálido cuando está activo */
+.dia-horario-row.active { 
+  background-color: rgba(251, 91, 91, 0.05); /* 🎨 5% de --color-primary */
+}
+
+/* 🎨 Estilos para el checkbox de día (reutilizados) */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0; /* Anula el margen global */
+}
+.checkbox-group label {
+  margin-bottom: 0;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  cursor: pointer;
+}
+.checkbox-group input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+
+/* Grupo de inputs de Hora */
+.horarios-inputs-group { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.horarios-inputs-group span { 
+  color: var(--color-text-secondary); /* 🎨 NEW */
+  font-weight: 500;
+}
+
+.horarios-inputs-group .form-input { 
+  /* 🎨 Hacemos los inputs de hora más pequeños */
+  width: 110px; 
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+/* --- Responsividad --- */
+@media (max-width: 600px) {
+  .form-grid-2 { 
+    grid-template-columns: 1fr; 
+    gap: 0;
+  }
+  
+  .dia-horario-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  
+  .horarios-inputs-group { 
+    flex-direction: row; /* Mantenemos la fila */
+    align-items: center; 
+    justify-content: space-between;
+    padding-left: 2.25rem; /* Indentación (ancho checkbox + gap) */
+  }
+
+  .horarios-inputs-group .form-input { 
+    width: 40%; /* Ocupa el espacio disponible */
+  }
+}

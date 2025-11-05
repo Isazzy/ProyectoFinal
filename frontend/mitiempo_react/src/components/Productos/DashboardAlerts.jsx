@@ -1,6 +1,10 @@
+// src/components/Common/DashboardAlerts.jsx
 import React, { useState, useEffect } from 'react';
 import { getProductosBajoStock } from '../../api/productos';
 import { Link } from 'react-router-dom';
+
+// 💡 1. Importamos el nuevo CSS
+import '../../CSS/DashboardAlerts.css';
 
 export default function DashboardAlerts() {
   const [lowStockCount, setLowStockCount] = useState(0);
@@ -22,34 +26,19 @@ export default function DashboardAlerts() {
   }
 
   return (
-    <div className="dashboard-alert low-stock-alert">
+    // 💡 2. Clases combinadas: hereda colores y bordes de .alert-error
+    //    y el layout flex de .dashboard-alert
+    <div className="alert alert-error dashboard-alert">
       <p>
         <strong>¡Alerta!</strong> Tienes <strong>{lowStockCount}</strong> producto(s)
         por debajo del stock mínimo.
       </p>
+      {/* 💡 3. El .btn-sm ahora es una clase global (ver App.css) */}
       <Link to="/admin/dashboard/productos?filtro=bajo_stock" className="btn btn-danger btn-sm">
         Ver Productos
       </Link>
-      <style>{`
-        .dashboard-alert {
-          padding: 1rem;
-          margin: 1rem;
-          border-radius: 8px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background-color: var(--danger-color-light);
-          border: 1px solid var(--danger-color);
-          color: var(--danger-color);
-        }
-        .dashboard-alert p {
-          margin: 0;
-        }
-        .btn-sm {
-          padding: 0.25rem 0.75rem;
-          font-size: 0.9rem;
-        }
-      `}</style>
+      
+      {/* 💡 4. El bloque <style> se ha eliminado */}
     </div>
   );
 }

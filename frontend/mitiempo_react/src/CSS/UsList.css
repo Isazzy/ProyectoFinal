@@ -1,0 +1,158 @@
+/* src/CSS/UsList.css */
+/* 🎨 Estilos para la página de lista de Usuarios (Tema Claro) */
+
+/* NOTA: .admin-page-container, .admin-page-header, .btn, .form-input, 
+   .form-select, .form-group, .styled-table, .table-actions
+   se heredan de los archivos CSS globales.
+*/
+
+/* --- Toolbar y Filtros --- */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
+  margin-bottom: 1rem;
+}
+
+.toolbar-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text-dark); /* 🎨 NEW */
+  margin: 0;
+}
+
+.search-filter-group { 
+  display: flex; 
+  gap: 10px; 
+}
+
+.search-filter-group .form-input { 
+  background-color: var(--color-bg-card); /* 🎨 NEW (Fondo blanco) */
+  width: 250px;
+}
+
+.filters-menu {
+  background-color: var(--color-bg-cream); /* 🎨 NEW (Fondo crema) */
+  border: 1px solid var(--color-border); /* 🎨 NEW */
+  border-radius: var(--border-radius-sm); /* 🎨 NEW */
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filters-menu .form-group {
+  margin-bottom: 0; /* Anulamos el margen de form-group */
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.btn-reset-filters { 
+  background: var(--color-bg-card); /* 🎨 NEW (Blanco) */
+  color: var(--color-text-dark);
+  border: 1px solid var(--color-border);
+}
+.btn-reset-filters:hover { 
+  background: var(--color-bg); /* 🎨 NEW (Gris claro) */
+}
+
+/* --- Estilos de Celdas de la Tabla --- */
+.user-info-cell { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
+
+.profile-pic-small {
+  width: 36px; 
+  height: 36px;
+  border-radius: 50%;
+  /* 🎨 NEW (Fondo rosa pálido, texto rosa) */
+  background-color: rgba(251, 91, 91, 0.1); 
+  color: var(--color-primary);
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  font-weight: 600; 
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.user-full-name { 
+  font-weight: 600; 
+  color: var(--color-text-dark); /* 🎨 NEW */
+}
+.user-email { 
+  font-size: 0.85rem; 
+  color: var(--color-text-secondary); /* 🎨 NEW */
+}
+
+/* Badges (reutilizados) */
+.access-badges { 
+  display: flex; 
+  gap: 5px; 
+  flex-wrap: wrap; 
+}
+
+.badge {
+  padding: 5px 12px; /* 🎨 Un poco más grande */
+  border-radius: var(--border-radius-pill); /* 🎨 NEW */
+  font-size: 0.8rem;
+  font-weight: 600; /* 🎨 Semibold */
+  text-transform: capitalize;
+  line-height: 1;
+}
+
+/* 🎨 Colores de badge actualizados (consistentes con TurnoDetailModal) */
+.badge-admin { 
+  background-color: rgba(225, 29, 72, 0.1); 
+  color: var(--color-danger); 
+}
+.badge-empleado { 
+  background-color: rgba(245, 158, 11, 0.1); 
+  color: #b45309; /* Ámbar oscuro */
+}
+.badge-cliente { 
+  background-color: rgba(5, 150, 105, 0.1); 
+  color: var(--color-success); 
+}
+
+.rol-profesional-text { 
+  color: var(--color-text-secondary); /* 🎨 NEW */
+  font-style: italic;
+}
+.text-muted { 
+  color: var(--color-text-secondary); /* 🎨 NEW */
+}
+.text-center {
+  text-align: center;
+}
+
+/* Responsividad (heredada de .styled-table en App.css) */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .search-filter-group {
+    flex-direction: column;
+  }
+  .search-filter-group .form-input {
+    width: 100%;
+  }
+  .filters-menu {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .text-center {
+    text-align: right; /* Anulado por el modo responsivo de la tabla */
+  }
+  .table-actions {
+    justify-content: flex-end; /* Alinea botones a la derecha en móvil */
+  }
+}

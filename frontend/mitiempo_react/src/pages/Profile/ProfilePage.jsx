@@ -1,24 +1,24 @@
 // src/pages/Profile/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
-import { getTurnos } from "../../api/turnos"; // Usa la misma API
+import { getTurnos } from "../../api/turnos"; 
 import { useAuth } from "../../Context/AuthContext";
-import TurnoCard from "../../components/Turnos/TurnoCard"; // Importa el card
-import "../../CSS/ProfilePage.css"; // CSS para esta página
+import TurnoCard from "../../components/Turnos/TurnoCard"; 
+import "../../CSS/ProfilePage.css"; 
 
 export default function ProfilePage() {
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth(); // Obtener el ID del cliente
+  const { user } = useAuth(); 
 
   useEffect(() => {
     if (!user) return;
 
     setLoading(true);
-    // Filtramos por el ID del cliente logueado
+    
     getTurnos({ id_cli: user.id })
       .then((response) => {
-        // Ordena por fecha, más nuevos primero
+       
         const sortedTurnos = response.data.sort((a, b) => 
           new Date(b.start) - new Date(a.start)
         );
@@ -30,7 +30,7 @@ export default function ProfilePage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  // Filtramos los turnos
+
   const turnosPendientes = turnos.filter(t => t.estado_turno === 'pendiente');
   const turnosConfirmados = turnos.filter(t => t.estado_turno === 'confirmado');
   const turnosPasados = turnos.filter(t => ['cancelado', 'completado'].includes(t.estado_turno));

@@ -1,3 +1,4 @@
+// front/src/pages/Admin/AgendaAdmin.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -10,13 +11,16 @@ import Modal from '../../components/Common/Modal';
 import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; 
 import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin'; 
 
+// 💡 Importamos el CSS rediseñado
 import "../../CSS/AdminAgenda.css"; 
 
+// 🎨 --- COLORES ACTUALIZADOS --- 
+// Colores más elegantes y alineados con el nuevo tema.
 const ESTADO_COLORS = {
-  'pendiente': '#f0ad4e', 
-  'confirmado': '#5cb85c', 
-  'completado': '#5bc0de', 
-  'cancelado': '#d9534f',  
+  'pendiente': '#f59e0b', // Ámbar (para advertencia)
+  'confirmado': '#059669', // Verde (éxito)
+  'completado': '#3b82f6', // Azul (informativo)
+  'cancelado': '#777777',  // Gris (color secundario de texto)
 };
 
 export default function AgendaAdmin() {
@@ -41,12 +45,13 @@ export default function AgendaAdmin() {
       .then(response => {
         
         const calendarEvents = response.data.map(turno => ({
-          id: turno.id_turno, // <- Corregido para usar id_turno
+          id: turno.id_turno,
           title: turno.cliente_nombre, 
           start: turno.fecha_hora_inicio, 
           end: turno.fecha_hora_fin, 
           backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
           borderColor: ESTADO_COLORS[turno.estado] || '#777',
+          textColor: '#ffffff', // 🎨 Aseguramos texto blanco en eventos
           extendedProps: { ...turno } 
         }));
         
@@ -55,6 +60,8 @@ export default function AgendaAdmin() {
       .catch(err => toast.error("Error al cargar la agenda."))
       .finally(() => setLoading(false));
   };
+
+  // --- El resto de los manejadores (sin cambios) ---
 
   const handleEventClick = (clickInfo) => {
     const turnoCompleto = clickInfo.event.extendedProps;
@@ -84,7 +91,7 @@ export default function AgendaAdmin() {
   };
 
   const handleEditFromView = () => {
-    setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+    setSelectedTurnoId(selectedTurno.id_turno);
     setViewModalOpen(false); 
     setFormModalOpen(true); 
   };
@@ -94,7 +101,7 @@ export default function AgendaAdmin() {
     setLoading(true);
     
     try {
-      await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado }); // <- Corregido para usar id_turno
+      await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado });
       toast.success(`Turno ${nuevoEstado}`);
       loadTurnos(); 
     } catch (err) {
@@ -106,7 +113,7 @@ export default function AgendaAdmin() {
   };
 
   const handleDeleteRequest = () => {
-    setSelectedTurnoId(selectedTurno.id_turno); // <- Corregido para usar id_turno
+    setSelectedTurnoId(selectedTurno.id_turno);
     setViewModalOpen(false); 
     setDeleteModalOpen(true); 
   };
@@ -127,11 +134,17 @@ export default function AgendaAdmin() {
     }
   };
 
-  return (
-    <div className="admin-page-container admin-agenda">
-      {loading && <p>Cargando agenda...</p>}
+  // --- Renderizado ---
 
-      <div className="calendar-container">
+  return (
+    // 💡 Contenedor genérico. El layout ya da el padding.
+    <div className="admin-agenda"> 
+      {loading && (
+        <div className="loading-spinner">Cargando agenda...</div>
+      )}
+
+      {/* 🎨 Contenedor de la tarjeta del calendario */}
+      <div className="calendar-container card">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -156,9 +169,25 @@ export default function AgendaAdmin() {
             week: 'Semana',
             day: 'Día',
           }}
-          height="auto" 
+          height="auto" // Se ajusta al contenedor
+          // 💡 Propiedades para zona horaria y formato
+          timeZone="local" 
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+          }}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+          }}
         />
       </div>
+
+      {/* --- Modales (usando el nuevo estilo de index.css y App.css) --- */}
 
       {viewModalOpen && (
         <TurnoDetailModal
@@ -184,6 +213,7 @@ export default function AgendaAdmin() {
         title="Confirmar Eliminación"
         footer={
           <>
+            {/* 🎨 Clases de botones del nuevo sistema de diseño */}
             <button onClick={() => setDeleteModalOpen(false)} className="btn btn-secondary" disabled={loading}>Cancelar</button>
             <button onClick={handleDeleteConfirm} className="btn btn-danger" disabled={loading}>
               {loading ? "Eliminando..." : "Eliminar Turno"}

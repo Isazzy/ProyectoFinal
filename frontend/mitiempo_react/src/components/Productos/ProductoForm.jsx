@@ -1,3 +1,4 @@
+// front/src/components/Productos/ProductoForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -12,6 +13,9 @@ import {
 import toast from "react-hot-toast";
 import { uploadToImgur } from "../../components/Productos/Imgur";
 import QuickCreateModal from "../Common/QuickCreateModal";
+
+// 💡 1. Importamos el nuevo archivo CSS
+import "../../CSS/ProductoForm.css";
 
 const initialState = {
   nombre_prod: "",
@@ -42,6 +46,7 @@ export default function ProductoForm() {
   const { id } = useParams();
   const isEditing = !!id;
 
+  // --- Lógica (sin cambios) ---
   const loadDropdowns = async () => {
     try {
       const [marcasRes, catRes] = await Promise.all([
@@ -135,14 +140,11 @@ export default function ProductoForm() {
     e.preventDefault();
     setError("");
 
-    // --- CORRECCIÓN ---
-    // Validación de campos obligatorios para prevenir el 400 Bad Request
     if (!producto.nombre_prod || !producto.precio_venta || producto.precio_venta <= 0) {
       setError("El Nombre y el Precio de Venta (mayor a 0) son obligatorios.");
       toast.error("Faltan campos obligatorios.");
       return;
     }
-    // --------------------
 
     setLoading(true);
     let imagenUrlFinal = producto.imagen_url || "";
@@ -181,7 +183,6 @@ export default function ProductoForm() {
       }
       navigate("/admin/dashboard/productos");
     } catch (err) {
-      // Intentar obtener un error más específico del serializer
       const apiError = err.response?.data;
       if (apiError) {
         const firstKey = Object.keys(apiError)[0];
@@ -195,15 +196,18 @@ export default function ProductoForm() {
       setLoading(false);
     }
   };
+  // ---------------------------------
 
   if (loading && !producto.nombre_prod) return <p>Cargando formulario...</p>;
 
   return (
+    // 💡 Usa la clase global .form-container de App.css
     <div className="form-container">
       <h2>{isEditing ? "Editar Producto" : "Nuevo Producto"}</h2>
 
       <form onSubmit={handleSubmit}>
-        {error && <p className="message error">{error}</p>}
+        {/* 💡 2. Usa la clase global .alert */}
+        {error && <div className="alert alert-error">{error}</div>}
 
         <div className="form-grid-2">
           <div className="form-group">
@@ -217,8 +221,9 @@ export default function ProductoForm() {
           <div className="form-group">
             <label>Imagen de Producto</label>
             {previewImg && (
-              <div style={{ marginBottom: "0.5rem", display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <img src={previewImg} alt="Preview" style={{ maxWidth: "120px", maxHeight: '80px', borderRadius: '4px' }} />
+              // 💡 3. Usa clases del nuevo CSS
+              <div className="image-preview-container">
+                <img src={previewImg} alt="Preview" className="image-preview" />
                 {imagenFile && (
                   <button type="button" onClick={handleRemoveFile} className="btn btn-secondary btn-sm">
                     Quitar
@@ -233,10 +238,11 @@ export default function ProductoForm() {
             />
             {!imagenFile && (
               <input
-                id="imagen_url" name="imagen_url" className="form-input"
+                id="imagen_url" name="imagen_url" 
+                // 💡 4. Usa clases del nuevo CSS
+                className="form-input image-url-input"
                 value={producto.imagen_url || ""} onChange={handleChange}
                 placeholder="Pega URL pública de imgur.com" disabled={loading}
-                style={{marginTop: '0.5rem'}}
               />
             )}
             {!imagenFile && (
@@ -250,6 +256,7 @@ export default function ProductoForm() {
         <div className="form-grid-2">
           <div className="form-group">
             <label htmlFor="marca">Marca</label>
+            {/* 💡 5. Usa clases del nuevo CSS */}
             <div className="input-with-button">
               <select
                 id="marca" name="marca" className="form-select"
@@ -319,7 +326,8 @@ export default function ProductoForm() {
           </div>
         </div>
 
-        <h4>Gestión de Stock</h4>
+        {/* 💡 6. Usa clase del nuevo CSS */}
+        <h4 className="form-section-divider">Gestión de Stock</h4>
         <div className="form-grid-2">
           <div className="form-group">
             <label htmlFor="stock_act_prod">Stock Actual</label>
@@ -357,6 +365,7 @@ export default function ProductoForm() {
           </div>
         </div>
 
+        {/* 💡 7. Clases globales de App.css */}
         <div className="form-actions">
           <button
             type="button" className="btn btn-secondary"
@@ -371,6 +380,7 @@ export default function ProductoForm() {
         </div>
       </form>
 
+      {/* (Estos modales ya usan estilos globales) */}
       <QuickCreateModal
         isOpen={isMarcaModalOpen}
         onClose={() => setIsMarcaModalOpen(false)}
@@ -387,53 +397,7 @@ export default function ProductoForm() {
         onSubmit={(data) => handleQuickCreate('categoria', createCategoria, data)}
       />
 
-      <style>{`
-        .form-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
-        }
-        h4 {
-          margin-top: 1.5rem;
-          border-top: 1px solid var(--border-color);
-          padding-top: 1rem;
-        }
-        .input-with-button {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
-        }
-        .input-with-button .form-select {
-          flex-grow: 1; 
-        }
-        .btn-add-quick {
-          flex-shrink: 0;
-          width: 40px; 
-          height: 40px; 
-          padding: 0;
-          font-size: 1.5rem; 
-          line-height: 1;
-          background-color: var(--primary-color);
-          color: white;
-          border: none;
-          border-radius: var(--border-radius);
-          cursor: pointer;
-        }
-        .btn-add-quick:disabled {
-          background-color: var(--secondary-color);
-          cursor: not-allowed;
-        }
-        .btn-sm { 
-          padding: 0.25rem 0.5rem;
-          font-size: 0.8rem;
-        }
-        @media (max-width: 600px) {
-          .form-grid-2 {
-            grid-template-columns: 1fr;
-            gap: 0;
-          }
-        }
-      `}</style>
+      {/* 💡 8. Bloque <style> eliminado */}
     </div>
   );
 }

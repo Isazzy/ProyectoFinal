@@ -1,0 +1,101 @@
+/* src/CSS/ProductoForm.css */
+/* 🎨 Estilos para el formulario de Productos (Tema Claro) */
+
+/* NOTA: .form-container, .form-group, .form-input, .form-select,
+   .btn, .btn-primary, .btn-secondary, .alert, .form-actions
+   se heredan de los archivos CSS globales (index.css, App.css) */
+
+/* Grilla de 2 columnas */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Título de sección (Gestión de Stock) */
+.form-section-divider {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-top: 2rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+  margin-bottom: 0.5rem; /* Menos espacio antes de los inputs */
+  /* Ocupa ambas columnas de la grilla */
+  grid-column: 1 / -1; 
+}
+
+/* --- Sección de Imagen --- */
+.image-preview-container {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.image-preview {
+  max-width: 120px;
+  max-height: 80px;
+  border-radius: var(--border-radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+/* 🎨 Botón pequeño (para el botón "Quitar") */
+.btn-sm { 
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  /* Hereda el resto de estilos de .btn y .btn-secondary */
+}
+
+.image-url-input {
+  margin-top: 0.75rem;
+}
+
+/* --- Input con botón de Añadir Rápido (Marca/Categoría) --- */
+.input-with-button {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.input-with-button .form-select {
+  flex-grow: 1; 
+}
+
+.btn-add-quick {
+  flex-shrink: 0;
+  /* 🎨 Mismo alto que los inputs (padding 12px + font-size ~16px + border 1px*2) */
+  height: 44px; 
+  width: 44px; 
+  padding: 0;
+  font-size: 1.75rem; 
+  line-height: 1;
+  font-weight: 300;
+  
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.btn-add-quick:hover {
+  background: var(--color-primary-light);
+}
+
+.btn-add-quick:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+/* --- Responsividad --- */
+@media (max-width: 600px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0; /* .form-group ya tiene margin-bottom */
+  }
+}

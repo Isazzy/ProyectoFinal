@@ -1,0 +1,72 @@
+/* src/CSS/ProductoDetailModal.css */
+/* 🎨 Estilos para el modal de detalle de producto (Tema Claro) */
+
+.producto-detalle-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* 1 parte imagen, 2 partes info */
+  gap: 1.5rem;
+}
+
+.producto-detalle-img img {
+  width: 100%;
+  /* 🎨 Usamos las variables globales */
+  border-radius: var(--border-radius-sm); 
+  border: 1px solid var(--color-border);
+  object-fit: cover;
+  aspect-ratio: 1 / 1; /* Hacemos la imagen cuadrada */
+}
+
+.producto-detalle-info p {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary); /* 🎨 Color de texto sutil */
+  display: flex;
+}
+
+/* 🎨 Mejora de alineación (como en TurnoDetailModal) */
+.producto-detalle-info p strong {
+  color: var(--color-text-dark);
+  font-weight: 500;
+  margin-right: 8px;
+  min-width: 100px; /* Alinea los valores */
+}
+
+.producto-detalle-info hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border); /* 🎨 Variable global */
+}
+
+.producto-detalle-acciones {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border); /* 🎨 Variable global */
+}
+
+/* 🎨 Clase para el texto de bajo stock */
+.low-stock-text {
+  color: var(--color-danger); /* 🎨 Variable global */
+  font-weight: 600;
+}
+
+/* 🎨 Nos aseguramos que el "Stock Actual:" también sea rojo */
+.low-stock-text strong {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+/* --- Responsividad --- */
+@media (max-width: 600px) {
+  .producto-detalle-grid {
+    grid-template-columns: 1fr; /* Colapsa a una columna */
+  }
+  
+  .producto-detalle-img img {
+    /* En móvil, usamos un aspect-ratio más panorámico */
+    aspect-ratio: 16 / 9; 
+    max-height: 200px;
+    margin: 0 auto;
+  }
+}
