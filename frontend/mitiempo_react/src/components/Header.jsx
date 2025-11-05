@@ -22,7 +22,7 @@ export default function Header() {
     if (user?.rol === "admin") {
       navigate("/admin/dashboard");
     } else {
-      navigate("/perfil_cliente");
+      navigate("/perfil");
     }
   };
 

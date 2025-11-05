@@ -12,9 +12,7 @@ api.interceptors.request.use(
     // 💡 Asegura que los endpoints de lectura pública no necesiten token
     const isPublic =
       config.method === "get" &&
-      (config.url.startsWith("/servicios") || 
-      
-       config.url.startsWith("/horarios_disponibles"));
+      (config.url.startsWith("/servicios") );
 
     if (isPublic) {
       delete config.headers.Authorization;
