@@ -9,19 +9,17 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // 💡 Asegura que los endpoints de lectura pública no necesiten token
+    // ✅ Solo los endpoints realmente públicos (sin autenticación)
     const isPublic =
       config.method === "get" &&
-      (config.url.startsWith("/servicios") || 
-      
-       config.url.startsWith("/horarios_disponibles"));
+      config.url.startsWith("/servicios"); // 👈 quitamos horarios_disponibles
 
     if (isPublic) {
       delete config.headers.Authorization;
       return config;
     }
 
-    // Usamos 'access' como lo definiste
+    // 🔐 Para todos los demás, agrega el token si existe
     const token = localStorage.getItem("access");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -37,14 +35,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 y no es un reintento
+    // 🔄 Si da 401 (token expirado) y no es un reintento, intenta refrescar
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refresh"); 
+      const refreshToken = localStorage.getItem("refresh");
 
       if (refreshToken) {
         try {
-          
           const res = await axios.post(`${BASE_API_URL}/token/refresh/`, {
             refresh: refreshToken,
           });
@@ -52,15 +49,14 @@ api.interceptors.response.use(
           const newAccess = res.data.access;
           localStorage.setItem("access", newAccess);
 
+          // 🔁 Reintenta con el nuevo token
           originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-          return api(originalRequest); 
+          return api(originalRequest);
         } catch {
-    
           localStorage.clear();
           window.location.href = "/login";
         }
       } else {
-        // No hay refresh token
         localStorage.clear();
         window.location.href = "/login";
       }
