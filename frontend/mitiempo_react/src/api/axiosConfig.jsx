@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// 💡 Tu URL base ya incluye /api, ¡perfecto!
+//  Tu URL base ya incluye /api, ¡perfecto!
 const BASE_API_URL = "http://127.0.0.1:8000/api";
 
 const api = axios.create({
@@ -9,17 +9,17 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // ✅ Solo los endpoints realmente públicos (sin autenticación)
+    //  Asegura que los endpoints de lectura pública no necesiten token
     const isPublic =
       config.method === "get" &&
-      config.url.startsWith("/servicios"); // 👈 quitamos horarios_disponibles
+      (config.url.startsWith("/servicios") );
 
     if (isPublic) {
       delete config.headers.Authorization;
       return config;
     }
 
-    // 🔐 Para todos los demás, agrega el token si existe
+    //  Para todos los demás, agrega el token si existe
     const token = localStorage.getItem("access");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -35,7 +35,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 🔄 Si da 401 (token expirado) y no es un reintento, intenta refrescar
+    //  Si da 401 (token expirado) y no es un reintento, intenta refrescar
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem("refresh");
@@ -49,7 +49,7 @@ api.interceptors.response.use(
           const newAccess = res.data.access;
           localStorage.setItem("access", newAccess);
 
-          // 🔁 Reintenta con el nuevo token
+          //  Reintenta con el nuevo token
           originalRequest.headers.Authorization = `Bearer ${newAccess}`;
           return api(originalRequest);
         } catch {

@@ -1,0 +1,127 @@
+/* src/CSS/TurnoDetailModal.css */
+/* 🎨 Estilos para el Modal de Detalle de Turno (Tema Claro) */
+
+.turno-detalle-info p {
+  margin-bottom: 12px;
+  color: var(--color-text-secondary); /* 🎨 NEW */
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+}
+
+.turno-detalle-info strong {
+  color: var(--color-text-dark); /* 🎨 NEW */
+  font-weight: 500; /* 🎨 NEW */
+  margin-right: 8px;
+  min-width: 100px;
+}
+
+.turno-detalle-info h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-dark); /* 🎨 NEW */
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  border-top: 1px solid var(--color-border); /* 🎨 NEW */
+  padding-top: 1rem;
+}
+
+.turno-detalle-info ul {
+  list-style: none;
+  padding-left: 1rem;
+}
+.turno-detalle-info li {
+  margin-bottom: 5px;
+  color: var(--color-text-secondary); /* 🎨 NEW */
+}
+
+/* Caja de observaciones */
+.observaciones-box {
+  background-color: var(--color-bg); /* 🎨 NEW (fondo gris claro) */
+  border: 1px solid var(--color-border); /* 🎨 NEW */
+  padding: 12px;
+  border-radius: var(--border-radius-sm); /* 🎨 NEW (8px) */
+  white-space: pre-wrap;
+  max-height: 100px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+/* Footer del Modal (para alinear botones) */
+.modal-footer-admin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Botón de eliminar (solo texto) */
+.btn-danger-text {
+  background: none;
+  border: none;
+  color: var(--color-danger); /* 🎨 NEW */
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.5rem;
+  transition: color var(--transition-speed);
+}
+.btn-danger-text:hover {
+  color: #c51a4a; /* Rojo más oscuro */
+}
+
+/* Badges de Estado (alineados con AgendaAdmin.jsx) */
+.badge {
+  padding: 5px 12px;
+  border-radius: var(--border-radius-pill); /* 🎨 NEW */
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+  line-height: 1;
+}
+
+.estado-pendiente {
+  background-color: rgba(245, 158, 11, 0.1); 
+  color: #b45309; /* Ámbar oscuro */
+}
+.estado-confirmado {
+  background-color: rgba(5, 150, 105, 0.1);
+  color: var(--color-success); /* 🎨 NEW */
+}
+.estado-completado {
+  background-color: rgba(59, 130, 246, 0.1); 
+  color: #1d4ed8; /* Azul oscuro */
+}
+.estado-cancelado {
+  background-color: rgba(119, 119, 119, 0.1); /* 🎨 NEW (Gris) */
+  color: var(--color-text-secondary); 
+}
+
+
+/* Acciones de Estado */
+.estado-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Botón de Éxito (debe heredar de .btn en el JSX) */
+.btn-success {
+  background: var(--color-success);
+  color: #ffffff;
+  border: 1px solid var(--color-success);
+}
+.btn-success:hover {
+  background: #047857; /* Verde más oscuro */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+}
+
+/* .btn-danger y .btn-secondary son globales (App.css) */

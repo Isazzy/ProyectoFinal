@@ -1,3 +1,4 @@
+// front/src/components/Servicios/ServiciosForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -6,11 +7,13 @@ import {
   getServicioById,
 } from "../../api/servicios";
 
-// --- Constantes para los nuevos campos ---
+//  1. Importamos el nuevo CSS
+import "../../CSS/ServiciosForm.css";
+
+// --- Constantes  ---
 const DIAS_SEMANA = [
   "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"
 ];
-
 const capitalizar = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export default function ServiciosForm() {
@@ -18,10 +21,8 @@ export default function ServiciosForm() {
     nombre_serv: "",
     tipo_serv: "",
     precio_serv: "",
-    // --- CAMBIO ---
-    duracion_minutos: 0, // Reemplaza a duracion_serv
-    dias_disponibles: [], // Nuevo campo
-    // --- FIN CAMBIO ---
+    duracion_minutos: 0, 
+    dias_disponibles: [], 
     descripcion_serv: "",
     activado: true,
   });
@@ -30,29 +31,21 @@ export default function ServiciosForm() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Opciones predefinidas
   const tiposServicio = ["Peluquería", "Uñas", "Maquillaje", "Varios"];
-  // 'roles' ya no es necesario
 
-  // Cargar servicio existente si hay ID
+  // --- Lógica ---
   useEffect(() => {
     const cargarServicio = async () => {
       if (id) {
         try {
           const res = await getServicioById(id);
           const data = res.data;
-
-          // --- CAMBIO ---
-          // La lógica de conversión de 'duracion_serv' se elimina.
-          // El serializer ahora envía los campos correctos.
           setServicio({
             ...data,
-            // Aseguramos que los valores sean del tipo correcto
             precio_serv: data.precio_serv || 0,
             duracion_minutos: data.duracion_minutos || 0,
             dias_disponibles: data.dias_disponibles || [],
           });
-
         } catch (err) {
           console.error("Error al cargar servicio:", err);
           setError("Error al cargar el servicio.");
@@ -62,7 +55,6 @@ export default function ServiciosForm() {
     cargarServicio();
   }, [id]);
 
-  // Manejar cambios en los inputs (genérico)
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setServicio((prev) => ({
@@ -71,23 +63,18 @@ export default function ServiciosForm() {
     }));
   };
 
-  // --- CAMBIO ---
-  // Nuevo handler para los checkboxes de días
   const handleDiasChange = (e) => {
     const { value, checked } = e.target;
     setServicio((prev) => {
       const dias = prev.dias_disponibles || [];
       if (checked) {
-        // Añadir el día (evitando duplicados)
         return { ...prev, dias_disponibles: [...new Set([...dias, value])] };
       } else {
-        // Quitar el día
         return { ...prev, dias_disponibles: dias.filter(dia => dia !== value) };
       }
     });
   };
 
-  // Guardar cambios
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -97,9 +84,6 @@ export default function ServiciosForm() {
       return;
     }
 
-    // --- CAMBIO ---
-    // Se elimina la lógica de 'duracion_formateada'.
-    // Creamos el payload con los nuevos campos.
     const payload = {
       ...servicio,
       precio_serv: parseFloat(servicio.precio_serv),
@@ -107,7 +91,6 @@ export default function ServiciosForm() {
       dias_disponibles: servicio.dias_disponibles || [],
     };
     
-    // Eliminamos campos que el serializer ya no espera
     delete payload.duracion_serv; 
     delete payload.rol_requerido;
 
@@ -123,16 +106,20 @@ export default function ServiciosForm() {
       setError("Error al guardar el servicio.");
     }
   };
+  // ---------------------------------
 
   return (
+    //  Usa la clase global .form-container
     <div className="form-container">
       <h2>{id ? "Editar Servicio" : "Nuevo Servicio"}</h2>
 
       <form onSubmit={handleSubmit}>
         
-        {error && <p className="message error">{error}</p>}
+        {/*  2. Usa la clase global .alert */}
+        {error && <div className="alert alert-error">{error}</div>}
 
-        {/* Nombre */}
+        {/* Los campos .form-group, .form-input, .form-select
+            ya heredan estilos globales de App.css */}
         <div className="form-group">
           <label htmlFor="nombre_serv">Nombre del servicio</label>
           <input
@@ -146,7 +133,6 @@ export default function ServiciosForm() {
           />
         </div>
 
-        {/* Tipo */}
         <div className="form-group">
           <label htmlFor="tipo_serv">Tipo de servicio</label>
           <select
@@ -165,14 +151,9 @@ export default function ServiciosForm() {
             ))}
           </select>
         </div>
-
-        {/* --- CAMBIO ---
-            Se elimina el <select> de 'rol_requerido'
-        */}
         
-        {/* Grilla para Precio y Duración */}
+        {/* 💡 3. Usa la clase .form-grid-2 del nuevo CSS */}
         <div className="form-grid-2">
-          {/* Precio */}
           <div className="form-group">
             <label htmlFor="precio_serv">Precio ($)</label>
             <input
@@ -188,7 +169,6 @@ export default function ServiciosForm() {
             />
           </div>
 
-          {/* --- CAMBIO --- Duración en Minutos */}
           <div className="form-group">
             <label htmlFor="duracion_minutos">Duración (minutos)</label>
             <input
@@ -204,7 +184,7 @@ export default function ServiciosForm() {
           </div>
         </div>
 
-        {/* --- CAMBIO --- Nuevo campo Días Disponibles */}
+        {/* 💡 4. Usa clases del nuevo CSS */}
         <div className="form-group">
           <label>Días Disponibles</label>
           <div className="checkbox-group-horizontal">
@@ -215,7 +195,6 @@ export default function ServiciosForm() {
                   id={`dia-${dia}`}
                   name="dias_disponibles"
                   value={dia}
-                  // Comprobamos si el día está en el array del estado
                   checked={(servicio.dias_disponibles || []).includes(dia)}
                   onChange={handleDiasChange}
                 />
@@ -225,7 +204,6 @@ export default function ServiciosForm() {
           </div>
         </div>
 
-        {/* Descripción */}
         <div className="form-group">
           <label htmlFor="descripcion_serv">Descripción</label>
           <textarea
@@ -238,7 +216,7 @@ export default function ServiciosForm() {
           />
         </div>
 
-        {/* Activo */}
+        {/* 💡 5. Usa la clase .checkbox-group del nuevo CSS */}
         <div className="checkbox-group">
           <input
             type="checkbox"
@@ -250,7 +228,7 @@ export default function ServiciosForm() {
           <label htmlFor="activado">Servicio Activo</label>
         </div>
 
-        {/* Botones */}
+        {/* 💡 6. Usa clases globales de App.css */}
         <div className="form-actions">
           <button
             type="button"
@@ -265,47 +243,7 @@ export default function ServiciosForm() {
         </div>
       </form>
       
-      {/* Estilos para los nuevos campos */}
-      <style>{`
-        .form-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-        .checkbox-group-horizontal {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          border: 1px solid #ccc;
-          padding: 1rem;
-          border-radius: 8px;
-        }
-        .checkbox-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .checkbox-item label {
-          margin: 0;
-          font-weight: 400;
-          cursor: pointer;
-        }
-        .checkbox-item input[type="checkbox"] {
-          width: auto;
-          cursor: pointer;
-        }
-
-        @media (max-width: 600px) {
-          .form-grid-2 {
-            grid-template-columns: 1fr;
-          }
-          .checkbox-group-horizontal {
-             flex-direction: column;
-             gap: 0.75rem;
-             align-items: flex-start;
-          }
-        }
-      `}</style>
+      {/* 💡 7. Bloque <style> eliminado */}
     </div>
   );
 }

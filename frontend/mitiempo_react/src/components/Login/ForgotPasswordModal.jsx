@@ -14,16 +14,13 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     setMessage("");
 
     // 💡 Asumimos un endpoint de backend.
-    // El backend NUNCA debe decir "correo no encontrado".
     try {
       // await api.post("/usuarios/reset-password/", { email });
 
-      // 💡 Mensaje genérico para evitar enumeración de usuarios
       setMessage(
         "Si tu correo está registrado, te enviaremos un enlace para recuperar tu contraseña."
       );
     } catch (err) {
-      // Muestra el mismo mensaje incluso si falla
       setMessage(
         "Si tu correo está registrado, te enviaremos un enlace para recuperar tu contraseña."
       );
@@ -40,7 +37,10 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     >
       <form onSubmit={handleSubmit}>
         {message ? (
-          <p className="message success">{message}</p>
+          // 🎨 1. REEMPLAZADO: Ahora usa la alerta global 'alert-info'
+          <div className="alert alert-info" role="alert">
+            {message}
+          </div>
         ) : (
           <p>
             Ingresa tu correo electrónico y te enviaremos un enlace para
@@ -57,9 +57,15 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading || !!message} // Deshabilita si ya envió
+            // 🎨 2. AÑADIDO: Clase global de input
+            className="form-input" 
+            required
+            autoFocus
           />
         </div>
 
+        {/* Las clases 'form-actions', 'btn-secondary' y 'btn-primary'
+            son globales y funcionan perfecto. */}
         {!message && (
           <div className="form-actions">
             <button
@@ -77,14 +83,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         )}
       </form>
       
-      {/* CSS para el mensaje de éxito del modal */}
-      <style>{`
-        .message.success {
-          background-color: var(--primary-color-light);
-          color: var(--text-color);
-          border: 1px solid var(--primary-color);
-        }
-      `}</style>
+      {/* 🎨 3. ELIMINADO: El bloque <style> ya no es necesario */}
+      
     </Modal>
   );
 }

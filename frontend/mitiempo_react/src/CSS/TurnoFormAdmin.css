@@ -1,0 +1,63 @@
+/* src/CSS/TurnoFormAdmin.css */
+/* 🎨 Estilos para el formulario de turnos dentro del modal */
+
+/* Contenedor del formulario */
+.turno-form-admin {
+  width: 100%;
+}
+
+/* NOTA: Las clases .form-group, .form-input, .form-select, 
+  .form-textarea y .alert ya están estilizadas 
+  globalmente en tu archivo App.css.
+*/
+
+/* Grilla para Fecha y Hora */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem; /* 🎨 Separación consistente */
+}
+
+/* Contenedor de checkboxes con scroll */
+.checkbox-group-scroll {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  
+  /* 🎨 Usando las variables del nuevo tema */
+  background-color: var(--color-bg); /* Fondo gris claro */
+  border: 1px solid var(--color-border);
+  padding: 15px;
+  border-radius: var(--border-radius-sm); /* 8px */
+  
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Etiqueta individual del checkbox */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary); /* 🎨 Gris sutil */
+  font-size: 0.95rem;
+}
+
+/* Estilo del checkbox */
+.checkbox-label input {
+  width: 16px;
+  height: 16px;
+  /* 🎨 Color de acento protagonista */
+  accent-color: var(--color-primary); 
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0; /* Los form-group ya tienen margin-bottom */
+  }
+  .checkbox-group-scroll {
+    grid-template-columns: 1fr;
+  }
+}

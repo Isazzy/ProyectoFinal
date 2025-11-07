@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axiosConfig";
-import "../../CSS/register.css"; // CSS actualizado
+//  Importamos el CSS rediseñado
+import "../../CSS/register.css"; 
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Modal from "../Common/Modal"; // Para el mensaje de éxito
 
-// --- Funciones de Validación ---
+// --- Funciones de Validación (Sin cambios) ---
 const validateEmail = (email) => {
   const re = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
   return re.test(String(email).toLowerCase());
@@ -33,49 +34,42 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  // 💡 Estado para el modal de éxito
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- Validación del Formulario ---
+  // --- Lógica de validación y submit (Sin cambios) ---
   const validateForm = () => {
     const { first_name, last_name, email, password, confirmPassword } = formData;
     
-    // 1. Campos vacíos
     if (!first_name || !last_name || !email || !password || !confirmPassword) {
       setError("Todos los campos son obligatorios.");
       return false;
     }
-    // 2. Email válido
     if (!validateEmail(email)) {
       setError("Por favor, ingresa un correo electrónico válido.");
       return false;
     }
-    // 3. Contraseña segura
     if (!validatePassword(password)) {
       setError(
         "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número."
       );
       return false;
     }
-    // 4. Contraseñas coinciden
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
       return false;
     }
     
-    setError(""); // Limpia errores
+    setError(""); 
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 💡 1. Valida antes de enviar
     if (!validateForm()) {
       return;
     }
@@ -83,23 +77,20 @@ export default function Register() {
     setLoading(true);
     try {
       await axios.post("/usuarios/register/", {
-        // Asigna 'username' si tu backend lo requiere, si no, quítalo
         username: formData.email.split("@")[0], 
         email: formData.email,
         first_name: formData.first_name,
         last_name: formData.last_name,
         password: formData.password,
-        role: "cliente", // Fijo para el registro público
-        // telefono: formData.telefono, // Asegúrate que tu backend acepta 'telefono'
+        role: "cliente", 
+        // telefono: formData.telefono, 
       });
 
-      // 💡 2. Muestra el modal de éxito
       setShowSuccessModal(true);
       
     } catch (err) {
-      // 💡 3. Muestra errores del backend (ej: email ya existe)
       const errorMsg = err.response?.data?.email || err.response?.data?.username || "Error al registrar el usuario. Intenta con otro correo o nombre de usuario.";
-      setError(errorMsg);
+      setError(errorMsg[0] || errorMsg); // Tomamos el primer error si es una lista
     } finally {
       setLoading(false);
     }
@@ -107,8 +98,9 @@ export default function Register() {
 
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
-    navigate("/login"); // Redirige al login DESPUÉS de cerrar el modal
+    navigate("/login"); 
   };
+  // --------------------------------------------------
 
   return (
     <>
@@ -116,11 +108,15 @@ export default function Register() {
         <form className="register-box" onSubmit={handleSubmit}>
           <h2>Registrarse</h2>
 
-          {/* 💡 Mensaje de Error Amigable */}
-          {error && <p className="message error">{error}</p>}
+          {/* 💡 1. Mensaje de Error actualizado a la clase global */}
+          {error && (
+            <div className="alert alert-error" role="alert">
+              {error}
+            </div>
+          )}
 
           <div className="form-grid">
-            {/* --- Inputs (Usando .form-group) --- */}
+            {/* 💡 2. Se añade la clase global .form-input */}
             <div className="form-group">
               <input
                 type="text"
@@ -128,6 +124,7 @@ export default function Register() {
                 placeholder="Nombre"
                 value={formData.first_name}
                 onChange={handleChange}
+                className="form-input" 
                 required
               />
             </div>
@@ -138,6 +135,7 @@ export default function Register() {
                 placeholder="Apellido"
                 value={formData.last_name}
                 onChange={handleChange}
+                className="form-input"
                 required
               />
             </div>
@@ -148,6 +146,7 @@ export default function Register() {
                 placeholder="Correo Electrónico"
                 value={formData.email}
                 onChange={handleChange}
+                className="form-input"
                 required
               />
             </div>
@@ -155,13 +154,13 @@ export default function Register() {
               <input
                 type="tel"
                 name="telefono"
-                placeholder="Teléfono (Opcional)"
+                placeholder="Teléfono "
                 value={formData.telefono}
                 onChange={handleChange}
+                className="form-input"
               />
             </div>
 
-            {/* --- Contraseñas --- */}
             <div className="form-group">
               <div className="password-wrapper">
                 <input
@@ -170,6 +169,7 @@ export default function Register() {
                   placeholder="Contraseña"
                   value={formData.password}
                   onChange={handleChange}
+                  className="form-input"
                   required
                 />
                 <button
@@ -190,6 +190,7 @@ export default function Register() {
                   placeholder="Confirmar contraseña"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  className="form-input"
                   required
                 />
               </div>
@@ -209,7 +210,7 @@ export default function Register() {
         </form>
       </div>
 
-      {/* --- Modal de Éxito --- */}
+      {/* --- Modal de Éxito (ya usa estilos globales) --- */}
       <Modal
         isOpen={showSuccessModal}
         onClose={handleCloseSuccessModal}

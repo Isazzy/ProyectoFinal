@@ -1,14 +1,14 @@
 /* src/CSS/sidebar.css */
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+/* Estilos adaptados al tema elegante (claro) */
+
+/* ... (Variables heredadas de index.css) ... */
 
 /* --- Contenedor Principal --- */
 .sidebar {
-  /* 💡 Colores del Sistema de Diseño */
-  background: var(--bg-color-light); 
-  color: var(--text-color);
-  border-right: 1px solid var(--border-color);
-
-  width: 240px; /* Un poco más ancho */
+  background: var(--color-bg-card); /* Fondo blanco */
+  color: var(--color-text-secondary); 
+  border-right: 1px solid var(--color-border); 
+  width: 240px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,6 @@
   top: 0;
   z-index: 1000;
 }
-
 .sidebar.collapsed {
   width: 70px;
 }
@@ -27,31 +26,39 @@
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Alineado a la izquierda */
+  justify-content: flex-start;
   padding: 1.25rem 1rem;
-  height: 70px; /* Altura fija para alinear con un header superior si lo hubiera */
-  border-bottom: 1px solid var(--border-color);
+  height: 70px;
+  
+  /* 💡 CAMBIO 1: Fondo con el color protagonista */
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
+  
+  /* 💡 CAMBIO 2: Se quita el borde inferior, ya no es necesario */
+  border-bottom: none; 
 }
 
 .hamburger-btn {
-  color: var(--text-color-muted);
+  /* 💡 CAMBIO 3: Botón de hamburguesa en blanco */
+  color: #ffffff; 
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
-  transition: color var(--transition-speed);
+  transition: opacity var(--transition-speed);
 }
 .hamburger-btn:hover {
-  color: var(--primary-color);
+  /* 💡 CAMBIO 4: Hover más sutil sobre el fondo de color */
+  color: #ffffff;
+  opacity: 0.8;
 }
 
 /* --- Logo --- */
 .logo {
-  font-family: 'Great Vibes', cursive;
+  font-family: 'Great Vibes', cursive; 
   text-align: left;
-  /* 💡 Color Primario para el Logo */
-  color: var(--primary-color); 
+  /* 💡 CAMBIO 5: Color de "Romina Magallanez" a blanco */
+  color: #ffffff; 
   margin-left: 1.25rem;
   transition: all 0.3s ease;
   overflow: hidden;
@@ -71,100 +78,91 @@
 }
 
 .R {
-  font-size: 1.3rem; /* Más legible */
+  font-size: 1.3rem;
   margin: 0;
   font-weight: 400;
   line-height: 1;
 }
 
 .M {
-  font-size: 0.8rem; /* Más legible */
-  letter-spacing: 0.2em;
+  font-size: 0.8rem;
+  /* 💡 CAMBIO 6: Más espaciado para "M I T I E M P O" */
+  letter-spacing: 0.35em; 
   margin: 0;
-  color: var(--text-color-muted);
+  /* 💡 CAMBIO 7: Color blanco sutil (un poco transparente) */
+  color: rgba(255, 255, 255, 0.9); 
+  font-family: var(--font-body); /* 💡 Usamos Poppins para el subtítulo */
+  font-weight: 500;
 }
 
 
 /* --- Navegación (Menú) --- */
-/* 💡 Contenedor de navegación que crece */
+/* (Sin cambios en esta sección) */
 .sidebar-nav {
-  flex-grow: 1; /* Empuja el footer hacia abajo */
-  overflow-y: auto; /* Permite scroll si hay muchos items */
+  flex-grow: 1; 
+  overflow-y: auto;
   padding: 1rem 0.5rem;
 }
-
 .sidebar-menu {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
+/* ... (resto de .sidebar-menu sin cambios) ... */
 .sidebar-menu li {
   margin-bottom: 4px;
 }
-
 .sidebar-menu a {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   text-decoration: none;
-  /* 💡 Color de texto secundario */
-  color: var(--text-color-muted); 
+  color: var(--color-text-secondary);
   padding: 0.8rem 1rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-sm);
   transition: all var(--transition-speed);
-  white-space: nowrap; /* Evita que el texto se parta */
+  white-space: nowrap;
 }
-
-/* 💡 Icono (primer hijo) */
 .sidebar-menu a > svg {
   font-size: 1.2rem;
-  min-width: 24px; /* Ancho fijo para alineación */
+  min-width: 24px;
   transition: transform var(--transition-speed);
 }
-
-/* --- Hover y Activo --- */
 .sidebar-menu a:hover {
-  /* 💡 Hover sutil */
-  background: var(--primary-color-light);
-  color: var(--primary-color); 
+  background: var(--color-bg-cream);
+  color: var(--color-primary); 
 }
-
 .sidebar-menu .active a {
-  /* 💡 Estilo activo */
-  background: var(--primary-color);
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(251, 91, 91, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 .sidebar-menu .active a > svg {
   transform: scale(1.1);
 }
 
 /* --- Footer (Perfil) --- */
+/* (Sin cambios en esta sección) */
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid var(--border-color);
-  position: relative; /* Para anclar el menú de perfil */
+  border-top: 1px solid var(--color-border);
+  position: relative;
 }
-
+/* ... (resto de .sidebar-footer sin cambios) ... */
 .profile-container {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .profile-pic {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  /* 💡 Borde con color primario */
-  border: 2px solid var(--primary-color); 
+  border: 2px solid var(--color-primary); 
   min-width: 40px;
 }
-
-/* Info de perfil (solo visible si está abierto) */
 .profile-info-open {
   overflow: hidden;
   white-space: nowrap;
@@ -172,54 +170,44 @@
 .profile-info-open .username-open {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--color-text-dark);
   margin: 0;
 }
 .profile-info-open .role-open {
   font-size: 0.8rem;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary);
   margin: 0;
 }
-
-/* --- Menú Desplegable del Perfil --- */
 .profile-menu {
   position: absolute;
-  /* 💡 Anclado robustamente al footer */
   bottom: calc(100% + 10px); 
   left: 1rem;
   width: 200px;
-  
-  /* 💡 Estilos del sistema de diseño */
-  background: var(--bg-color); /* Más oscuro que el sidebar */
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
   box-shadow: var(--shadow-soft);
-  
   padding: 0.8rem;
   z-index: 10;
-  animation: fadeIn 0.2s ease; /* Animación simple */
+  animation: fadeIn 0.2s ease;
 }
-
-/* 💡 Cuando el sidebar está colapsado, el menú aparece al lado */
 .sidebar.collapsed .profile-menu {
   bottom: 10px;
   left: calc(100% + 10px);
 }
-
 .profile-menu .username {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--color-text-dark);
   margin-bottom: 2px;
 }
 .profile-menu .email {
   font-size: 0.8rem;
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary);
   margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.5rem;
 }
-
 .profile-menu button {
   display: flex;
   align-items: center;
@@ -231,50 +219,41 @@
   padding: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
-  /* 💡 Color de texto */
-  color: var(--text-color-muted); 
-  border-radius: 5px;
+  color: var(--color-text-secondary);
+  border-radius: var(--border-radius-sm);
   transition: all var(--transition-speed);
 }
-
 .profile-menu button:hover {
-  color: var(--primary-color);
-  background-color: var(--bg-color-light);
+  color: var(--color-primary);
+  background-color: var(--color-bg-cream);
 }
 
 /* --- Responsividad del Contenido --- */
-/* Este CSS es para el div que contiene las <Routes> */
+/* (Sin cambios en esta sección) */
 .admin-content {
-  padding-left: 240px; /* Mismo ancho que .sidebar.open */
+  padding-left: 240px; 
   transition: padding-left 0.3s ease;
+  background-color: var(--color-bg); 
+  min-height: 100vh;
 }
-
 .admin-content.collapsed {
-  padding-left: 70px; /* Mismo ancho que .sidebar.collapsed */
+  padding-left: 70px; 
 }
-
-/* En móvil, el sidebar está oculto o por encima */
 @media (max-width: 768px) {
   .sidebar {
     width: 240px;
-    transform: translateX(-100%); /* Oculto por defecto */
+    transform: translateX(-100%); 
     transition: transform 0.3s ease;
   }
   .sidebar.open {
-    transform: translateX(0); /* Visible */
-    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    transform: translateX(0);
+    box-shadow: var(--shadow-hover);
   }
-
   .admin-content {
-    padding-left: 0; /* Sin padding */
+    padding-left: 0;
   }
   .admin-content.collapsed {
     padding-left: 0;
-  }
-  
-  .hamburger-btn {
-    /* Muestra el botón de hamburguesa en el header principal,
-       no en el sidebar (o ajústalo como prefieras) */
   }
 }
 

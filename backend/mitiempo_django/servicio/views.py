@@ -12,8 +12,10 @@ class ServicioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-    
-        if not user.is_authenticated or getattr(user, 'role', 'cliente') == 'cliente':
-            return Servicio.objects.filter(activado=True) 
-        # Si es admin/staff, devolvemos el queryset completo (todos los servicios)
-        return self.queryset 
+
+        # Si no está autenticado o pertenece al grupo "Cliente", solo ve servicios activos
+        if not user.is_authenticated or user.groups.filter(name='Cliente').exists():
+            return Servicio.objects.filter(activado=True)
+
+        # Si es staff o superusuario, ve todos
+        return self.queryset

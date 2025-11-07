@@ -1,34 +1,38 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+/* --- 1. Importación de Tipografías (Google Fonts) --- */
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* 🎨 1. Paleta de Colores (Basada en tu #fb5b5b) */
-  --primary-color: #fb5b5b;
-  --primary-color-hover: #fa4a4a;
-  --primary-color-light: rgba(251, 91, 91, 0.1); /* Para fondos y 'glows' */
+  /* 🎨 2. Paleta de Colores (Elegante y Femenina) */
+  --color-primary: #fb5b5b;        /* Color protagonista */
+  --color-primary-light: #ff8a8a;  /* Para degradados y hovers */
   
-  /* 🌙 2. Tema Oscuro (Basado en tus preferencias) */
-  --bg-color: #1a1a1a;          /* Fondo principal (muy oscuro) */
-  --bg-color-light: #2c2c2c;  /* Fondo para cards, modales, inputs */
-  --text-color: #f0f0f0;      /* Texto principal (blanco suave) */
-  --text-color-muted: #a0a0a0; /* Texto secundario (gris) */
-  --border-color: #444;       /* Bordes sutiles */
+  --color-bg: #f9f9f9;            /* Fondo general (gris muy claro) */
+  --color-bg-card: #ffffff;       /* Fondo de tarjetas y contenedores */
+  --color-bg-cream: #fdfaf6;      /* Tono crema sutil para secciones */
   
-  /* 🚦 3. Colores de Estado (Para turnos) */
-  --success-color: #059669; /* Verde (Confirmado) */
-  --warning-color: #ca8a04; /* Amarillo (Pendiente) */
-  --danger-color: #e11d48;  /* Rojo (Cancelado/Borrar) */
+  --color-text-dark: #333333;      /* Texto principal (oscuro, no negro) */
+  --color-text-secondary: #777777;  /* Texto más claro, gris sutil */
+  --color-border: #eeeeee;          /* Bordes y divisores suaves */
 
-  /* 🖋️ 4. Tipografía */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* 🖋️ 3. Tipografía */
+  --font-brand: 'Great Vibes', cursive; /* Para títulos de marca */
+  --font-body: 'Poppins', sans-serif;   /* Para UI, botones y textos */
+
+  /* 📐 4. Layout y Efectos (Moderno y Suave) */
+  --border-radius-sm: 8px;    /* Para elementos pequeños (inputs, badges) */
+  --border-radius-md: 16px;   /* Para tarjetas (más redondeado) */
+  --border-radius-pill: 50px; /* Para botones */
   
-  /* 📐 5. Layout y Efectos */
-  --border-radius: 8px; /* Bordes redondeados */
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.2); /* Sombra suave */
-  --transition-speed: 0.3s ease; /* Transiciones */
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.07); /* Sombra suave principal */
+  --shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.1); /* Sombra al pasar el mouse */
+  --shadow-glow: 0 6px 20px rgba(251, 91, 91, 0.25); /* "Brillo" para botones */
+  
+  --transition-speed: 0.3s ease; /* Velocidad de animación */
 }
 
-/* --- Reseteo Básico y Estilos Globales --- */
+/* --- 5. Reseteo Básico y Estilos Globales --- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -36,55 +40,156 @@
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary); /* Color de párrafo por defecto */
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Jerarquía Visual (Títulos) --- */
+/* --- 6. Jerarquía Visual (Títulos y Textos) --- */
 h1, h2, h3, h4, h5, h6 {
+  font-weight: 600; /* Poppins Semibold */
+  color: var(--color-text-dark);
   margin-bottom: 1rem;
-  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+
+/* Clase especial para el nombre de la marca */
+.brand-title {
+  font-family: var(--font-brand);
+  font-weight: 400; /* Las fuentes caligráficas no necesitan bold */
+  font-size: 3.5rem; /* Grande y elegante */
+  color: var(--color-text-dark);
   line-height: 1.2;
 }
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.75rem; } /* Título de página (ej: "Agenda de Turnos") */
-h3 { font-size: 1.25rem; } /* Título de sección (ej: "Turnos Pendientes") */
 
 p {
   margin-bottom: 1rem;
-  color: var(--text-color-muted);
+  font-weight: 400; /* Poppins Regular */
 }
+
 p strong {
-  color: var(--text-color);
+  color: var(--color-text-dark);
+  font-weight: 600;
 }
 
 a {
-  color: var(--primary-color);
+  color: var(--color-primary);
   text-decoration: none;
   transition: color var(--transition-speed);
 }
 a:hover {
-  color: var(--primary-color-hover);
+  color: var(--color-primary-light);
 }
 
-/* --- Contenedor Principal de Páginas --- */
+/* --- 7. Contenedor Principal y Layout --- */
 .app-container {
   max-width: 1200px;
-  margin: 20px auto;
+  margin: 30px auto;
   padding: 20px;
 }
 
-/* --- Estilos Responsivos Globales --- */
+/* --- 8. Componentes Globales (Botones, Tarjetas, Alertas) --- */
+
+/* Botones (redondeados tipo "pill") */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 500; /* Poppins Medium */
+  padding: 12px 28px;
+  border-radius: var(--border-radius-pill);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  transition: all var(--transition-speed);
+}
+
+.btn-primary {
+  color: white;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-light));
+  box-shadow: var(--shadow-glow); /* Efecto "brillo" solicitado */
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(251, 91, 91, 0.35); /* Sombra "glow" más intensa */
+}
+
+/* Tarjetas (suaves y redondeadas) */
+.card {
+  background-color: var(--color-bg-card);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.card:hover {
+  transform: translateY(-5px); /* Efecto "lift" */
+  box-shadow: var(--shadow-hover);
+}
+
+/* Alertas Modernas (con animación) */
+.alert {
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-left: 5px solid;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInSlide 0.5s ease forwards;
+}
+
+@keyframes fadeInSlide {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-success {
+  background-color: #f0f9f3;
+  color: #2e7d32;
+  border-color: #4caf50;
+}
+.alert-error {
+  background-color: #fff5f5; /* Tono rosado muy claro */
+  color: #c62828;
+  border-color: var(--color-primary); /* Usa el color primario para errores */
+}
+.alert-info {
+  background-color: var(--color-bg-cream);
+  color: #6d4c00;
+  border-color: #ffab00;
+}
+
+/* --- 9. Estilos Responsivos --- */
 @media (max-width: 768px) {
   .app-container {
-    margin: 10px;
+    margin: 15px auto;
     padding: 15px;
   }
-  h1 { font-size: 1.75rem; }
+  
+  .brand-title {
+    font-size: 2.75rem; /* Reducir para móviles */
+  }
+
+  h1 { font-size: 2rem; }
   h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  .btn {
+    padding: 10px 24px;
+    font-size: 0.95rem;
+  }
 }

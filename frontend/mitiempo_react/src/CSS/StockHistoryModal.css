@@ -1,0 +1,35 @@
+/* src/CSS/StockHistoryModal.css */
+/* 🎨 Estilos para la tabla del historial de stock */
+
+/* NOTA: La clase base '.styled-table' se hereda de App.css */
+
+/* Anula el 'margin-bottom: 1rem' de .styled-table 
+  para que la tabla no tenga un margen innecesario dentro del modal.
+*/
+.history-table {
+  margin-bottom: 0; 
+}
+
+/* Estilos para las celdas de cantidad */
+.stock-in {
+  color: var(--color-success); /* 🎨 Variable global (verde) */
+  font-weight: 600;
+}
+
+.stock-out {
+  color: var(--color-danger); /* 🎨 Variable global (rojo) */
+  font-weight: 600;
+}
+
+/* En la vista móvil (heredado de App.css), 
+  las celdas .stock-in y .stock-out se alinean a la derecha. 
+  Si prefieres que mantengan el color, puedes añadir:
+*/
+@media (max-width: 768px) {
+  .history-table td.stock-in::before {
+    color: var(--color-text-dark); /* Mantiene la etiqueta oscura */
+  }
+  .history-table td.stock-out::before {
+    color: var(--color-text-dark); /* Mantiene la etiqueta oscura */
+  }
+}

@@ -44,9 +44,9 @@ class Turno(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='turnos_como_cliente',
-        db_column='id_cli',
-        limit_choices_to={'role': 'cliente'}
+        db_column='id_cli'
     )
+
     
     fecha_hora_inicio = models.DateTimeField()
 

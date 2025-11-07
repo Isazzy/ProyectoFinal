@@ -1,3 +1,4 @@
+// src/components/Productos/StockUpdateModal.jsx
 import React, { useState } from 'react';
 import Modal from '../Common/Modal';
 import { createStockMovement } from '../../api/productos';
@@ -47,6 +48,7 @@ export default function StockUpdateModal({ producto, onClose, onStockUpdated }) 
       title={`Actualizar Stock: ${producto.nombre_prod}`}
       footer={
         <>
+          {/* Clases globales correctas */}
           <button onClick={onClose} className="btn btn-secondary" disabled={loading}>
             Cancelar
           </button>
@@ -57,8 +59,17 @@ export default function StockUpdateModal({ producto, onClose, onStockUpdated }) 
       }
     >
       <form onSubmit={handleSubmit}>
-        {error && <p className="message error">{error}</p>}
+        
+        {/* 🎨 ¡ACTUALIZADO! Se usa la clase de alerta global */}
+        {error && (
+          <div className="alert alert-error" role="alert">
+            {error}
+          </div>
+        )}
+        
         <p>Stock actual: <strong>{producto.stock_act_prod}</strong></p>
+        
+        {/* Clases globales correctas */}
         <div className="form-group">
           <label htmlFor="cantidad_movida">Cantidad a Mover</label>
           <input

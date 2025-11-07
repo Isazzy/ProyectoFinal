@@ -1,7 +1,9 @@
+// front/src/pages/Admin/AdminLayout.jsx
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import "../../CSS/adminLayout.css";
+// 💡 Asegúrate de importar el CSS corregido
+import "../../CSS/adminLayout.css"; 
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -12,14 +14,14 @@ export default function AdminLayout() {
         isOpen={sidebarOpen}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
-      
-      {/* 💡 Actualización: 
-          Cambiamos <div> por <main> para mejor semántica HTML.
-          <main> le indica al navegador que este es el contenido 
-          principal de la página.
+      {/* 💡 Lógica de clase corregida: 
+        Aplica 'collapsed' solo si sidebarOpen es 'false'.
+        La clase 'expanded' no es necesaria.
       */}
-      <main className={`admin-content ${sidebarOpen ? "expanded" : "collapsed"}`}>
-        <Outlet /> {/* Aquí se cargan las páginas hijas */}
+      <main className={`admin-content ${!sidebarOpen ? "collapsed" : ""}`}>
+        {/* Outlet renderizará las rutas anidadas de App.js 
+            (AgendaAdmin, UsList, AdminServicios, etc.) */}
+        <Outlet /> 
       </main>
       
     </div>

@@ -1,13 +1,18 @@
+// front/src/components/Booking/BookingPage.jsx
+// front/src/components/Booking/BookingPage.jsx
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import "react-calendar/dist/Calendar.css"; // Estilo base del calendario
 
 import { useAuth } from "../../Context/AuthContext";
 import { getServicios } from "../../api/servicios";
 import { getHorariosDisponibles, createTurno } from "../../api/turnos";
+
+// 1. Importamos el CSS rediseñado
 import "../../CSS/BookingPage.css";
 
+// --- Lógica de helpers ---
 const groupServicios = (servicios) => {
   return servicios.reduce((acc, srv) => {
     const tipo = srv.tipo_serv || "Varios";
@@ -16,13 +21,23 @@ const groupServicios = (servicios) => {
     return acc;
   }, {});
 };
-
 const formatDuration = (minutos) => {
   if (!minutos || minutos <= 0) return "";
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
   if (h > 0) return m > 0 ? `~${h}h ${m}min` : `~${h}h`;
   return `~${m} min`;
+};
+
+// Map días a números según JS Date
+const DIAS_MAP = {
+  domingo: 0,
+  lunes: 1,
+  martes: 2,
+  miercoles: 3,
+  jueves: 4,
+  viernes: 5,
+  sabado: 6,
 };
 
 export default function BookingPage() {
@@ -42,7 +57,7 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState("");
 
-  // Cargar servicios al iniciar
+  // --- Fetch servicios ---
   useEffect(() => {
     setLoading(true);
     getServicios()
@@ -54,37 +69,33 @@ export default function BookingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Cargar horarios disponibles cuando cambian fecha o servicios
+  // --- Fetch horarios disponibles ---
   useEffect(() => {
     if (selectedServicios.length === 0 || !selectedDate) {
       setMergedSlots([]);
       return;
     }
-
     setLoadingSlots(true);
     const fechaISO = selectedDate.toISOString().split("T")[0];
-
     getHorariosDisponibles(fechaISO, selectedServicios)
       .then((res) => {
-         console.log("API horarios:", res.data);
-        const slots = (res.data.disponibilidad || []).map(s => s.hora || s); 
+        const slots = (res.data.disponibilidad || []).map((s) => s.hora || s);
         setMergedSlots(slots);
       })
       .catch(() => setMergedSlots([]))
       .finally(() => setLoadingSlots(false));
   }, [selectedServicios, selectedDate]);
 
+  // --- Manejo de selección ---
   const handleServiceToggle = (id) => {
     setSelectedServicios((prev) =>
       prev.includes(id) ? prev.filter((s_id) => s_id !== id) : [...prev, id]
     );
   };
-
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setSelectedSlot(null);
   };
-
   const handleSlotClick = (slot) => setSelectedSlot(slot);
 
   const goToStep2 = () => {
@@ -102,7 +113,6 @@ export default function BookingPage() {
       return;
     }
     setError("");
-
     const allServicios = Object.values(servicios).flat();
     const serviciosSeleccionados = allServicios.filter((s) =>
       selectedServicios.includes(s.id_serv)
@@ -115,7 +125,6 @@ export default function BookingPage() {
       (acc, s) => acc + (s.duracion_minutos || 0),
       0
     );
-
     setResumen({
       nombres: serviciosSeleccionados.map((s) => s.nombre_serv).join(", "),
       fecha: selectedDate.toLocaleDateString("es-AR"),
@@ -124,29 +133,24 @@ export default function BookingPage() {
       duracion: formatDuration(totalDuracion),
       observaciones,
     });
-
     setStep(3);
   };
 
   const handleConfirmBooking = async () => {
     setLoading(true);
     setError("");
-
     if (!user) {
       setError("Error: No se encontró al cliente. Por favor, inicia sesión.");
       setLoading(false);
       return;
     }
-
     const fechaISO = selectedDate.toISOString().split("T")[0];
     const fechaHoraInicio = new Date(`${fechaISO}T${selectedSlot}:00`).toISOString();
-
     const turnoData = {
       fecha_hora_inicio: fechaHoraInicio,
       servicios_ids: selectedServicios,
       observaciones,
     };
-
     try {
       await createTurno(turnoData);
       toast.success("¡Turno reservado con éxito!");
@@ -173,6 +177,23 @@ export default function BookingPage() {
     }
   };
 
+  // --- Días habilitados según servicios seleccionados ---
+  const getDiasHabilitados = () => {
+    if (selectedServicios.length === 0) return [];
+    const allServicios = Object.values(servicios).flat();
+    const seleccionados = allServicios.filter((s) =>
+      selectedServicios.includes(s.id_serv)
+    );
+    const diasArrays = seleccionados.map((s) => s.dias_disponibles || []);
+    if (diasArrays.length === 0) return [];
+    const diasComunes = diasArrays.reduce((a, b) =>
+      a.filter((dia) => b.includes(dia))
+    );
+    return diasComunes.map((dia) => DIAS_MAP[dia]);
+  };
+  const diasHabilitados = getDiasHabilitados();
+
+  // --- Render step ---
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -229,7 +250,15 @@ export default function BookingPage() {
           <div className="step-datetime-container">
             <div className="calendar-wrapper">
               <h4>1. Selecciona la Fecha</h4>
-              <Calendar onChange={handleDateChange} value={selectedDate} minDate={new Date()} />
+              <Calendar
+                onChange={handleDateChange}
+                value={selectedDate}
+                minDate={new Date()}
+                tileDisabled={({ date }) => !diasHabilitados.includes(date.getDay())}
+              />
+              {diasHabilitados.length === 0 && (
+                <p>No hay días disponibles para los servicios seleccionados.</p>
+              )}
             </div>
             <div className="slots-wrapper">
               <h4>2. Selecciona el Horario</h4>
@@ -243,7 +272,7 @@ export default function BookingPage() {
                     <button
                       key={slot}
                       className={`btn slot-btn ${
-                        selectedSlot === slot ? "btn-primary" : "btn-secondary"
+                        selectedSlot === slot ? "selected" : ""
                       }`}
                       onClick={() => handleSlotClick(slot)}
                     >
@@ -300,7 +329,7 @@ export default function BookingPage() {
                 className="form-textarea"
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
-                placeholder="Alergias, preferencias, etc."
+                placeholder=" preferencias, etc."
                 rows="3"
               />
             </div>
@@ -329,19 +358,21 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="app-container reserva-container">
-      <div className="step-title">
-        <h2 className="header-title">Reserva tu Turno</h2>
-        <div className="stepper-visual">
-          <span className={step === 1 ? "active" : ""}></span>
-          <span className={step === 2 ? "active" : ""}></span>
-          <span className={step === 3 ? "active" : ""}></span>
+    <div className="app-container">
+      <div className="reserva-container card">
+        <div className="step-title">
+          <h2 className="header-title">Reserva tu Turno</h2>
+          <div className="stepper-visual">
+            <span className={step === 1 ? "active" : ""}></span>
+            <span className={step === 2 ? "active" : ""}></span>
+            <span className={step === 3 ? "active" : ""}></span>
+          </div>
         </div>
+
+        {error && <div className="alert alert-error">{error}</div>}
+
+        {renderStep()}
       </div>
-
-      {error && <p className="message error">{error}</p>}
-
-      {renderStep()}
     </div>
   );
 }

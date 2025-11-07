@@ -1,79 +1,39 @@
 /* src/CSS/ProfilePage.css */
+/* 🎨 Estilos para la página de "Mis Turnos" (Tema Claro) */
+
+/* El .app-container global da el padding y max-width */
+
+.profile-page h2 {
+  color: var(--color-text-dark); /* 🎨 NEW */
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border); /* 🎨 NEW */
+}
 
 .profile-page .turnos-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem; /* 🎨 Más espacio */
 }
+
 .profile-page h3 {
-  color: var(--text-color-muted);
-  font-size: 1.2rem;
+  color: var(--color-text-dark); /* 🎨 NEW */
+  font-size: 1.25rem;
+  font-weight: 600;
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
 }
+
 .empty-message {
-  color: var(--text-color-muted);
+  color: var(--color-text-secondary); /* 🎨 NEW */
   font-style: italic;
-  padding: 1rem;
-  background-color: var(--bg-color-light);
-  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  background-color: var(--color-bg-cream); /* 🎨 NEW */
+  border-radius: var(--border-radius-sm); /* 🎨 NEW */
   text-align: center;
+  border: 1px solid var(--color-border);
 }
 
-/* --- TurnoCard --- */
-.turno-card {
-  background: var(--bg-color-light);
-  border: 1px solid var(--border-color);
-  border-left-width: 5px;
-  border-radius: var(--border-radius);
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-soft);
-}
-
-/* Colores de estado (Borde izquierdo) */
-.turno-card.estado-pendiente { border-left-color: var(--warning-color); }
-.turno-card.estado-confirmado { border-left-color: var(--success-color); }
-.turno-card.estado-cancelado { border-left-color: var(--danger-color); }
-.turno-card.estado-completado { border-left-color: var(--text-color-muted); }
-
-.turno-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 1.1em;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.turno-card-header strong {
-  color: var(--text-color);
-}
-
-/* Badges (reutilizados de Admin) */
-.badge {
-  padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;
-  font-weight: 500; text-transform: capitalize;
-}
-.estado-pendiente { background-color: rgba(202, 138, 4, 0.1); color: var(--warning-color); }
-.estado-confirmado { background-color: rgba(5, 150, 105, 0.1); color: var(--success-color); }
-.estado-cancelado { background-color: rgba(225, 29, 72, 0.1); color: var(--danger-color); }
-.estado-completado { background-color: var(--border-color); color: var(--text-color-muted); }
-
-.turno-card-body {
-  padding: 1rem;
-}
-.turno-card-body p {
-  color: var(--text-color-muted);
-  margin-bottom: 0.5rem;
-}
-.turno-card-body p strong {
-  color: var(--text-color);
-}
-.turno-card-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  font-size: 0.9rem;
-  color: var(--text-color-muted);
-  font-weight: 500;
-}
+/* 🎨 NOTA: Todos los estilos de .turno-card, .turno-card-header,
+   .turno-estado-badge, .turno-card-body, .turno-card-footer,
+   y .estado-* se heredan globalmente de App.css 
+*/

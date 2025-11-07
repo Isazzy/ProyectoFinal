@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Necesitas: npm install react-icons
-import { useAuth } from "../../Context/AuthContext"; // Importa el hook de Auth
-import api from "../../api/axiosConfig"; // Importa tu instancia de API
-import "../../CSS/Login.css"; // Usa el CSS que te proporcioné
+import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useAuth } from "../../Context/AuthContext";
+import api from "../../api/axiosConfig";
+import "../../CSS/Login.css";
 import fondo from "../../imagenes/fondo.png";
-import ForgotPasswordModal from "./ForgotPasswordModal"; // Dependencia del modal
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  // Obtiene la función 'login' del contexto
   const { login } = useAuth();
-  const navigate = useNavigate();
 
-  // Efecto para "Recordar Usuario"
   useEffect(() => {
     const rememberedEmail = localStorage.getItem("rememberedUser");
     if (rememberedEmail) {
@@ -32,10 +27,9 @@ export default function Login() {
   }, []);
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Previene el refresh del formulario
+    e.preventDefault();
     setError("");
 
-    // Validación de campos vacíos
     if (!email || !password) {
       setError("Por favor ingresa correo y contraseña");
       return;
@@ -43,37 +37,27 @@ export default function Login() {
 
     setLoading(true);
     try {
-      
-      // --- ¡CORRECCIÓN CRÍTICA! ---
-      // Tu backend espera 'email' porque USERNAME_FIELD = 'email'
-      const response = await api.post("/login/", {
-        email: email, // <-- Envía 'email'
-        password: password,
+      const { data } = await api.post("/login/", {
+        email,
+        password,
       });
-      // -----------------------------
-      
-      const data = response.data;
 
-      // Valida que el token exista en la respuesta
-      if (!data.access) {
-        console.error("Respuesta exitosa de la API, pero no se recibió 'access token'.");
-        throw new Error("Error inesperado al iniciar sesión.");
-      }
+      if (!data.access) throw new Error("Error inesperado al iniciar sesión.");
 
-      // Llama a la función 'login' del AuthContext.
-      // Esta función se encará de decodificar, guardar y redirigir.
+      // ✅ Guarda tokens y redirige
       login(data.access, data.refresh);
 
-      // Lógica de "Recordar Usuario"
+      // ✅ Guarda datos del usuario para el header
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       if (rememberMe) {
         localStorage.setItem("rememberedUser", email);
       } else {
         localStorage.removeItem("rememberedUser");
       }
-      
     } catch (err) {
-      // Captura errores 401 (Credenciales incorrectas)
-      const errorMsg = err.response?.data?.detail || "Correo o contraseña incorrectos";
+      const errorMsg =
+        err.response?.data?.detail || "Correo o contraseña incorrectos";
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -94,11 +78,9 @@ export default function Login() {
         <div className="login-right">
           <form className="login-card" onSubmit={handleLogin}>
             <h2>Iniciar Sesión</h2>
-            
-            {/* Mensaje de error amigable */}
-            {error && <p className="message error">{error}</p>}
 
-            {/* Grupo de Email */}
+            {error && <div className="alert alert-error">{error}</div>}
+
             <div className="form-group">
               <label htmlFor="email">Correo electrónico</label>
               <input
@@ -107,10 +89,12 @@ export default function Login() {
                 placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="form-input"
+                required
+                autoFocus
               />
             </div>
 
-            {/* Grupo de Contraseña */}
             <div className="form-group">
               <label htmlFor="password">Contraseña</label>
               <div className="password-wrapper">
@@ -120,8 +104,9 @@ export default function Login() {
                   placeholder="Tu contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="form-input"
+                  required
                 />
-                {/* Botón de Ver/Ocultar Contraseña */}
                 <button
                   type="button"
                   className="password-toggle-btn"
@@ -132,7 +117,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Opciones (Recordar / Olvidé) */}
             <div className="form-options">
               <div className="checkbox-group">
                 <input
@@ -143,8 +127,7 @@ export default function Login() {
                 />
                 <label htmlFor="rememberMe">Recordar usuario</label>
               </div>
-              
-              {/* Link para abrir el modal */}
+
               <button
                 type="button"
                 className="link-button"
@@ -154,7 +137,6 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Botón de Submit */}
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? "Ingresando..." : "Iniciar Sesión"}
             </button>
@@ -169,7 +151,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Renderiza el Modal */}
       <ForgotPasswordModal
         isOpen={isForgotModalOpen}
         onClose={() => setIsForgotModalOpen(false)}

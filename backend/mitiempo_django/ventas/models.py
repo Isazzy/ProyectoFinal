@@ -7,10 +7,10 @@ class Ventas(models.Model):
     id_venta = models.AutoField(primary_key=True)
     id_caja = models.ForeignKey('cajas.Cajas', models.DO_NOTHING, db_column='id_caja')
     cliente = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  
-        on_delete=models.DO_NOTHING,
-        limit_choices_to={'role': 'cliente'}  
+        settings.AUTH_USER_MODEL,
+        on_delete=models.DO_NOTHING
     )
+
     fech_hs_vent = models.DateTimeField()
     tipo_venta = models.CharField(max_length=100)
     total_venta = models.DecimalField(max_digits=10, decimal_places=2)
