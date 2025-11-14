@@ -1,9 +1,10 @@
 // src/App.js
 import React from "react";
 import {
-  BrowserRouter as Router, // 💡 Renombrado a Router
+  BrowserRouter as Router,
   Routes,
   Route,
+  Navigate, // 👈 AGREGAR ESTE IMPORT
   useLocation,
 } from "react-router-dom";
 import "../src/App.css";
@@ -24,7 +25,6 @@ import Servicios from "./pages/Servicios";
 import BookingPage from "./components/Booking/BookingPage"; 
 import ProfilePage from "./components/Booking/ProfilePage";
 
-
 // Admin
 import AdminLayout from "./pages/Admin/AdminLayout";
 import AdminServicios from "./pages/Admin/AdminServicios";
@@ -35,6 +35,13 @@ import ServiciosForm from "./components/Servicios/ServiciosForm";
 import AdminProductos from "./pages/Admin/AdminProductos";
 import ProductoForm from "./components/Productos/ProductoForm";
 import StockHistoryPage from "./pages/Admin/StockHistoryPage";
+import ProveedorList from './components/proveedores/ProveedorList';
+import ProveedorForm from './components/proveedores/ProveedorForm';
+import ProveedorDetalle from './components/proveedores/ProveedorDetalle';
+
+// 👈 CORREGIR IMPORTS DE COMPRAS (sin ../)
+import CompraList from './components/compras/CompraList';
+import CompraForm from './components/compras/CompraForm';
 
 // Rutas protegidas
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
@@ -44,9 +51,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // Layout sigue igual
 >>>>>>> 874e3164 (reestructuracion de archivos)
+=======
+>>>>>>> 8868d1d9 (mando cambios front react)
 function Layout() {
   const location = useLocation();
 
@@ -83,7 +93,6 @@ function Layout() {
             </PrivateRoute>
           }
         />
-        
 
         {/* RUTAS ADMIN */}
         <Route
@@ -106,18 +115,28 @@ function Layout() {
           <Route path="productos/create" element={<ProductoForm />} />
           <Route path="productos/edit/:id" element={<ProductoForm />} />
           <Route path="stock-history" element={<StockHistoryPage />} />
+          
+          {/* 👈 RUTAS DE COMPRAS (rutas relativas dentro de /admin/dashboard) */}
+          <Route path="compras" element={<CompraList />} />
+          <Route path="compras/nueva" element={<CompraForm />} />
+
+          {/* Proveedores */}
+          <Route path="proveedores" element={<ProveedorList />} />
+          <Route path="proveedores/nuevo" element={<ProveedorForm />} />
+          <Route path="proveedores/editar/:id" element={<ProveedorForm />} />
+          <Route path="proveedores/detalle/:id" element={<ProveedorDetalle />} />
+
         </Route>
       </Routes>
     </>
   );
 }
 
-// 💡 2. CAMBIAR EL ORDEN AQUÍ
 export default function App() {
   return (
-    <Router> {/* <-- 1. Router DEBE estar por fuera */}
-      <AuthProvider> {/* <-- 2. AuthProvider por dentro */}
-        <Layout /> {/* <-- 3. Layout ahora tiene acceso a ambos contextos */}
+    <Router>
+      <AuthProvider>
+        <Layout />
       </AuthProvider>
     </Router>
   );

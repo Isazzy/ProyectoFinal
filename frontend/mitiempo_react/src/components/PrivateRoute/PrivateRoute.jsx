@@ -1,3 +1,5 @@
+//src/components/PrivateRoute/PrivateRoute.jsx
+
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 // 💡 1. Importa el hook de tu contexto

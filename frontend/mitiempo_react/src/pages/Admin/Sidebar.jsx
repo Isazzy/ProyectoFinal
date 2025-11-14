@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // front/src/pages/Admin/Sidebar.jsx
 <<<<<<< HEAD
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -31,8 +32,11 @@ import {
 } from "@coreui/icons";
 
 =======
+=======
+//src/pages/Admin/Sidebar.jsx
+>>>>>>> 8868d1d9 (mando cambios front react)
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   FaUserCog, FaBars, FaTimes, FaChartBar, FaCalendarAlt, FaUsers,
   FaBox, FaTruck, FaShoppingCart, FaClipboardList, FaSignOutAlt
@@ -369,10 +373,18 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               key={item.to}
               className={location.pathname.startsWith(`/admin/dashboard/${item.to}`) ? "active" : ""}
             >
-              <Link to={item.to} title={!isOpen ? item.label : ""}>
+              <NavLink
+                to={`/admin/dashboard/${item.to}`}
+                title={!isOpen ? item.label : ""}
+                className={({ isActive }) => (isActive ? "active" : "")}
+                onClick={(e) => {
+                  // Respaldo ante overlays / pointer-events
+                  e.preventDefault();
+                  navigate(`/admin/dashboard/${item.to}`);
+                }}>
                 {item.icon}
                 {isOpen && <span>{item.label}</span>}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>

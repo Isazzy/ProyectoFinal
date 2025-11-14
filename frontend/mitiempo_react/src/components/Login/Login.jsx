@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; 
-import { useAuth } from "../../Context/AuthContext"; 
+import { useAuth } from "../../Context/AuthContext.jsx"; 
 import api from "../../api/axiosConfig"; 
 // 💡 Importamos el CSS rediseñado
 import "../../CSS/Login.css"; 
@@ -43,7 +43,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await api.post("/login/", {
+  /*    const response = await api.post("/login/", {
         email: email, 
         password: password,
       });
@@ -55,7 +55,11 @@ export default function Login() {
         throw new Error("Error inesperado al iniciar sesión.");
       }
 
-      login(data.access, data.refresh);
+      login(data.access, data.refresh); */
+      const res = await login(email, password);  // ← un único POST (desde AuthContext)
+      if (!res?.success) {
+        throw new Error(res?.error || "Error al iniciar sesión");
+      }
 
       if (rememberMe) {
         localStorage.setItem("rememberedUser", email);
@@ -64,7 +68,7 @@ export default function Login() {
       }
       
     } catch (err) {
-      const errorMsg = err.response?.data?.detail || "Correo o contraseña incorrectos";
+      const errorMsg = err?.message || err?.response?.data?.detail || "Correo o contraseña incorrectos";
       setError(errorMsg);
     } finally {
       setLoading(false);
