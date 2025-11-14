@@ -6,6 +6,7 @@ from django.apps import AppConfig
 class ComprasConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'compras'
+<<<<<<< HEAD
 ========
 class CajasConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -19,3 +20,8 @@ class ComprasConfig(AppConfig):
     def ready(self):
         import compras.signals  # Nueva línea: Conecta signals
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+
+    def ready(self):
+        import compras.signals  # Nueva línea: Conecta signals
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)

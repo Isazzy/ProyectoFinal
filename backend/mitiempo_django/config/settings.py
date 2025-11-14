@@ -37,7 +37,10 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
@@ -52,7 +55,10 @@ REST_FRAMEWORK = {
         'anon': '100/hour',
         'user': '1000/hour',
     },
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
 }
 
 # cors authorization (quien se puede conectar a este  backend)
@@ -93,7 +99,10 @@ INSTALLED_APPS = [
     'turnos',
     'productos',
 <<<<<<< HEAD
+<<<<<<< HEAD
     'proveedores',
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
     'compras',
 <<<<<<< HEAD
 =======
@@ -166,7 +175,11 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD' : 'mx525',
         'HOST': 'localhost',
+<<<<<<< HEAD
         'PORT': '3307',
+=======
+        'PORT': '3306',
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
         
     }
 }

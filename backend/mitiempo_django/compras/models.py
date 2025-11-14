@@ -1,48 +1,97 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+# compras/models.py
+
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
 from django.db import models
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+from django.core.exceptions import ValidationError  # Nueva importación para validaciones
+
+
+# Importar modelo de productos
 from productos.models import Productos
-from proveedores.models import Proveedores
-from cajas.models import Cajas
 
-# Create your models here.
-class Compras(models.Model):
-    id_compra = models.AutoField(primary_key=True)
-    id_caja = models.ForeignKey(Cajas, models.DO_NOTHING, db_column='id_caja')
-    nro_comp = models.IntegerField()
-    fecha_hs_comp = models.DateTimeField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
-    estado = models.CharField(max_length=9)
 
+from django.conf import settings
+
+
+class Proveedores(models.Model):
+    """Modelo Proveedor basado en tabla PROVEEDORES"""
+    
+    # Mapeo exacto de tu BD
+    id_prov = models.AutoField(primary_key=True)
+    nombre_prov = models.CharField(max_length=200, verbose_name="Nombre del Proveedor")
+    tipo_prov = models.CharField(max_length=100, blank=True, verbose_name="Tipo de Proveedor")
+    telefono = models.CharField(max_length=20, blank=True)
+    correo = models.EmailField(blank=True)
+    direccion = models.TextField(blank=True)
+    
+    # Campos adicionales útiles
+    activo = models.BooleanField(default=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Nueva regla: Validar que el proveedor existe antes de modificar (solo para actualizaciones)
+        if self.pk and not Proveedores.objects.filter(pk=self.pk).exists():
+            raise ValidationError("El proveedor no existe en la base de datos y no puede ser modificado.")
+        super().save(*args, **kwargs)
+    def delete(self, *args, **kwargs):
+        # Nueva regla: No eliminar si tiene compras o productos asociados
+        if self.compras.exists() or self.productos_proveedor.exists():
+            raise ValidationError("No se puede eliminar un proveedor con compras o productos asociados.")
+        super().delete(*args, **kwargs)
+    
     class Meta:
+        db_table = 'proveedores'
         managed = True
-        db_table = 'compras'
+        verbose_name = 'Proveedor'
+        verbose_name_plural = 'Proveedores'
+        ordering = ['nombre_prov']
+    
+    def __str__(self):
+        return f"{self.nombre_prov}"
 
 
-class DetCompras(models.Model):
-    id_det_comp = models.AutoField(primary_key=True)
-    id_comp = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_comp')
-    cantidad = models.IntegerField()
-    precio_uni = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        managed = True
-        db_table = 'det_compras'
-
-
-class ProductosXProveedores(models.Model):
+class productos_x_proveedores(models.Model):
+    """Relación Producto-Proveedor con historial de compras"""
+    
     id_prod_x_prov = models.AutoField(primary_key=True)
-  
     id_prod = models.ForeignKey(
-         'productos.Productos',
-         on_delete=models.CASCADE
-     )
-  
-    id_prov = models.ForeignKey(Proveedores, models.DO_NOTHING, db_column='id_prov')
-    id_compra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_compra')
+        Productos, 
+        on_delete=models.PROTECT, 
+        db_column='id_prod',
+        related_name='proveedores_producto'
+    )
+    id_prov = models.ForeignKey(
+        Proveedores, 
+        on_delete=models.PROTECT, 
+        db_column='id_prov',
+        related_name='productos_proveedor'
+    )
+    d_compra = models.DateField(verbose_name="Fecha de Compra", null=True, blank=True)
+    
+    # Campos útiles adicionales
+    precio_ultima_compra = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    
+    def delete(self, *args, **kwargs):
+        # Nueva regla: No eliminar si hay compras recientes (últimos 30 días) para este producto-proveedor
+        from django.utils import timezone
+        from datetime import timedelta
+        fecha_limite = timezone.now().date() - timedelta(days=30)
+        if self.id_prod.detalles_compra.filter(id_compra__fecha_hs_comp__date__gte=fecha_limite).exists():
+            raise ValidationError("No se puede eliminar una relación producto-proveedor con compras recientes.")
+        super().delete(*args, **kwargs)
 
     class Meta:
+<<<<<<< HEAD
         managed = True
         db_table = 'productos_x_proveedores'
 =======
@@ -135,6 +184,8 @@ class productos_x_proveedores(models.Model):
         super().delete(*args, **kwargs)
 
     class Meta:
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
         db_table = 'productos_x_proveedores'
         verbose_name = 'Producto por Proveedor'
         verbose_name_plural = 'Productos por Proveedores'
@@ -283,5 +334,9 @@ class DetalleCompra(models.Model):
         
         # Actualizar total de la compra
         if self.id_compra:
+<<<<<<< HEAD
             self.id_compra.calcular_total()
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+            self.id_compra.calcular_total()
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)

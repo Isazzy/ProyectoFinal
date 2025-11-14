@@ -1,6 +1,9 @@
 from django.contrib import admin
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
 from .models import Proveedores, Compra, DetalleCompra, productos_x_proveedores
 
 @admin.register(Proveedores)
@@ -22,6 +25,9 @@ class DetalleCompraAdmin(admin.ModelAdmin):
 @admin.register(productos_x_proveedores)
 class ProductoXProveedorAdmin(admin.ModelAdmin):
     list_display = ['id_prod', 'id_prov', 'd_compra', 'precio_ultima_compra']
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
 
 # Register your models here.

@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # cajas/migrations/0001_initial.py
 from django.db import migrations
 
@@ -20,12 +21,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+# cajas/migrations/0001_initial.py
+from django.db import migrations
+
+class Migration(migrations.Migration):
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
     initial = True
 
     dependencies = [
     ]
 
     operations = [
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         migrations.CreateModel(
@@ -46,4 +54,6 @@ class Migration(migrations.Migration):
             },
         ),
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
     ]

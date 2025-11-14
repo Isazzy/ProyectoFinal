@@ -1,10 +1,15 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 from django.shortcuts import render
 
 # Create your views here.
 =======
 # compras/views.py
 
+=======
+# compras/views.py
+
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -401,5 +406,9 @@ class productos_x_proveedoresViewSet(viewsets.ModelViewSet):
         if proveedor:
             queryset = queryset.filter(id_prov_id=proveedor)
         
+<<<<<<< HEAD
         return queryset.order_by('-d_compra')
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+        return queryset.order_by('-d_compra')
+>>>>>>> a51b6139 (creacion de app compras/proveedores back y front)

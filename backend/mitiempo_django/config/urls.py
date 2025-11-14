@@ -39,6 +39,9 @@ urlpatterns = [
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
     path('api/', include('productos.urls')),
+
+    # URLs de la app compras
+    path('api/', include('compras.urls')),
     
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
 ]
