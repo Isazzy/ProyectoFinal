@@ -1,5 +1,9 @@
 # productos/models.py
+
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from decimal import Decimal
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -53,6 +57,7 @@ class Marca(models.Model):
         return self.nombre
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 # --- Modelo para Categorías ---
 # (Reemplaza al antiguo campo 'tipo_prod')
@@ -60,6 +65,9 @@ class Marca(models.Model):
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, unique=True)
@@ -74,7 +82,7 @@ class Categoria(models.Model):
         return self.nombre
     
 class Productos(models.Model):
-    id_prod = models.AutoField(primary_key = True)
+    id_prod = models.AutoField(primary_key=True)
     nombre_prod = models.CharField(max_length=100)
     
     marca = models.ForeignKey(
@@ -94,6 +102,7 @@ class Productos(models.Model):
 
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
     precio_compra = models.DecimalField(max_digits=10, decimal_places=2)
+<<<<<<< HEAD
     stock_min_prod = models.IntegerField()
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -121,6 +130,12 @@ class Productos(models.Model):
     stock_act_prod = models.IntegerField(default=0) 
     reposicion_prod = models.IntegerField()
     stock_max_prod = models.IntegerField()
+=======
+    stock_min_prod = models.IntegerField()  # Stock mínimo para alertas de reposición
+    stock_act_prod = models.IntegerField(default=0)  # Stock actual (inventario)
+    reposicion_prod = models.IntegerField()  # Cantidad sugerida para reposición
+    unidad = models.CharField(max_length=20, default='unidades', help_text="e.g., 'ml', 'unidades'")  # Nueva: Unidad de medida
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
     imagen_url = models.URLField(max_length=300, blank=True, null=True)
 
     class Meta:
@@ -136,6 +151,7 @@ class Productos(models.Model):
         return self.nombre_prod
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 class Compras(models.Model):
@@ -211,6 +227,67 @@ class ProductosXProveedores(models.Model):
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+    def clean(self):
+        """
+        Validaciones para asegurar integridad:
+        - Precios deben ser positivos.
+        - Stock actual no puede ser negativo.
+        - Stock mínimo debe ser >= 0.
+        """
+        if self.precio_venta <= 0 or self.precio_compra <= 0:
+            raise ValidationError("Los precios de venta y compra deben ser mayores a 0.")
+        if self.stock_act_prod < 0:
+            raise ValidationError("El stock actual no puede ser negativo.")
+        if self.stock_min_prod < 0:
+            raise ValidationError("El stock mínimo no puede ser negativo.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Ejecuta validaciones antes de guardar
+        super().save(*args, **kwargs)
+
+    def needs_restock(self):
+        """
+        Método para verificar si el producto necesita reposición.
+        Retorna True si stock_act_prod <= stock_min_prod.
+        Útil para alertas en la peluquería.
+        """
+        return self.stock_act_prod <= self.stock_min_prod
+
+    def update_stock(self, cantidad, tipo_movimiento, usuario=None, razon=""):
+        """
+        Método para actualizar stock de manera segura y registrar en historial.
+        - cantidad: Positiva para entrada, negativa para salida.
+        - tipo_movimiento: 'ENTRADA', 'SALIDA' o 'AJUSTE'.
+        - usuario: Usuario que realiza el cambio (opcional).
+        - razon: Descripción del cambio (opcional).
+        
+        Lógica de negocio: Actualiza stock_act_prod y crea entrada en StockHistory.
+        Se usa en serializers de compra (ENTRADA) y venta (SALIDA) para integración automática.
+        """
+        if tipo_movimiento not in ['ENTRADA', 'SALIDA', 'AJUSTE']:
+            raise ValidationError("Tipo de movimiento inválido.")
+        
+        stock_anterior = self.stock_act_prod
+        self.stock_act_prod += cantidad  # Actualiza stock
+        
+        if self.stock_act_prod < 0:
+            raise ValidationError("No hay suficiente stock para esta operación.")
+        
+        self.save()  # Guarda el producto con nuevo stock
+        
+        # Crea entrada en historial
+        StockHistory.objects.create(
+            producto=self,
+            tipo_movimiento=tipo_movimiento,
+            cantidad_movida=cantidad,
+            stock_anterior=stock_anterior,
+            stock_actual=self.stock_act_prod,
+            razon=razon,
+            usuario=usuario
+        )
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 class StockHistory(models.Model):
     
     TIPO_MOVIMIENTO = [
@@ -230,12 +307,13 @@ class StockHistory(models.Model):
     
     fecha_movimiento = models.DateTimeField(auto_now_add=True)
     tipo_movimiento = models.CharField(max_length=10, choices=TIPO_MOVIMIENTO)
-    cantidad_movida = models.IntegerField()
+    cantidad_movida = models.IntegerField()  # Puede ser negativa para salidas
     stock_anterior = models.IntegerField()
     stock_actual = models.IntegerField()
     razon = models.CharField(max_length=255, blank=True, null=True) 
 
     usuario = models.ForeignKey(
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         'mitiempo_enloderomi.CustomUser', # <--- USA EL STRING 'app.Modelo'
@@ -245,6 +323,9 @@ class StockHistory(models.Model):
 =======
         'mitiempo_enloderomi.CustomUser',
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+        'mitiempo_enloderomi.CustomUser',  # Ajusta si el modelo de usuario es diferente
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True
@@ -254,6 +335,7 @@ class StockHistory(models.Model):
         db_table = "stock_history"
         verbose_name = "Historial de Stock"
         verbose_name_plural = "Historiales de Stock"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -266,3 +348,8 @@ class StockHistory(models.Model):
     def __str__(self):
         return f'{self.tipo_movimiento} de {self.cantidad_movida} para {self.producto.nombre_prod}'
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
+=======
+    
+    def __str__(self):
+        return f'{self.tipo_movimiento} de {self.cantidad_movida} para {self.producto.nombre_prod if self.producto else "Producto eliminado"}'
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)

@@ -23,7 +23,7 @@ class ProductosAdmin(admin.ModelAdmin):
     list_display = (
         "id_prod", "nombre_prod", "marca", "categoria",
         "precio_venta", "precio_compra", "stock_act_prod",
-        "stock_min_prod", "stock_max_prod", "reposicion_prod"
+        "stock_min_prod", "reposicion_prod"
     )
     list_filter = ("marca", "categoria",)
     search_fields = ("nombre_prod", "marca__nombre", "categoria__nombre")

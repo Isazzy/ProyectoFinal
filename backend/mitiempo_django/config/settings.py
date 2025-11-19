@@ -38,9 +38,13 @@ REST_FRAMEWORK = {
     ],
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
+=======
+    
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
@@ -56,9 +60,14 @@ REST_FRAMEWORK = {
         'user': '1000/hour',
     },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> a51b6139 (creacion de app compras/proveedores back y front)
+=======
+     
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 }
 
 # cors authorization (quien se puede conectar a este  backend)
@@ -96,8 +105,9 @@ INSTALLED_APPS = [
     "pytz",
     'mitiempo_enloderomi',
     'servicio',
-    'turnos',
+    'turno',
     'productos',
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     'proveedores',
@@ -114,6 +124,13 @@ INSTALLED_APPS = [
     'cajas',
     'ventas',
 >>>>>>> 5f5a7856 (Actualizacion de models.py)
+=======
+    'compra',
+    'caja',
+    'venta',
+    "caja_registro",
+    'drf_spectacular',
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 ]
 
 MIDDLEWARE = [
@@ -165,6 +182,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         'NAME':'mitiem',
 =======
         'NAME':'mitiempo',
@@ -172,6 +190,9 @@ DATABASES = {
 =======
         'NAME':'mitiem',
 >>>>>>> d8b7e6dc (Arreglé horarios de turnos-cliente)
+=======
+        'NAME':'mitiempo2',
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
         'USER': 'root',
         'PASSWORD' : 'mx525',
         'HOST': 'localhost',

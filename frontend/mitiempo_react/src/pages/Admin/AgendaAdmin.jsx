@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 // src/pages/Admin/AgendaAdmin.jsx
 =======
 // front/src/pages/Admin/AgendaAdmin.jsx
@@ -10,6 +11,9 @@
 =======
 // front/src/pages/Admin/AgendaAdmin.jsx
 >>>>>>> 632fee59 (Cambios)
+=======
+// src/components/agenda/AdminAgenda.jsx
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 import React, { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -19,14 +23,18 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction'; // Para clicks
 =======
 import interactionPlugin from '@fullcalendar/interaction';
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 import interactionPlugin from '@fullcalendar/interaction';
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+import esLocale from '@fullcalendar/core/locales/es';
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 import toast from 'react-hot-toast';
-
-import { getTurnos, deleteTurno, updateTurno } from '../../api/turnos';
+import api from "../../api/axiosConfig";
 import Modal from '../../components/Common/Modal';
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; // Componente de solo lectura
@@ -42,18 +50,48 @@ import "../../CSS/AdminAgenda.css";
 =======
 import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal'; 
 import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin'; 
+=======
+import TurnoDetailModal from '../../components/Turnos/TurnoDetailModal';
+import TurnoFormAdmin from '../../components/Turnos/TurnoFormAdmin';
+import CobroModal from '../../components/Turnos/CobroModal';
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 
-// 💡 Importamos el CSS rediseñado
-import "../../CSS/AdminAgenda.css"; 
+import { 
+  Calendar,
+  Clock,
+  Users,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Plus,
+  RefreshCw,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp
+} from 'lucide-react';
 
+import './AdminAgenda.css';
+import { getTurnos, updateTurno, deleteTurno } from "../../api/turnos";
+
+<<<<<<< HEAD
 // 🎨 --- COLORES ACTUALIZADOS --- 
 // Colores más elegantes y alineados con el nuevo tema.
 <<<<<<< HEAD
+=======
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 const ESTADO_COLORS = {
-  'pendiente': '#f59e0b', // Ámbar (para advertencia)
-  'confirmado': '#059669', // Verde (éxito)
-  'completado': '#3b82f6', // Azul (informativo)
-  'cancelado': '#777777',  // Gris (color secundario de texto)
+  'pendiente': '#f59e0b',
+  'confirmado': '#059669',
+  'completado': '#3b82f6',
+  'cancelado': '#777777',
+};
+
+const ESTADO_INFO = {
+  'pendiente': { icon: Clock, label: 'Pendiente', color: '#f59e0b' },
+  'confirmado': { icon: CheckCircle, label: 'Confirmado', color: '#059669' },
+  'completado': { icon: CheckCircle, label: 'Completado', color: '#3b82f6' },
+  'cancelado': { icon: XCircle, label: 'Cancelado', color: '#777777' },
 };
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
@@ -76,6 +114,7 @@ export default function AgendaAdmin() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+<<<<<<< HEAD
   
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -93,12 +132,23 @@ export default function AgendaAdmin() {
   const [selectedTurnoId, setSelectedTurnoId] = useState(null); 
   
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+
+  const [selectedTurno, setSelectedTurno] = useState(null);
+  const [selectedTurnoId, setSelectedTurnoId] = useState(null);
+  const [selectedDateTime, setSelectedDateTime] = useState(null);
+
+  const [cobroModalOpen, setCobroModalOpen] = useState(false);
+  const [turnoParaCobrar, setTurnoParaCobrar] = useState(null);
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
   useEffect(() => {
     loadTurnos();
   }, []);
 
   const loadTurnos = () => {
     setLoading(true);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     getTurnos() // El backend ya filtra por rol (admin/empleado)
@@ -113,10 +163,13 @@ export default function AgendaAdmin() {
           id: turno.id_turno, // FullCalendar usa 'id'
 =======
     getTurnos() 
+=======
+    getTurnos()
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
       .then(response => {
-        
         const calendarEvents = response.data.map(turno => ({
           id: turno.id_turno,
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
           id: turno.id_turno, // <- Corregido para usar id_turno
@@ -138,14 +191,23 @@ export default function AgendaAdmin() {
 =======
           extendedProps: { ...turno } 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+          title: turno.cliente_nombre || Cliente ${turno.cliente || ''},
+          start: turno.fecha_hora_inicio,
+          end: turno.fecha_hora_fin,
+          backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
+          borderColor: ESTADO_COLORS[turno.estado] || '#777',
+          textColor: '#ffffff',
+          extendedProps: { ...turno }
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
         }));
-        
         setEvents(calendarEvents);
       })
-      .catch(err => toast.error("Error al cargar la agenda."))
+      .catch(() => toast.error("Error al cargar la agenda."))
       .finally(() => setLoading(false));
   };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -166,20 +228,26 @@ export default function AgendaAdmin() {
 >>>>>>> 632fee59 (Cambios)
   // --- El resto de los manejadores (sin cambios) ---
 
+=======
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
   const handleEventClick = (clickInfo) => {
     const turnoCompleto = clickInfo.event.extendedProps;
-    
     if (turnoCompleto) {
       setSelectedTurno(turnoCompleto);
+<<<<<<< HEAD
       setViewModalOpen(true); 
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
       setViewModalOpen(true); 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+      setViewModalOpen(true);
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
     }
   };
 
   const handleDateClick = (arg) => {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     setSelectedTurnoId(null); // Modo "Crear"
@@ -202,10 +270,19 @@ export default function AgendaAdmin() {
   };
   
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+    const clickedDate = new Date(arg.date);
+    setSelectedDateTime(clickedDate);
+    setSelectedTurnoId(null);
+    setFormModalOpen(true);
+  };
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
   const handleCloseViewModal = () => {
     setViewModalOpen(false);
     setSelectedTurno(null);
   };
+<<<<<<< HEAD
   
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -228,6 +305,14 @@ export default function AgendaAdmin() {
       loadTurnos(); 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
     }
+=======
+
+  const handleCloseFormModal = (didSave = false) => {
+    setFormModalOpen(false);
+    setSelectedTurnoId(null);
+    setSelectedDateTime(null);
+    if (didSave) loadTurnos();
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
   };
 
   const handleEditFromView = () => {
@@ -258,15 +343,16 @@ export default function AgendaAdmin() {
       loadTurnos(); // Recarga
 =======
     setSelectedTurnoId(selectedTurno.id_turno);
-    setViewModalOpen(false); 
-    setFormModalOpen(true); 
+    setViewModalOpen(false);
+    setFormModalOpen(true);
   };
 
-  const handleUpdateStatus = async (nuevoEstado) => {
+  const handleUpdateStatus = async (accion) => {
     if (!selectedTurno) return;
     setLoading(true);
-    
+
     try {
+<<<<<<< HEAD
       await updateTurno(selectedTurno.id_turno, { estado: nuevoEstado });
       toast.success(`Turno ${nuevoEstado}`);
       loadTurnos(); 
@@ -276,8 +362,59 @@ export default function AgendaAdmin() {
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
     } catch (err) {
       toast.error("Error al actualizar estado.");
+=======
+      if (accion === 'cobrar') {
+        setTurnoParaCobrar(selectedTurno);
+        setCobroModalOpen(true);
+        setLoading(false);
+        return;
+      }
+
+      if (accion === 'completar') {
+        await api.post(/turnos/${selectedTurno.id_turno}/marcar_completado/);
+        toast.success("Turno completado correctamente");
+      } else {
+        await updateTurno(selectedTurno.id_turno, { estado: accion });
+        toast.success(Turno actualizado a ${accion});
+      }
+
+      loadTurnos();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al actualizar el turno.");
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
     } finally {
       setLoading(false);
+      handleCloseViewModal();
+    }
+  };
+
+  const handleConfirmCobro = async (metodoPago) => {
+    if (!turnoParaCobrar) return;
+
+    if (!['Efectivo', 'Transferencia'].includes(metodoPago)) {
+      toast.error("Solo se permite cobrar en Efectivo o Transferencia.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.post(/turnos/${turnoParaCobrar.id_turno}/cobrar_turno/, { metodo_pago: metodoPago });
+      toast.success(res.data.mensaje || "Turno cobrado correctamente");
+      loadTurnos();
+    } catch (err) {
+      console.error(err);
+      if (err.response?.data) {
+        const msg = err.response.data.detail || err.response.data.error || err.response.data.mensaje;
+        if (msg) toast.error(msg);
+        else toast.error("Error al procesar el cobro.");
+      } else {
+        toast.error("Error al procesar el cobro.");
+      }
+    } finally {
+      setLoading(false);
+      setCobroModalOpen(false);
+      setTurnoParaCobrar(null);
       handleCloseViewModal();
     }
   };
@@ -291,6 +428,7 @@ export default function AgendaAdmin() {
     setDeleteModalOpen(true); // Abre modal de confirmación
 =======
     setSelectedTurnoId(selectedTurno.id_turno);
+<<<<<<< HEAD
     setViewModalOpen(false); 
     setDeleteModalOpen(true); 
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
@@ -302,8 +440,12 @@ export default function AgendaAdmin() {
     setViewModalOpen(false); 
     setDeleteModalOpen(true); 
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+    setViewModalOpen(false);
+    setDeleteModalOpen(true);
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
   };
-  
+
   const handleDeleteConfirm = async () => {
     if (!selectedTurnoId) return;
     setLoading(true);
@@ -311,7 +453,7 @@ export default function AgendaAdmin() {
       await deleteTurno(selectedTurnoId);
       toast.success("Turno eliminado.");
       loadTurnos();
-    } catch (err) {
+    } catch {
       toast.error("Error al eliminar el turno.");
     } finally {
       setLoading(false);
@@ -320,6 +462,7 @@ export default function AgendaAdmin() {
     }
   };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   return (
@@ -345,14 +488,68 @@ export default function AgendaAdmin() {
           initialView="timeGridWeek" // Vista semanal
 =======
   // --- Renderizado ---
+=======
+  // Estadísticas
+  const totalTurnos = events.length;
+  const turnosPendientes = events.filter(e => e.extendedProps?.estado === 'pendiente').length;
+  const turnosConfirmados = events.filter(e => e.extendedProps?.estado === 'confirmado').length;
+  const turnosCompletados = events.filter(e => e.extendedProps?.estado === 'completado').length;
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 
   return (
-    // 💡 Contenedor genérico. El layout ya da el padding.
-    <div className="admin-agenda"> 
-      {loading && (
-        <div className="loading-spinner">Cargando agenda...</div>
-      )}
+    <div className="agenda-page">
+      
+      {/* Header Hero Section */}
+      <div className="agenda-hero-header">
+        <div className="agenda-hero-container">
+          <div className="agenda-hero-content">
+            
+            {/* Left Side - Title & Stats */}
+            <div className="agenda-hero-left">
+              <div className="agenda-title-section">
+                <div className="agenda-icon-badge">
+                  <Calendar className="agenda-icon-large" />
+                </div>
+                <div>
+                  <h1 className="agenda-main-title">Agenda de Turnos</h1>
+                  <p className="agenda-subtitle">Gestiona citas y horarios</p>
+                </div>
+              </div>
+              
+              {/* Stats Cards */}
+              <div className="agenda-stats-grid">
+                <div className="agenda-stat-card">
+                  <TrendingUp className="agenda-stat-icon agenda-stat-icon-blue" />
+                  <div>
+                    <p className="agenda-stat-number">{totalTurnos}</p>
+                    <p className="agenda-stat-label">Total Turnos</p>
+                  </div>
+                </div>
+                <div className="agenda-stat-card">
+                  <Clock className="agenda-stat-icon agenda-stat-icon-yellow" />
+                  <div>
+                    <p className="agenda-stat-number">{turnosPendientes}</p>
+                    <p className="agenda-stat-label">Pendientes</p>
+                  </div>
+                </div>
+                <div className="agenda-stat-card">
+                  <CheckCircle className="agenda-stat-icon agenda-stat-icon-green" />
+                  <div>
+                    <p className="agenda-stat-number">{turnosConfirmados}</p>
+                    <p className="agenda-stat-label">Confirmados</p>
+                  </div>
+                </div>
+                <div className="agenda-stat-card">
+                  <CheckCircle className="agenda-stat-icon agenda-stat-icon-cyan" />
+                  <div>
+                    <p className="agenda-stat-number">{turnosCompletados}</p>
+                    <p className="agenda-stat-label">Completados</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
+<<<<<<< HEAD
       {/* 🎨 Contenedor de la tarjeta del calendario */}
       <div className="calendar-container card">
         <FullCalendar
@@ -435,10 +632,59 @@ export default function AgendaAdmin() {
           }}
 <<<<<<< HEAD
         />
+=======
+            {/* Right Side - Actions */}
+            <div className="agenda-hero-actions">
+              <button
+                onClick={() => loadTurnos()}
+                className="agenda-refresh-button"
+                disabled={loading}
+              >
+                <RefreshCw className={agenda-button-icon ${loading ? 'spinning' : ''}} />
+                Actualizar
+              </button>
+              
+              <button
+                onClick={() => {
+                  setSelectedDateTime(new Date());
+                  setSelectedTurnoId(null);
+                  setFormModalOpen(true);
+                }}
+                className="agenda-new-button"
+              >
+                <Plus className="agenda-button-icon" />
+                Nuevo Turno
+              </button>
+            </div>
+          </div>
+        </div>
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
       </div>
 
-      {/* --- Modales (usando el nuevo estilo de index.css y App.css) --- */}
+      {/* Main Content */}
+      <div className="agenda-main-container">
+        
+        {/* Leyenda de Estados */}
+        <div className="agenda-legend">
+          <h3 className="agenda-legend-title">
+            <Filter className="agenda-legend-icon" />
+            Leyenda de Estados
+          </h3>
+          <div className="agenda-legend-items">
+            {Object.entries(ESTADO_INFO).map(([key, info]) => {
+              const IconComponent = info.icon;
+              return (
+                <div key={key} className="agenda-legend-item">
+                  <div className="agenda-legend-color" style={{ backgroundColor: info.color }}></div>
+                  <IconComponent className="agenda-legend-item-icon" style={{ color: info.color }} />
+                  <span className="agenda-legend-label">{info.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
+<<<<<<< HEAD
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
           height="auto" 
@@ -453,9 +699,82 @@ export default function AgendaAdmin() {
       {/* --- Modales (usando el nuevo estilo de index.css y App.css) --- */}
 
 >>>>>>> 632fee59 (Cambios)
+=======
+        {/* Calendario */}
+        <div className="agenda-calendar-card">
+          {loading && (
+            <div className="agenda-loading-overlay">
+              <div className="agenda-spinner"></div>
+              <p>Cargando agenda...</p>
+            </div>
+          )}
+          
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+            events={events}
+            eventClick={handleEventClick}
+            dateClick={handleDateClick}
+            editable={false}
+            selectable={true}
+            allDaySlot={false}
+            slotMinTime="08:00:00"
+            slotMaxTime="20:00:00"
+            locale={esLocale}
+            buttonText={{
+              today: 'Hoy',
+              month: 'Mes',
+              week: 'Semana',
+              day: 'Día',
+            }}
+            height="auto"
+            timeZone="local"
+            slotLabelFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              meridiem: false,
+              hour12: false
+            }}
+            eventTimeFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              meridiem: false,
+              hour12: false
+            }}
+            slotDuration="00:30:00"
+            snapDuration="00:15:00"
+            nowIndicator={true}
+            eventContent={(arg) => {
+              const turno = arg.event.extendedProps;
+              const estadoInfo = ESTADO_INFO[turno.estado];
+              const IconComponent = estadoInfo?.icon || Clock;
+              
+              return (
+                <div className="agenda-event-content">
+                  <IconComponent className="agenda-event-icon" />
+                  <div className="agenda-event-text">
+                    <div className="agenda-event-time">{arg.timeText}</div>
+                    <div className="agenda-event-title">{arg.event.title}</div>
+                  </div>
+                </div>
+              );
+            }}
+          />
+        </div>
+
+      </div>
+
+      {/* Modals */}
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
       {viewModalOpen && (
         <TurnoDetailModal
-          turno={selectedTurno} 
+          turno={selectedTurno}
           onClose={handleCloseViewModal}
           onEdit={handleEditFromView}
           onDelete={handleDeleteRequest}
@@ -463,6 +782,7 @@ export default function AgendaAdmin() {
           loading={loading}
         />
       )}
+<<<<<<< HEAD
       
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -471,12 +791,17 @@ export default function AgendaAdmin() {
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
       {formModalOpen && (
         <TurnoFormAdmin
           turnoIdToEdit={selectedTurnoId}
           onClose={handleCloseFormModal}
+          preselectedDateTime={selectedDateTime}
         />
       )}
+<<<<<<< HEAD
       
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -485,12 +810,25 @@ export default function AgendaAdmin() {
 >>>>>>> parent of def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
 =======
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
+=======
+
+      {cobroModalOpen && (
+        <CobroModal
+          turno={turnoParaCobrar}
+          onClose={() => setCobroModalOpen(false)}
+          onConfirm={handleConfirmCobro}
+          loading={loading}
+        />
+      )}
+
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         title="Confirmar Eliminación"
         footer={
           <>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -500,6 +838,11 @@ export default function AgendaAdmin() {
             {/* 🎨 Clases de botones del nuevo sistema de diseño */}
 >>>>>>> 632fee59 (Cambios)
             <button onClick={() => setDeleteModalOpen(false)} className="btn btn-secondary" disabled={loading}>Cancelar</button>
+=======
+            <button onClick={() => setDeleteModalOpen(false)} className="btn btn-secondary" disabled={loading}>
+              Cancelar
+            </button>
+>>>>>>> def20f14 (creacion de caja, movimiento_caja, mod venta mod compra)
             <button onClick={handleDeleteConfirm} className="btn btn-danger" disabled={loading}>
               {loading ? "Eliminando..." : "Eliminar Turno"}
             </button>
@@ -508,7 +851,6 @@ export default function AgendaAdmin() {
       >
         <p>¿Estás seguro de que deseas eliminar este turno? Esta acción no se puede deshacer.</p>
       </Modal>
-
     </div>
   );
 }

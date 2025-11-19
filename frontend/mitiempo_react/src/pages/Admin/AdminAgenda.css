@@ -1,0 +1,611 @@
+/* src/components/agenda/AdminAgenda.css */
+
+/* ============================================
+   VARIABLES
+   ============================================ */
+:root {
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-sky-50: #f0f9ff;
+  --color-sky-100: #e0f2fe;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+  --color-cyan-300: #67e8f9;
+  --color-cyan-600: #0891b2;
+  --color-blue-50: #eff6ff;
+  --color-blue-300: #93c5fd;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-600: #059669;
+  --color-yellow-300: #fcd34d;
+  --color-yellow-500: #eab308;
+  --color-amber-500: #f59e0b;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ============================================
+   PÁGINA PRINCIPAL
+   ============================================ */
+.agenda-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-indigo-50) 0%, var(--color-sky-50) 50%, var(--color-blue-50) 100%);
+  padding-bottom: 2.5rem;
+}
+
+/* ============================================
+   HERO HEADER
+   ============================================ */
+.agenda-hero-header {
+  background: linear-gradient(90deg, var(--color-indigo-600) 0%, var(--color-sky-600) 50%, var(--color-blue-600) 100%);
+  color: white;
+  padding: 2rem 1.5rem 8rem;
+}
+
+.agenda-hero-container {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.agenda-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .agenda-hero-content {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.agenda-hero-left {
+  flex: 1;
+}
+
+.agenda-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.agenda-icon-badge {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.agenda-icon-large {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.agenda-main-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 1024px) {
+  .agenda-main-title {
+    font-size: 3rem;
+  }
+}
+
+.agenda-subtitle {
+  color: #bfdbfe;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Stats Grid */
+.agenda-stats-grid {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.agenda-stat-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 150px;
+}
+
+.agenda-stat-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.agenda-stat-icon-blue {
+  color: var(--color-blue-300);
+}
+
+.agenda-stat-icon-yellow {
+  color: var(--color-yellow-300);
+}
+
+.agenda-stat-icon-green {
+  color: var(--color-emerald-300);
+}
+
+.agenda-stat-icon-cyan {
+  color: var(--color-cyan-300);
+}
+
+.agenda-stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.agenda-stat-label {
+  font-size: 0.75rem;
+  color: #bfdbfe;
+}
+
+/* Hero Actions */
+.agenda-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.agenda-refresh-button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.agenda-refresh-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.agenda-refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agenda-new-button {
+  padding: 0.875rem 1.5rem;
+  background: white;
+  color: var(--color-indigo-600);
+  border-radius: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.agenda-new-button:hover {
+  box-shadow: var(--shadow-2xl);
+  transform: scale(1.05);
+}
+
+.agenda-button-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.agenda-button-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+.agenda-main-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  margin-top: -6rem;
+}
+
+/* ============================================
+   LEYENDA
+   ============================================ */
+.agenda-legend {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-slate-200);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.agenda-legend-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agenda-legend-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-indigo-600);
+}
+
+.agenda-legend-items {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.agenda-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agenda-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.agenda-legend-item-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.agenda-legend-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-slate-700);
+}
+
+/* ============================================
+   CALENDARIO
+   ============================================ */
+.agenda-calendar-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--color-slate-200);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.agenda-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  gap: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.agenda-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--color-indigo-100);
+  border-top-color: var(--color-indigo-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   ESTILOS FULLCALENDAR PERSONALIZADOS
+   ============================================ */
+
+/* Toolbar */
+.fc .fc-toolbar {
+  padding: 0 0 1.5rem;
+  gap: 1rem;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-slate-800);
+  text-transform: capitalize;
+}
+
+/* Botones */
+.fc .fc-button {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s ease;
+  background: var(--color-slate-50) !important;
+  color: var(--color-slate-700) !important;
+  border: 2px solid var(--color-slate-200) !important;
+  box-shadow: none !important;
+}
+
+.fc .fc-button:hover:not(:disabled) {
+  background: var(--color-indigo-50) !important;
+  color: var(--color-indigo-700) !important;
+  border-color: var(--color-indigo-300) !important;
+  transform: translateY(-1px);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: linear-gradient(135deg, var(--color-indigo-600) 0%, var(--color-sky-600) 100%) !important;
+  color: white !important;
+  border-color: var(--color-indigo-600) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.fc .fc-button:disabled {
+  background: var(--color-slate-100) !important;
+  color: var(--color-slate-400) !important;
+  opacity: 0.5;
+}
+
+/* Header de columnas */
+.fc .fc-col-header-cell {
+  background: linear-gradient(180deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+  color: var(--color-slate-700);
+  font-weight: 700;
+  border: 1px solid var(--color-slate-200);
+  padding: 1rem 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.fc .fc-col-header-cell-cushion {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Día actual */
+.fc .fc-day-today {
+  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%) !important;
+}
+
+.fc .fc-day-today .fc-col-header-cell-cushion {
+  color: var(--color-indigo-700);
+  font-weight: 800;
+}
+
+/* Slots de tiempo */
+.fc .fc-timegrid-slot {
+  height: 3.5rem;
+}
+
+.fc .fc-timegrid-slot-label {
+  color: var(--color-slate-600);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid var(--color-slate-100);
+}
+
+.fc .fc-timegrid-slot-lane {
+  background: white;
+  border-bottom: 1px dashed var(--color-slate-200);
+}
+
+/* Línea de hora actual */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: var(--color-indigo-600) !important;
+  border-width: 2px !important;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: var(--color-indigo-600) !important;
+  border-width: 6px !important;
+}
+
+/* Eventos */
+.fc-event {
+  cursor: pointer;
+  border-radius: 0.5rem !important;
+  border: none !important;
+  padding: 0.375rem 0.625rem !important;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.fc-event:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-xl);
+  z-index: 10;
+}
+
+.agenda-event-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+}
+
+.agenda-event-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.agenda-event-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.agenda-event-time {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  opacity: 0.9;
+  margin-bottom: 0.125rem;
+}
+
+.agenda-event-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Vista Mes */
+.fc-daygrid-event {
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.375rem !important;
+}
+
+.fc-daygrid-day-number {
+  color: var(--color-slate-700);
+  font-weight: 600;
+  padding: 0.5rem;
+  text-decoration: none;
+}
+
+.fc-daygrid-day:hover {
+  background: var(--color-slate-50);
+  cursor: pointer;
+}
+
+/* Scrollbars personalizados */
+.fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+  background: var(--color-slate-100);
+  border-radius: 4px;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+  background: var(--color-slate-300);
+  border-radius: 4px;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-400);
+}
+
+/* Más espacio entre eventos */
+.fc .fc-timegrid-event-harness {
+  margin-bottom: 2px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+  .agenda-hero-header {
+    padding: 1.5rem 1rem 6rem;
+  }
+  
+  .agenda-main-title {
+    font-size: 2rem;
+  }
+  
+  .agenda-stats-grid {
+    flex-direction: column;
+  }
+  
+  .agenda-stat-card {
+    width: 100%;
+  }
+  
+  .agenda-hero-actions {
+    flex-direction: column;
+  }
+  
+  .agenda-refresh-button,
+  .agenda-new-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .agenda-calendar-card {
+    padding: 1rem;
+  }
+  
+  .fc .fc-toolbar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .fc .fc-button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .agenda-legend-items {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
