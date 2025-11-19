@@ -1,4 +1,4 @@
-// src/api/axiosConfig.js  (o .jsx, pero usa solo UNO)
+// src/api/axiosConfig.jsx
 import axios from "axios";
 
 // ====== BASE URL ======
@@ -15,15 +15,16 @@ const api = axios.create({
 // ====== REQUEST INTERCEPTOR ======
 api.interceptors.request.use(
   (config) => {
-    // Endpoints públicos de lectura
-    const isPublic =
-      config.method === "get" &&
-      (config.url?.startsWith("/servicios"));
+    // Endpoints públicos de lectura (modificado: ahora false para que /servicios/ envíe token si existe)
+    const isPublic = false;  // Cambiado a false para requerir auth en /servicios/
 
+    // Bloque comentado para evitar eliminar Authorization
+    /*
     if (isPublic) {
       if (config.headers) delete config.headers.Authorization;
       return config;
     }
+    */
 
     const token =
       typeof localStorage !== "undefined"
@@ -147,7 +148,6 @@ if (!compraService.getAll)  compraService.getAll  = (params)  => compraService.l
 if (!compraService.create)  compraService.create  = (payload) => compraService.crear(payload);
 if (!compraService.delete)  compraService.delete  = (id)      => compraService.eliminar(id);
 
-
 // limpio params para no enviar '' o null
 const cleanParams = (params = {}) => {
   const out = {};
@@ -159,8 +159,6 @@ const cleanParams = (params = {}) => {
   });
   return out;
 };
-
-
 
 // ---- Proveedores ----
 export const proveedorService = {
@@ -190,6 +188,15 @@ proveedorService.historial = async (id) =>
 export const productoProveedorService = {
   listar: async (params) =>
     asList(await pickData(api.get('/productos-proveedores/', { params }))),
+};
+
+// ---- Servicios ----
+export const servicioService = {
+  listar: async (params) => asList(await pickData(api.get("/servicios/", { params: cleanParams(params) }))),
+  crear: (payload) => pickData(api.post("/servicios/", payload)),
+  detalle: async (id) => asItem(await pickData(api.get(`/servicios/${id}/`))),
+  actualizar: (id, payload) => pickData(api.put(`/servicios/${id}/`, payload)),
+  eliminar: (id) => pickData(api.delete(`/servicios/${id}/`)),
 };
 
 // ====== DEFAULT EXPORT (para import api from ...) ======

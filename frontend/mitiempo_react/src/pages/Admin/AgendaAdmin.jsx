@@ -171,6 +171,7 @@ export default function AgendaAdmin() {
           id: turno.id_turno,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
           id: turno.id_turno, // <- Corregido para usar id_turno
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
@@ -193,6 +194,9 @@ export default function AgendaAdmin() {
 >>>>>>> 67ec8a26 (Producto terminado (Creo))
 =======
           title: turno.cliente_nombre || Cliente ${turno.cliente || ''},
+=======
+          title: turno.cliente_nombre || `Cliente ${turno.cliente || ''}`,
+>>>>>>> f3790e02 (WIP: guardando cambios antes del rebase)
           start: turno.fecha_hora_inicio,
           end: turno.fecha_hora_fin,
           backgroundColor: ESTADO_COLORS[turno.estado] || '#777',
@@ -371,11 +375,11 @@ export default function AgendaAdmin() {
       }
 
       if (accion === 'completar') {
-        await api.post(/turnos/${selectedTurno.id_turno}/marcar_completado/);
+        await api.post(`/turnos/${selectedTurno.id_turno}/marcar_completado/`);
         toast.success("Turno completado correctamente");
       } else {
         await updateTurno(selectedTurno.id_turno, { estado: accion });
-        toast.success(Turno actualizado a ${accion});
+        toast.success(`Turno actualizado a ${accion}`);
       }
 
       loadTurnos();
@@ -399,7 +403,7 @@ export default function AgendaAdmin() {
 
     setLoading(true);
     try {
-      const res = await api.post(/turnos/${turnoParaCobrar.id_turno}/cobrar_turno/, { metodo_pago: metodoPago });
+      const res = await api.post(`/turnos/${selectedTurno.id_turno}/marcar_completado/`);
       toast.success(res.data.mensaje || "Turno cobrado correctamente");
       loadTurnos();
     } catch (err) {
@@ -550,6 +554,7 @@ export default function AgendaAdmin() {
             </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       {/* 🎨 Contenedor de la tarjeta del calendario */}
       <div className="calendar-container card">
         <FullCalendar
@@ -634,13 +639,15 @@ export default function AgendaAdmin() {
         />
 =======
             {/* Right Side - Actions */}
+=======
+          {/* Right Side - Actions */}
+>>>>>>> f3790e02 (WIP: guardando cambios antes del rebase)
             <div className="agenda-hero-actions">
               <button
                 onClick={() => loadTurnos()}
                 className="agenda-refresh-button"
                 disabled={loading}
               >
-                <RefreshCw className={agenda-button-icon ${loading ? 'spinning' : ''}} />
                 Actualizar
               </button>
               

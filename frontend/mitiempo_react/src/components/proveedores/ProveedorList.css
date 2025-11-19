@@ -1,68 +1,87 @@
-/* src/components/proveedores/ProveedorList.css */
-
 /* ============================================
-   VARIABLES Y RESET
+   OPCIÓN 1: BURGUNDY PROFESSIONAL
+   Paleta Principal: Borgoña (#7D2321) + Gris Carbón (#3B3738)
+   Vibe: Elegante, premium, corporativo
    ============================================ */
+
 :root {
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
-  --color-purple-50: #faf5ff;
-  --color-purple-600: #9333ea;
-  --color-purple-700: #7e22ce;
-  --color-pink-50: #fdf2f8;
-  --color-pink-600: #db2777;
-  --color-pink-700: #be185d;
+  /* Colores principales - Borgoña */
+  --color-burgundy-50: #fef2f2;
+  --color-burgundy-100: #fee2e2;
+  --color-burgundy-200: #fecaca;
+  --color-burgundy-300: #fca5a5;
+  --color-burgundy-500: #7D2321;
+  --color-burgundy-600: #991b1b;
+  --color-burgundy-700: #7f1d1d;
+  --color-burgundy-800: #450a0a;
+  
+  /* Colores secundarios - Carbón */
+  --color-charcoal-50: #f8f9fa;
+  --color-charcoal-100: #e9ecef;
+  --color-charcoal-200: #dee2e6;
+  --color-charcoal-300: #ced4da;
+  --color-charcoal-400: #adb5bd;
+  --color-charcoal-500: #6c757d;
+  --color-charcoal-600: #495057;
+  --color-charcoal-700: #3B3738;
+  --color-charcoal-800: #212529;
+  
+  /* Acentos - Dorado rosado */
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  
+  /* Complementarios */
+  --color-amber-100: #fef3c7;
+  --color-amber-300: #fcd34d;
+  --color-amber-500: #f59e0b;
+  
   --color-emerald-100: #d1fae5;
+  --color-emerald-300: #6ee7b7;
   --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
   --color-emerald-700: #047857;
   --color-emerald-800: #065f46;
-  --color-teal-500: #14b8a6;
+  
   --color-slate-50: #f8fafc;
   --color-slate-100: #f1f5f9;
   --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
   --color-slate-400: #94a3b8;
   --color-slate-500: #64748b;
   --color-slate-600: #475569;
   --color-slate-700: #334155;
   --color-slate-800: #1e293b;
+  
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
   --color-red-600: #dc2626;
-  --color-blue-50: #eff6ff;
-  --color-blue-100: #dbeafe;
-  --color-blue-600: #2563eb;
-  --color-blue-700: #1d4ed8;
-  --color-green-300: #86efac;
-  --color-yellow-400: #facc15;
   
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  /* Sombras con tinte borgoña */
+  --shadow-sm: 0 1px 2px 0 rgba(125, 35, 33, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(125, 35, 33, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(125, 35, 33, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(125, 35, 33, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(125, 35, 33, 0.25);
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* ============================================
-   PÁGINA PRINCIPAL
-   ============================================ */
 .proveedor-list-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-indigo-50) 0%, var(--color-purple-50) 50%, var(--color-pink-50) 100%);
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 50%, #f8f9fa 100%);
   padding-bottom: 2.5rem;
 }
 
-/* ============================================
-   LOADING STATE
-   ============================================ */
 .proveedor-loading-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-indigo-50) 0%, var(--color-purple-50) 50%, var(--color-pink-50) 100%);
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 50%, #f8f9fa 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,8 +101,8 @@
 .proveedor-spinner {
   width: 80px;
   height: 80px;
-  border: 4px solid var(--color-indigo-100);
-  border-top-color: var(--color-indigo-600);
+  border: 4px solid var(--color-burgundy-100);
+  border-top-color: #7D2321;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -91,7 +110,7 @@
 .proveedor-spinner-icon {
   width: 32px;
   height: 32px;
-  color: var(--color-indigo-600);
+  color: #7D2321;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -103,23 +122,20 @@
 }
 
 .proveedor-loading-title {
-  color: var(--color-slate-700);
+  color: var(--color-charcoal-700);
   font-weight: 600;
   font-size: 1.125rem;
   margin-bottom: 0.5rem;
 }
 
 .proveedor-loading-subtitle {
-  color: var(--color-slate-500);
+  color: var(--color-charcoal-500);
   font-size: 0.875rem;
 }
 
-/* ============================================
-   ERROR STATE
-   ============================================ */
 .proveedor-error-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-indigo-50) 0%, var(--color-purple-50) 50%, var(--color-pink-50) 100%);
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 50%, #f8f9fa 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,7 +155,7 @@
 .proveedor-error-icon-wrapper {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #ef4444 0%, var(--color-pink-600) 100%);
+  background: linear-gradient(135deg, #7D2321 0%, #991b1b 100%);
   border-radius: 1rem;
   display: flex;
   align-items: center;
@@ -157,7 +173,7 @@
 .proveedor-error-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-slate-800);
+  color: var(--color-charcoal-800);
   text-align: center;
   margin-bottom: 0.75rem;
 }
@@ -174,7 +190,7 @@
 
 .proveedor-error-button {
   width: 100%;
-  background: linear-gradient(90deg, var(--color-indigo-600) 0%, var(--color-purple-600) 50%, var(--color-pink-600) 100%);
+  background: linear-gradient(90deg, #7D2321 0%, #991b1b 50%, #7f1d1d 100%);
   color: white;
   padding: 1rem;
   border-radius: 1rem;
@@ -194,11 +210,9 @@
   transform: scale(1.05);
 }
 
-/* ============================================
-   HERO HEADER
-   ============================================ */
+/* HERO HEADER */
 .proveedor-hero-header {
-  background: linear-gradient(90deg, var(--color-indigo-600) 0%, var(--color-purple-600) 50%, var(--color-pink-600) 100%);
+  background: linear-gradient(90deg, #3B3738 0%, #7D2321 50%, #991b1b 100%);
   color: white;
   padding: 2rem 1.5rem 8rem;
 }
@@ -236,13 +250,13 @@
 .proveedor-icon-badge {
   width: 64px;
   height: 64px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .proveedor-icon-large {
@@ -264,12 +278,11 @@
 }
 
 .proveedor-subtitle {
-  color: var(--color-indigo-100);
+  color: #fecdd3;
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
-/* Stats Grid */
 .proveedor-stats-grid {
   display: flex;
   gap: 1rem;
@@ -294,7 +307,7 @@
 }
 
 .proveedor-stat-icon-green {
-  color: var(--color-green-300);
+  color: #6ee7b7;
 }
 
 .proveedor-stat-icon-emerald {
@@ -302,7 +315,7 @@
 }
 
 .proveedor-stat-icon-slate {
-  color: #cbd5e1;
+  color: #fda4af;
 }
 
 .proveedor-stat-number {
@@ -313,10 +326,9 @@
 
 .proveedor-stat-label {
   font-size: 0.75rem;
-  color: var(--color-indigo-100);
+  color: #fecdd3;
 }
 
-/* Hero Actions */
 .proveedor-hero-actions {
   display: flex;
   gap: 0.75rem;
@@ -333,27 +345,27 @@
   gap: 0.5rem;
   border: none;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
 }
 
 .proveedor-filter-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
 }
 
 .proveedor-filter-button.active {
   background: white;
-  color: var(--color-purple-600);
+  color: #7D2321;
   box-shadow: var(--shadow-xl);
 }
 
 .proveedor-filter-indicator {
   width: 10px;
   height: 10px;
-  background: var(--color-yellow-400);
+  background: #fcd34d;
   border-radius: 50%;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -376,7 +388,7 @@
 .proveedor-new-button {
   padding: 0.875rem 1.5rem;
   background: white;
-  color: var(--color-purple-600);
+  color: #7D2321;
   border-radius: 1rem;
   font-weight: 700;
   border: none;
@@ -398,9 +410,6 @@
   height: 20px;
 }
 
-/* ============================================
-   MAIN CONTAINER
-   ============================================ */
 .proveedor-main-container {
   max-width: 80rem;
   margin: 0 auto;
@@ -408,14 +417,11 @@
   margin-top: -6rem;
 }
 
-/* ============================================
-   FILTER PANEL
-   ============================================ */
 .proveedor-filter-panel {
   background: white;
   border-radius: 1.5rem;
   box-shadow: var(--shadow-2xl);
-  border: 1px solid var(--color-indigo-100);
+  border: 1px solid var(--color-burgundy-100);
   padding: 2rem;
   margin-bottom: 1.5rem;
   backdrop-filter: blur(10px);
@@ -436,7 +442,7 @@
 .proveedor-filter-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-slate-800);
+  color: var(--color-charcoal-800);
   margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
@@ -446,7 +452,7 @@
 .proveedor-filter-title-icon {
   width: 20px;
   height: 20px;
-  color: var(--color-purple-600);
+  color: #7D2321;
 }
 
 .proveedor-filter-grid {
@@ -470,7 +476,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-slate-700);
+  color: var(--color-charcoal-700);
   margin-bottom: 0.625rem;
 }
 
@@ -482,7 +488,7 @@
   border: 2px solid var(--color-slate-200);
   border-radius: 0.75rem;
   font-weight: 500;
-  color: var(--color-slate-700);
+  color: var(--color-charcoal-700);
   transition: all 0.2s ease;
   font-size: 0.9375rem;
 }
@@ -490,9 +496,9 @@
 .proveedor-select:focus,
 .proveedor-input:focus {
   outline: none;
-  border-color: var(--color-purple-600);
+  border-color: #7D2321;
   background: white;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(125, 35, 33, 0.1);
 }
 
 .proveedor-input::placeholder {
@@ -529,7 +535,7 @@
 .proveedor-clear-button {
   padding: 0.75rem 1.5rem;
   background: var(--color-slate-100);
-  color: var(--color-slate-700);
+  color: var(--color-charcoal-700);
   border-radius: 0.75rem;
   font-weight: 700;
   border: none;
@@ -555,7 +561,7 @@
 
 .proveedor-apply-button {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(90deg, var(--color-purple-600) 0%, var(--color-pink-600) 100%);
+  background: linear-gradient(90deg, #7D2321 0%, #991b1b 100%);
   color: white;
   border-radius: 0.75rem;
   font-weight: 700;
@@ -568,9 +574,6 @@
   box-shadow: var(--shadow-xl);
 }
 
-/* ============================================
-   EMPTY STATE
-   ============================================ */
 .proveedor-empty-state {
   background: white;
   border-radius: 1.5rem;
@@ -583,7 +586,7 @@
 .proveedor-empty-icon {
   width: 128px;
   height: 128px;
-  background: linear-gradient(135deg, var(--color-slate-100) 0%, var(--color-slate-200) 100%);
+  background: linear-gradient(135deg, #fef2f2 0%, #ffe4e6 100%);
   border-radius: 1.5rem;
   display: flex;
   align-items: center;
@@ -595,24 +598,24 @@
 .proveedor-empty-package {
   width: 64px;
   height: 64px;
-  color: var(--color-slate-400);
+  color: #7D2321;
 }
 
 .proveedor-empty-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-slate-800);
+  color: var(--color-charcoal-800);
   margin-bottom: 0.75rem;
 }
 
 .proveedor-empty-text {
-  color: var(--color-slate-500);
+  color: var(--color-charcoal-500);
   margin-bottom: 2rem;
 }
 
 .proveedor-empty-button {
   padding: 1rem 2rem;
-  background: linear-gradient(90deg, var(--color-purple-600) 0%, var(--color-pink-600) 100%);
+  background: linear-gradient(90deg, #7D2321 0%, #991b1b 100%);
   color: white;
   border-radius: 1rem;
   font-weight: 700;
@@ -630,9 +633,6 @@
   transform: scale(1.05);
 }
 
-/* ============================================
-   CARDS GRID
-   ============================================ */
 .proveedor-cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -651,9 +651,6 @@
   }
 }
 
-/* ============================================
-   PROVEEDOR CARD
-   ============================================ */
 .proveedor-card {
   background: white;
   border-radius: 1.5rem;
@@ -673,11 +670,11 @@
 }
 
 .proveedor-card-border.active {
-  background: linear-gradient(90deg, var(--color-emerald-500) 0%, var(--color-teal-500) 100%);
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
 }
 
 .proveedor-card-border.inactive {
-  background: linear-gradient(90deg, var(--color-slate-400) 0%, var(--color-slate-500) 100%);
+  background: linear-gradient(90deg, #6c757d 0%, #495057 100%);
 }
 
 .proveedor-card-content {
@@ -705,18 +702,18 @@
 .proveedor-building-icon {
   width: 20px;
   height: 20px;
-  color: var(--color-purple-600);
+  color: #7D2321;
 }
 
 .proveedor-card-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-slate-800);
+  color: var(--color-charcoal-800);
   transition: color 0.2s ease;
 }
 
 .proveedor-card:hover .proveedor-card-title {
-  color: var(--color-purple-600);
+  color: #7D2321;
 }
 
 .proveedor-card-id {
@@ -725,8 +722,8 @@
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 9999px;
-  background: var(--color-slate-100);
-  color: var(--color-slate-600);
+  background: var(--color-charcoal-100);
+  color: var(--color-charcoal-600);
   margin-bottom: 0.75rem;
 }
 
@@ -746,8 +743,8 @@
 }
 
 .proveedor-status-badge.inactive {
-  background: var(--color-slate-200);
-  color: var(--color-slate-600);
+  background: var(--color-charcoal-100);
+  color: var(--color-charcoal-600);
 }
 
 .proveedor-status-icon {
@@ -772,12 +769,12 @@
 .proveedor-detail-icon {
   width: 16px;
   height: 16px;
-  color: var(--color-slate-400);
+  color: var(--color-charcoal-400);
   flex-shrink: 0;
 }
 
 .proveedor-detail-text {
-  color: var(--color-slate-600);
+  color: var(--color-charcoal-600);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -789,8 +786,8 @@
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #e9d5ff 0%, #fce7f3 100%);
-  color: var(--color-purple-700);
+  background: linear-gradient(90deg, #fecdd3 0%, #ffe4e6 100%);
+  color: #7f1d1d;
 }
 
 .proveedor-card-actions {
@@ -815,12 +812,12 @@
 
 .proveedor-action-edit {
   flex: 1;
-  background: var(--color-blue-50);
-  color: var(--color-blue-700);
+  background: #fff1f2;
+  color: #7D2321;
 }
 
 .proveedor-action-edit:hover {
-  background: var(--color-blue-100);
+  background: #ffe4e6;
 }
 
 .proveedor-action-edit:hover .proveedor-action-icon {
@@ -828,12 +825,12 @@
 }
 
 .proveedor-action-view {
-  background: var(--color-slate-50);
-  color: var(--color-slate-700);
+  background: var(--color-charcoal-100);
+  color: var(--color-charcoal-700);
 }
 
 .proveedor-action-view:hover {
-  background: var(--color-slate-100);
+  background: var(--color-charcoal-200);
 }
 
 .proveedor-action-view:hover .proveedor-action-icon {
@@ -859,9 +856,6 @@
   transition: transform 0.2s ease;
 }
 
-/* ============================================
-   RESPONSIVE ADJUSTMENTS
-   ============================================ */
 @media (max-width: 640px) {
   .proveedor-hero-header {
     padding: 1.5rem 1rem 6rem;
