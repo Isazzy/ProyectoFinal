@@ -1,17 +1,41 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../../CSS/Login.css";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // Necesitas: npm install react-icons
+import { useAuth } from "../../Context/AuthContext"; // Importa el hook de Auth
+import api from "../../api/axiosConfig"; // Importa tu instancia de API
+import "../../CSS/Login.css"; // Usa el CSS que te proporcioné
 import fondo from "../../imagenes/fondo.png";
+import ForgotPasswordModal from "./ForgotPasswordModal"; // Dependencia del modal
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+
+  // Obtiene la función 'login' del contexto
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  // Efecto para "Recordar Usuario"
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedUser");
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Previene el refresh del formulario
     setError("");
+
+    // Validación de campos vacíos
     if (!email || !password) {
       setError("Por favor ingresa correo y contraseña");
       return;
@@ -19,109 +43,137 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      
+      // --- ¡CORRECCIÓN CRÍTICA! ---
+      // Tu backend espera 'email' porque USERNAME_FIELD = 'email'
+      const response = await api.post("/login/", {
+        email: email, // <-- Envía 'email'
+        password: password,
       });
+      // -----------------------------
+      
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || "Correo o contraseña incorrecta");
-        return;
+      // Valida que el token exista en la respuesta
+      if (!data.access) {
+        console.error("Respuesta exitosa de la API, pero no se recibió 'access token'.");
+        throw new Error("Error inesperado al iniciar sesión.");
       }
 
-      //  Guardar tokens con nombres consistentes
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
+      // Llama a la función 'login' del AuthContext.
+      // Esta función se encará de decodificar, guardar y redirigir.
+      login(data.access, data.refresh);
 
-      //  Obtener y guardar rol
-      let role = null;
-
-      if (data.user?.role) {
-        role = data.user.role;
-      } else if (data.access) {
-        try {
-          const [, payloadBase64] = data.access.split(".");
-          const payload = JSON.parse(atob(payloadBase64));
-          role = payload.role;
-        } catch (err) {
-          console.error("Error decodificando token", err);
-        }
+      // Lógica de "Recordar Usuario"
+      if (rememberMe) {
+        localStorage.setItem("rememberedUser", email);
+      } else {
+        localStorage.removeItem("rememberedUser");
       }
-
-      if (!role) throw new Error("No se pudo obtener el rol del usuario");
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          role,
-        })
-      );
-
-      //  Redirigir según el rol
-      if (role === "admin") navigate("/admin/dashboard");
-      else if (role === "empleado") navigate("/panel_empleado");
-      else navigate("/perfil_cliente");
-
+      
     } catch (err) {
-      console.error("Error al hacer login:", err);
-      setError("Error de conexión con el servidor");
+      // Captura errores 401 (Credenciales incorrectas)
+      const errorMsg = err.response?.data?.detail || "Correo o contraseña incorrectos";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <div
-        className="login-left"
-        style={{ backgroundImage: `url(${fondo})` }}
-      >
-        <h1>Romina Magallanez</h1>
-        <p>ESTILISTA</p>
-      </div>
+    <>
+      <div className="login-container">
+        <div
+          className="login-left"
+          style={{ backgroundImage: `url(${fondo})` }}
+        >
+          <h1>Romina Magallanez</h1>
+          <p>ESTILISTA</p>
+        </div>
 
-      <div className="login-right">
-        <div className="login-card">
-          <h2>Iniciar Sesión</h2>
+        <div className="login-right">
+          <form className="login-card" onSubmit={handleLogin}>
+            <h2>Iniciar Sesión</h2>
+            
+            {/* Mensaje de error amigable */}
+            {error && <p className="message error">{error}</p>}
 
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            {/* Grupo de Email */}
+            <div className="form-group">
+              <label htmlFor="email">Correo electrónico</label>
+              <input
+                type="email"
+                id="email"
+                placeholder="correo@ejemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            {/* Grupo de Contraseña */}
+            <div className="form-group">
+              <label htmlFor="password">Contraseña</label>
+              <div className="password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {/* Botón de Ver/Ocultar Contraseña */}
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
 
-          <button onClick={handleLogin} disabled={loading}>
-            {loading ? "Ingresando..." : "Iniciar Sesión"}
-          </button>
+            {/* Opciones (Recordar / Olvidé) */}
+            <div className="form-options">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <label htmlFor="rememberMe">Recordar usuario</label>
+              </div>
+              
+              {/* Link para abrir el modal */}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => setIsForgotModalOpen(true)}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
 
-          {error && <p className="message error">{error}</p>}
-
-          <div className="login-links">
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => alert("Funcionalidad en desarrollo")}
-            >
-              ¿Olvidaste tu contraseña?
+            {/* Botón de Submit */}
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? "Ingresando..." : "Iniciar Sesión"}
             </button>
-          </div>
+
+            <div className="login-links">
+              <span>¿No tienes una cuenta?</span>
+              <Link to="/register" className="link-button">
+                Registrarse
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
-    </div>
+
+      {/* Renderiza el Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+      />
+    </>
   );
 }

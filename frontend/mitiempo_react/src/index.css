@@ -1,13 +1,90 @@
-body {
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+  /* 🎨 1. Paleta de Colores (Basada en tu #fb5b5b) */
+  --primary-color: #fb5b5b;
+  --primary-color-hover: #fa4a4a;
+  --primary-color-light: rgba(251, 91, 91, 0.1); /* Para fondos y 'glows' */
+  
+  /* 🌙 2. Tema Oscuro (Basado en tus preferencias) */
+  --bg-color: #1a1a1a;          /* Fondo principal (muy oscuro) */
+  --bg-color-light: #2c2c2c;  /* Fondo para cards, modales, inputs */
+  --text-color: #f0f0f0;      /* Texto principal (blanco suave) */
+  --text-color-muted: #a0a0a0; /* Texto secundario (gris) */
+  --border-color: #444;       /* Bordes sutiles */
+  
+  /* 🚦 3. Colores de Estado (Para turnos) */
+  --success-color: #059669; /* Verde (Confirmado) */
+  --warning-color: #ca8a04; /* Amarillo (Pendiente) */
+  --danger-color: #e11d48;  /* Rojo (Cancelado/Borrar) */
+
+  /* 🖋️ 4. Tipografía */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* 📐 5. Layout y Efectos */
+  --border-radius: 8px; /* Bordes redondeados */
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  --transition-speed: 0.3s ease; /* Transiciones */
+}
+
+/* --- Reseteo Básico y Estilos Globales --- */
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 16px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* --- Jerarquía Visual (Títulos) --- */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; } /* Título de página (ej: "Agenda de Turnos") */
+h3 { font-size: 1.25rem; } /* Título de sección (ej: "Turnos Pendientes") */
+
+p {
+  margin-bottom: 1rem;
+  color: var(--text-color-muted);
+}
+p strong {
+  color: var(--text-color);
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-speed);
+}
+a:hover {
+  color: var(--primary-color-hover);
+}
+
+/* --- Contenedor Principal de Páginas --- */
+.app-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* --- Estilos Responsivos Globales --- */
+@media (max-width: 768px) {
+  .app-container {
+    margin: 10px;
+    padding: 15px;
+  }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
 }

@@ -1,91 +1,74 @@
+# turnos/models.py
 from django.db import models
 from django.conf import settings
+from servicio.models import Servicio # Importamos desde la app 'servicios'
 
-class Servicios(models.Model):
-    id_serv = models.AutoField(primary_key=True)
-    tipo_serv = models.CharField(max_length=100)
-    nombre_serv = models.CharField(max_length=100)
-    precio_serv = models.DecimalField(max_digits=9, decimal_places=2)
-    # Importante: DurationField almacena la duración del servicio (ej: '01:30:00')
-    duracion_serv = models.DurationField(blank=True, null=True) 
-
-    descripcion_serv = models.TextField(blank=True, null=True)
-    activado = models.BooleanField(default=True)
-
-    ROL_REQUERIDO_CHOICES = [
-        ('peluquera', 'Peluquera'),
-        ('manicurista', 'Manicurista'),
-        ('estilista', 'Estilista'),
-        ('multi', 'Múltiple'),
+class Turno(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('confirmado', 'Confirmado'),
+        ('completado', 'Completado'),
+        ('cancelado', 'Cancelado'),
     ]
-    rol_requerido = models.CharField(max_length=20, choices=ROL_REQUERIDO_CHOICES, blank=True, null=True)
 
-    class Meta:
-        managed = True
-        db_table = 'servicios'
-
-    def __str__(self):
-        estado = "Activo" if self.activado else "Inactivo"
-        return f"{self.nombre_serv} ({estado})"
-
-class ServicioProfesional(models.Model):
-    servicio = models.ForeignKey(Servicios, on_delete=models.CASCADE)
-    profesional = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    rol = models.CharField(
-        max_length=20,
-        choices=Servicios.ROL_REQUERIDO_CHOICES,
-        blank=True,
-        null=True,
-        help_text="Rol que cumple el profesional en este servicio"
-    )
-
-    class Meta:
-        unique_together = ('servicio', 'profesional')
-
-    def __str__(self):
-        return f"{self.profesional.username} - {self.servicio.nombre_serv} ({self.rol})"
-
-
-class Turnos(models.Model):
     id_turno = models.AutoField(primary_key=True)
-    id_cli = models.ForeignKey(
+    
+    # --- LA CLAVE DEL CAMBIO ---
+    fecha_hora_inicio = models.DateTimeField() 
+    fecha_hora_fin = models.DateTimeField(
+        help_text="Calculado automáticamente al crear/actualizar."
+    ) 
+    # --- FIN DEL CAMBIO ---
+
+    cliente = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        db_column='id_cli',
-        limit_choices_to={'role': 'cliente'}
+        db_column='id_cli', # Mantenemos tu columna
+        limit_choices_to={'role': 'cliente'},
+        related_name='turnos_como_cliente'
     )
-    id_prof = models.ForeignKey(
+    
+    profesional = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        db_column='id_prof',
-        limit_choices_to={'role': 'empleado'},
-        related_name='turnos_profesional'
+        db_column='id_prof', # Mantenemos tu columna
+        limit_choices_to={'role__in': ['empleado', 'admin']},
+        related_name='turnos_como_profesional'
     )
-    fecha_turno = models.DateField()
-    hora_turno = models.TimeField()
-    estado_turno = models.CharField(max_length=9, blank=True, null=True, default="pendiente")
+    
+    estado_turno = models.CharField(
+        max_length=10, 
+        choices=ESTADO_CHOICES, 
+        default='pendiente'
+    )
     observaciones = models.TextField(blank=True, null=True)
     
-    # RELACIÓN CRÍTICA: Muchos a muchos con Servicios a través de TurnosXServicios
     servicios_incluidos = models.ManyToManyField(
-        Servicios, 
-        through='TurnosXServicios', 
-        related_name='turnos_relacionados'
+        Servicio, 
+        through='TurnoServicio', # Modelo 'through'
+        related_name='turnos_asociados'
     )
 
     class Meta:
         managed = True
-        db_table = 'turnos'
+        db_table = 'turnos' # Mantenemos tu tabla
+        verbose_name = "Turno"
+        verbose_name_plural = "Turnos"
+        ordering = ['fecha_hora_inicio'] 
 
     def __str__(self):
-        return f"Turno de {self.id_cli.username} con {self.id_prof.username} el {self.fecha_turno} a las {self.hora_turno}"
+        return f"Turno de {self.cliente.username} con {self.profesional.username} el {self.fecha_hora_inicio.strftime('%Y-%m-%d %H:%M')}"
 
-
-class TurnosXServicios(models.Model):
+# Modelo 'through' (antes TurnosXServicios)
+class TurnoServicio(models.Model):
     id_turno_servicio = models.AutoField(primary_key=True)
-    id_turno = models.ForeignKey(Turnos, models.DO_NOTHING, db_column='id_turno')
-    id_serv = models.ForeignKey(Servicios, models.DO_NOTHING, db_column='id_serv')
+    
+    turno = models.ForeignKey(Turno, models.CASCADE, db_column='id_turno')
+    servicio = models.ForeignKey(Servicio, models.CASCADE, db_column='id_serv')
 
     class Meta:
         managed = True
-        db_table = 'turnos_x_servicios'
+        db_table = 'turnos_x_servicios' # Mantenemos tu tabla
+        verbose_name = "Servicio del Turno"
+        verbose_name_plural = "Servicios del Turno"
+        unique_together = ('turno', 'servicio')

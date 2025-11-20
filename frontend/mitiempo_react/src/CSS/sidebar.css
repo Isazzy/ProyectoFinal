@@ -1,16 +1,21 @@
+/* src/CSS/sidebar.css */
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+/* --- Contenedor Principal --- */
 .sidebar {
-  width: 220px;
-  background: #242121;
-  color: #111;
+  /* 💡 Colores del Sistema de Diseño */
+  background: var(--bg-color-light); 
+  color: var(--text-color);
+  border-right: 1px solid var(--border-color);
+
+  width: 240px; /* Un poco más ancho */
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   transition: width 0.3s ease;
   position: fixed;
   left: 0;
   top: 0;
-  border-right: 1px solid #ccc;
   z-index: 1000;
 }
 
@@ -18,29 +23,37 @@
   width: 70px;
 }
 
+/* --- Encabezado (Logo y Botón) --- */
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
+  justify-content: flex-start; /* Alineado a la izquierda */
+  padding: 1.25rem 1rem;
+  height: 70px; /* Altura fija para alinear con un header superior si lo hubiera */
+  border-bottom: 1px solid var(--border-color);
 }
 
 .hamburger-btn {
-  color: #f0f0f0;
+  color: var(--text-color-muted);
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  margin-top: -1rem;
-
+  padding: 0;
+  transition: color var(--transition-speed);
+}
+.hamburger-btn:hover {
+  color: var(--primary-color);
 }
 
-/* ==== LOGO ==== */
+/* --- Logo --- */
 .logo {
   font-family: 'Great Vibes', cursive;
-  text-align: center;
-  color: #fdfdfd;
-  transition: all 0.4s ease;
+  text-align: left;
+  /* 💡 Color Primario para el Logo */
+  color: var(--primary-color); 
+  margin-left: 1.25rem;
+  transition: all 0.3s ease;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -48,38 +61,46 @@
 .logo-open {
   opacity: 1;
   transform: translateX(0);
-  
 }
 
 .logo-closed {
   opacity: 0;
   transform: translateX(-40px);
   width: 0;
-  padding: 0;
+  margin-left: 0;
 }
 
 .R {
-  font-size: 0.99rem;
+  font-size: 1.3rem; /* Más legible */
   margin: 0;
   font-weight: 400;
+  line-height: 1;
 }
 
 .M {
-  font-size: 0.50rem;
-  letter-spacing: 0.3em;
+  font-size: 0.8rem; /* Más legible */
+  letter-spacing: 0.2em;
   margin: 0;
+  color: var(--text-color-muted);
 }
 
 
-/* Menú */
+/* --- Navegación (Menú) --- */
+/* 💡 Contenedor de navegación que crece */
+.sidebar-nav {
+  flex-grow: 1; /* Empuja el footer hacia abajo */
+  overflow-y: auto; /* Permite scroll si hay muchos items */
+  padding: 1rem 0.5rem;
+}
+
 .sidebar-menu {
   list-style: none;
   padding: 0;
-  margin: -3rem 0;
+  margin: 0;
 }
 
 .sidebar-menu li {
-  margin: 0.5rem 0;
+  margin-bottom: 4px;
 }
 
 .sidebar-menu a {
@@ -87,87 +108,141 @@
   align-items: center;
   gap: 0.8rem;
   text-decoration: none;
-  color: #ffffff;
+  /* 💡 Color de texto secundario */
+  color: var(--text-color-muted); 
   padding: 0.8rem 1rem;
-  border-radius: 10px;
-  transition: background 0.2s;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-speed);
+  white-space: nowrap; /* Evita que el texto se parta */
 }
 
+/* 💡 Icono (primer hijo) */
+.sidebar-menu a > svg {
+  font-size: 1.2rem;
+  min-width: 24px; /* Ancho fijo para alineación */
+  transition: transform var(--transition-speed);
+}
+
+/* --- Hover y Activo --- */
 .sidebar-menu a:hover {
-  background: #fb5b5b;
+  /* 💡 Hover sutil */
+  background: var(--primary-color-light);
+  color: var(--primary-color); 
 }
 
 .sidebar-menu .active a {
-  background: #fb5b5b;
-  border: 1px solid #302b2b;
+  /* 💡 Estilo activo */
+  background: var(--primary-color);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(251, 91, 91, 0.3);
+}
+.sidebar-menu .active a > svg {
+  transform: scale(1.1);
 }
 
-/* Footer */
+/* --- Footer (Perfil) --- */
 .sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 1rem;
-  position: relative;
-}
-
-.footer-icon {
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #fcf7f7;
+  border-top: 1px solid var(--border-color);
+  position: relative; /* Para anclar el menú de perfil */
 }
 
 .profile-container {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .profile-pic {
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
-  border: 1px solid #fafafa;
+  /* 💡 Borde con color primario */
+  border: 2px solid var(--primary-color); 
+  min-width: 40px;
 }
 
-/* Menú desplegable del perfil */
+/* Info de perfil (solo visible si está abierto) */
+.profile-info-open {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.profile-info-open .username-open {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+.profile-info-open .role-open {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  margin: 0;
+}
+
+/* --- Menú Desplegable del Perfil --- */
 .profile-menu {
   position: absolute;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  /* 💡 Anclado robustamente al footer */
+  bottom: calc(100% + 10px); 
+  left: 1rem;
+  width: 200px;
+  
+  /* 💡 Estilos del sistema de diseño */
+  background: var(--bg-color); /* Más oscuro que el sidebar */
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-soft);
+  
   padding: 0.8rem;
-  width: 180px;
-  text-align: left;
   z-index: 10;
+  animation: fadeIn 0.2s ease; /* Animación simple */
 }
 
-.profile-menu p {
-  margin: 0.3rem 0;
-  font-size: 0.85rem;
+/* 💡 Cuando el sidebar está colapsado, el menú aparece al lado */
+.sidebar.collapsed .profile-menu {
+  bottom: 10px;
+  left: calc(100% + 10px);
+}
+
+.profile-menu .username {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 2px;
+}
+.profile-menu .email {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
 }
 
 .profile-menu button {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   background: none;
   border: none;
   text-align: left;
-  padding: 0.3rem 0;
+  padding: 0.5rem;
   cursor: pointer;
-  color: #333;
+  font-size: 0.9rem;
+  /* 💡 Color de texto */
+  color: var(--text-color-muted); 
+  border-radius: 5px;
+  transition: all var(--transition-speed);
 }
 
 .profile-menu button:hover {
-  color: #fb5b5b;
+  color: var(--primary-color);
+  background-color: var(--bg-color-light);
 }
 
+<<<<<<< HEAD
 /* sidebar.css (fragmento) */
 .sidebar .sidebar-menu a[data-tooltip],
 .sidebar .footer-link[data-tooltip] {
@@ -198,3 +273,45 @@
   background: #0ea5e9; /* ajusta a tu paleta */
   color: #fff;
 }
+=======
+/* --- Responsividad del Contenido --- */
+/* Este CSS es para el div que contiene las <Routes> */
+.admin-content {
+  padding-left: 240px; /* Mismo ancho que .sidebar.open */
+  transition: padding-left 0.3s ease;
+}
+
+.admin-content.collapsed {
+  padding-left: 70px; /* Mismo ancho que .sidebar.collapsed */
+}
+
+/* En móvil, el sidebar está oculto o por encima */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 240px;
+    transform: translateX(-100%); /* Oculto por defecto */
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0); /* Visible */
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+
+  .admin-content {
+    padding-left: 0; /* Sin padding */
+  }
+  .admin-content.collapsed {
+    padding-left: 0;
+  }
+  
+  .hamburger-btn {
+    /* Muestra el botón de hamburguesa en el header principal,
+       no en el sidebar (o ajústalo como prefieras) */
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+>>>>>>> 874e3164 (reestructuracion de archivos)

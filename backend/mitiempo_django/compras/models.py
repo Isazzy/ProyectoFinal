@@ -1,5 +1,5 @@
 from django.db import models
-from productos.models import Productos
+#from productos.models import Productos
 from proveedores.models import Proveedores
 from mitiempo_enloderomi.models import Cajas
 
@@ -32,7 +32,12 @@ class DetCompras(models.Model):
 
 class ProductosXProveedores(models.Model):
     id_prod_x_prov = models.AutoField(primary_key=True)
-    id_prod = models.ForeignKey(Productos, models.DO_NOTHING, db_column='id_prod')
+  
+    id_prod = models.ForeignKey(
+         'productos.Productos',
+         on_delete=models.CASCADE
+     )
+  
     id_prov = models.ForeignKey(Proveedores, models.DO_NOTHING, db_column='id_prov')
     id_compra = models.ForeignKey(Compras, models.DO_NOTHING, db_column='id_compra')
 

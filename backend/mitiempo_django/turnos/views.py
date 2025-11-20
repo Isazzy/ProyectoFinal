@@ -1,252 +1,165 @@
+# turnos/views.py
 from rest_framework import viewsets, permissions, status
-from .models import Servicios, Turnos, TurnosXServicios
-from .serializers import ServicioSerializer, TurnosSerializer, TurnosXServiciosSerializer
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import BasePermission, IsAuthenticated, IsAuthenticatedOrReadOnly
-from datetime import timedelta, datetime, time, date
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from django.conf import settings
-import pytz
-import locale
-import re 
+from django.utils import timezone
+from datetime import datetime, time, timedelta
+
+from .models import Turno
+from .serializers import TurnoSerializer
+from servicio.models import Servicio
 
 User = get_user_model()
-TIME_ZONE = getattr(settings, 'TIME_ZONE', 'UTC')
-
-# --- NUEVA FUNCIÓN DE UTILIDAD: Normalización de nombres de días ---
-def normalize_day_name(day_str):
-    """Normaliza el nombre del día a minúsculas y sin tildes."""
-    if not day_str:
-        return ''
-    s = day_str.lower().strip()
-    s = s.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
-    return s.replace('ñ', 'n')
-
-# --- Funciones auxiliares (calcular_duracion_total, obtener_rangos_ocupados) ---
-
-def calcular_duracion_total(servicios_ids):
-    """Calcula la duración total sumada de una lista de IDs de servicio."""
-    try:
-        servicios_objs = Servicios.objects.filter(pk__in=servicios_ids, activado=True) 
-        if not servicios_objs.exists():
-            raise serializers.ValidationError("No se encontraron servicios válidos o activos.")
-
-        duracion_segundos = sum([s.duracion_serv.total_seconds() for s in servicios_objs if s.duracion_serv], 0)
-
-        if duracion_segundos == 0:
-            raise serializers.ValidationError("Al menos un servicio debe tener duración definida.")
-            
-        return timedelta(seconds=duracion_segundos), servicios_objs
-
-    except Exception as e:
-        raise serializers.ValidationError(f"Error al calcular la duración: {str(e)}")
 
 
-def obtener_rangos_ocupados(profesional_id, fecha: date):
-    """Obtiene una lista de tuplas (inicio, fin) de todos los turnos ocupados."""
-    
-    turnos = Turnos.objects.filter(
-        id_prof_id=profesional_id, 
-        fecha_turno=fecha, 
-        estado_turno__in=['pendiente', 'confirmado']
-    ).prefetch_related('servicios_incluidos')
-
-    rangos_ocupados = []
-
-    for t in turnos:
-        duracion_segundos = sum([
-            s.duracion_serv.total_seconds() 
-            for s in t.servicios_incluidos.all() if s.duracion_serv
-        ], 0)
-
-        start_dt = datetime.combine(fecha, t.hora_turno, tzinfo=pytz.timezone(TIME_ZONE))
-        end_dt = start_dt + timedelta(seconds=duracion_segundos)
-        rangos_ocupados.append((start_dt, end_dt))
-        
-    return rangos_ocupados
-
-
-# --- Endpoint de horarios disponibles (Ajustado) ---
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def horarios_disponibles(request):
     """
-    Devuelve horarios disponibles, usando los horarios laborales REALES del profesional.
+    Calcula los slots de horarios disponibles para un profesional,
+    una fecha y una lista de servicios específicos.
     """
-    id_prof = request.query_params.get('id_prof')
-    fecha_str = request.query_params.get('fecha')
-    servicios_ids_str = request.query_params.get('servicios_ids')
-
-    if not fecha_str or not servicios_ids_str:
-        return Response({'error': 'Faltan parámetros: fecha y servicios_ids'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
+    # 1. Obtener parámetros de la query
     try:
+        profesional_id = int(request.query_params.get('id_prof'))
+        fecha_str = request.query_params.get('fecha') # "YYYY-MM-DD"
+        servicios_ids_str = request.query_params.get('servicios_ids') # "1,2,3"
+        
         fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-        servicios_ids = [int(x.strip()) for x in servicios_ids_str.split(',') if x.strip()]
-        
-        duracion_necesaria, _ = calcular_duracion_total(servicios_ids)
-        
-    except (ValueError, serializers.ValidationError) as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        servicios_ids = [int(sid) for sid in servicios_ids_str.split(',') if sid]
+    except Exception as e:
+        return Response(
+            {'error': f"Parámetros inválidos: {e}"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    
-    profesionales = User.objects.filter(role__in=['empleado', 'admin'], is_active=True)
-    if id_prof:
-        profesionales = profesionales.filter(id=id_prof)
-    
-    # ... (Configuración de locale) ...
+    if not all([profesional_id, fecha, servicios_ids]):
+        return Response(
+            {'error': 'Faltan parámetros: id_prof, fecha y servicios_ids son requeridos.'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 2. Calcular duración total necesaria
     try:
-        locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
-    except locale.Error:
-        try: locale.setlocale(locale.LC_ALL, 'es_ES')
-        except locale.Error: pass 
+        profesional = User.objects.get(id=profesional_id)
+        servicios = Servicio.objects.filter(id_serv__in=servicios_ids)
+        duracion_necesaria = sum(
+            [s.duracion_serv for s in servicios if s.duracion_serv], 
+            timedelta()
+        )
+        if duracion_necesaria == timedelta():
+            duracion_necesaria = timedelta(minutes=30) # Default
+            
+    except User.DoesNotExist:
+        return Response({'error': 'Profesional no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+         return Response({'error': f'Error al calcular duración: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
-    system_day_name = fecha.strftime("%A")
-    dia_nombre_normalizado = normalize_day_name(system_day_name)
+    # 3. Obtener horario laboral del profesional para ese día
+    try:
+        dia_semana_turno = fecha.strftime("%A").lower()
+        # Normalización (simple)
+        if 'lunes' in dia_semana_turno: dia_nombre = 'lunes'
+        elif 'martes' in dia_semana_turno: dia_nombre = 'martes'
+        elif 'miércoles' in dia_semana_turno: dia_nombre = 'miércoles'
+        elif 'jueves' in dia_semana_turno: dia_nombre = 'jueves'
+        elif 'viernes' in dia_semana_turno: dia_nombre = 'viernes'
+        elif 'sábado' in dia_semana_turno: dia_nombre = 'sábado'
+        elif 'domingo' in dia_semana_turno: dia_nombre = 'domingo'
+        else: dia_nombre = ''
+        
+        horario_profesional = next(
+            (d for d in profesional.dias_laborables or [] if d.get('dia', '').lower() == dia_nombre), 
+            None
+        )
+        
+        if not horario_profesional:
+            return Response({'disponibilidad': [], 'error': 'El profesional no trabaja ese día.'})
+
+        tz = timezone.get_current_timezone()
+        hora_inicio_laboral = datetime.strptime(horario_profesional.get('inicio', '09:00'), '%H:%M').time()
+        hora_fin_laboral = datetime.strptime(horario_profesional.get('fin', '17:00'), '%H:%M').time()
+        
+        inicio_jornada = tz.localize(datetime.combine(fecha, hora_inicio_laboral))
+        fin_jornada = tz.localize(datetime.combine(fecha, hora_fin_laboral))
+
+    except Exception as e:
+        return Response({'error': f'Error al procesar horario laboral: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # 4. Obtener "obstáculos" (turnos ya reservados)
+    turnos_ocupados = Turno.objects.filter(
+        profesional=profesional,
+        estado_turno__in=['pendiente', 'confirmado'],
+        fecha_hora_inicio__date=fecha
+    ).order_by('fecha_hora_inicio')
+
+    # 5. Algoritmo de generación de slots (GAPs)
+    slots_disponibles = []
+    INTERVALO_PASO = timedelta(minutes=15) # El turno puede empezar cada 15 min
     
-    INTERVALO_PASO = timedelta(minutes=15)
-    disponibles_por_profesional = {}
+    # Empezamos en el inicio de la jornada
+    slot_potencial = inicio_jornada
     
-    for prof in profesionales:
-        horario_dia = None
+    # Ajustar si el día es hoy, para no mostrar slots pasados
+    ahora = timezone.now()
+    if slot_potencial < ahora:
+        slot_potencial = ahora
+        # Redondeamos al próximo intervalo (ej: 10:01 -> 10:15)
+        minutos_pasados = slot_potencial.minute % INTERVALO_PASO.total_seconds() / 60
+        if minutos_pasados > 0:
+             slot_potencial += INTERVALO_PASO - timedelta(minutes=minutos_pasados)
+        slot_potencial = slot_potencial.replace(second=0, microsecond=0)
+
+
+    for turno in turnos_ocupados:
+        # 'gap_fin' es el inicio del turno ocupado
+        gap_fin = turno.fecha_hora_inicio 
         
-        # 1. Buscar el día y obtener el horario de inicio/fin
-        for d in prof.dias_laborables or []:
-            day_data = d if isinstance(d, dict) and 'dia' in d else {'dia': d, 'inicio': '09:00', 'fin': '17:00'}
-            normalized_prof_day = normalize_day_name(day_data.get('dia', ''))
-
-            if normalized_prof_day == dia_nombre_normalizado:
-                horario_dia = day_data
-                break
-        
-        if not horario_dia:
-            continue
+        # Iteramos en el "gap" (espacio libre) antes de este turno
+        while slot_potencial + duracion_necesaria <= gap_fin:
+            slots_disponibles.append(slot_potencial.strftime('%H:%M'))
+            slot_potencial += INTERVALO_PASO
             
-        try:
-            HORA_INICIO_PROF = datetime.strptime(horario_dia.get('inicio', '09:00'), '%H:%M').time()
-            HORA_FIN_PROF = datetime.strptime(horario_dia.get('fin', '17:00'), '%H:%M').time()
-        except (TypeError, ValueError):
-            continue 
+        # Saltamos al final del turno ocupado para buscar el próximo gap
+        slot_potencial = max(slot_potencial, turno.fecha_hora_fin)
 
-        # 2. Obtener rangos ocupados
-        rangos_ocupados = obtener_rangos_ocupados(prof.id, fecha)
-        
-        # 3. Buscar slots disponibles
-        slots = []
-        t = datetime.combine(fecha, HORA_INICIO_PROF, tzinfo=pytz.timezone(TIME_ZONE))
-        fin_horario = datetime.combine(fecha, HORA_FIN_PROF, tzinfo=pytz.timezone(TIME_ZONE))
+    # 6. Revisar el último "gap" (desde el último turno hasta el fin de jornada)
+    while slot_potencial + duracion_necesaria <= fin_jornada:
+        slots_disponibles.append(slot_potencial.strftime('%H:%M'))
+        slot_potencial += INTERVALO_PASO
 
-        while t + duracion_necesaria <= fin_horario:
-            rango_turno = (t, t + duracion_necesaria)
-            is_available = all(rango_turno[1] <= o[0] or rango_turno[0] >= o[1] for o in rangos_ocupados)
-            
-            if is_available:
-                slots.append(t.strftime("%H:%M"))
-            
-            t += INTERVALO_PASO
-            
-        if slots:
-            disponibles_por_profesional[prof.id] = {
-                'id': prof.id,
-                'nombre': prof.get_full_name() or prof.username,
-                'profesion': prof.rol_profesional, 
-                'slots': slots
-            }
-
-    return Response({'disponibilidad': disponibles_por_profesional})
-
-
-# --- ViewSets ---
-
-class ServicioViewSet(viewsets.ModelViewSet):
-    queryset = Servicios.objects.all().order_by('nombre_serv')
-    serializer_class = ServicioSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated or getattr(user, 'role', '') == 'cliente':
-            return Servicios.objects.filter(activado=True)
-        return Servicios.objects.all()
+    return Response({'disponibilidad': slots_disponibles})
 
 
 class TurnosViewSet(viewsets.ModelViewSet):
-    queryset = Turnos.objects.all().select_related('id_cli', 'id_prof').prefetch_related('servicios_incluidos')
-    serializer_class = TurnosSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    """
+    API endpoint para ver y gestionar Turnos.
+    La lógica de creación y validación está en TurnoSerializer.
+    """
+    queryset = Turno.objects.all()
+    serializer_class = TurnoSerializer
+    permission_classes = [permissions.IsAuthenticated] # Requiere autenticación
 
     def get_queryset(self):
+        """ Filtra los turnos según el rol del usuario """
         user = self.request.user
+        qs = Turno.objects.all().select_related('cliente', 'profesional').prefetch_related('servicios_incluidos__servicio')
+
         if getattr(user, 'role', '') == 'cliente':
-            return self.queryset.filter(id_cli=user)
+            return qs.filter(cliente=user)
+        
         if getattr(user, 'role', '') == 'empleado':
-            return self.queryset.filter(id_prof=user)
-        return self.queryset
-
-    def perform_create(self, serializer):
+            return qs.filter(profesional=user)
         
-        try:
-            id_cli = self.request.user 
-            
-            # El serializer validó 'id_prof', obtenemos el objeto User
-            id_prof_obj = serializer.validated_data.get('id_prof') 
-            
-            fecha_turno = serializer.validated_data.get('fecha_turno')
-            hora_turno = serializer.validated_data.get('hora_turno')
-            
-            # 'id_servicios' viene como una lista de objetos Servicio
-            servicios_objs = serializer.validated_data.pop('id_servicios')
+        # Admin ve todo
+        return qs
 
-            # VALIDACIÓN ADICIONAL (Doble chequeo)
-            if not id_prof_obj or id_prof_obj.role not in ['empleado', 'admin'] or not id_prof_obj.is_active:
-                raise serializers.ValidationError({"id_prof": "El profesional seleccionado no es válido o no está activo."})
+    def get_serializer_context(self):
+        """ Pasa el 'request' al serializer para que pueda acceder al usuario """
+        return {'request': self.request}
 
-            # 1. Obtener Duración y Servicios (Extraemos los IDs)
-            servicios_ids = [s.id_serv for s in servicios_objs]
-            duracion_necesaria, _ = calcular_duracion_total(servicios_ids)
-
-            # 3. Validación de Solapamiento FINAL
-            rangos_ocupados = obtener_rangos_ocupados(id_prof_obj.id, fecha_turno)
-            
-            start_dt = datetime.combine(fecha_turno, hora_turno, tzinfo=pytz.timezone(TIME_ZONE))
-            end_dt = start_dt + duracion_necesaria
-            rango_turno_actual = (start_dt, end_dt)
-            
-            is_available = all(rango_turno_actual[1] <= o[0] or rango_turno_actual[0] >= o[1] for o in rangos_ocupados)
-            
-            if not is_available:
-                raise serializers.ValidationError({"hora_turno": "El horario seleccionado ya no está disponible."})
-
-            # 4. Crear el turno
-            turno = Turnos.objects.create(
-                id_cli=id_cli,
-                id_prof=id_prof_obj,
-                fecha_turno=fecha_turno,
-                hora_turno=hora_turno,
-                estado_turno='pendiente',
-                observaciones=serializer.validated_data.get('observaciones', '')
-            )
-            
-            # 5. Crear las relaciones
-            for serv in servicios_objs:
-                 turno.servicios_incluidos.add(serv)
-            
-            turno.save()
-            
-            # 💡 CORRECCIÓN CRÍTICA: Devolver la instancia del modelo 'turno'
-            # Esto permite a DRF serializar la respuesta 201 correctamente.
-            return turno 
-        
-        except serializers.ValidationError as ve:
-            raise ve
-        except Exception as e:
-            print(f"💥 Error en perform_create (Excepción general): {str(e)}")
-            raise serializers.ValidationError({"detail": f"Error interno al procesar el turno: {str(e)}"})
-
-
-class TurnosXServicosViewSet(viewsets.ModelViewSet):
-    queryset = TurnosXServicios.objects.all().select_related('id_turno', 'id_serv')
-    serializer_class = TurnosXServiciosSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # No necesitas perform_create, el serializer se encarga de todo
+    # (ya asigna el cliente desde el context['request'].user)
