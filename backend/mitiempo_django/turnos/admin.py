@@ -1,6 +1,8 @@
 from django.contrib import admin
 # Importamos los tres modelos de la app
 from .models import Turno, TurnoServicio, ConfiguracionLocal
+from django.utils.html import format_html
+from django.urls import reverse
 
 # --- Admin para el Modelo de Configuración ---
 
@@ -51,7 +53,8 @@ class TurnoAdmin(admin.ModelAdmin):
         "fecha_hora_inicio", 
         "duracion_total_minutos", # Propiedad del modelo
         "fecha_hora_fin",       # Propiedad del modelo
-        "estado"
+        "estado",
+         "cliente", "boton_crear_venta"
     )
     
     # --- Filtros disponibles en la barra lateral ---
@@ -75,9 +78,27 @@ class TurnoAdmin(admin.ModelAdmin):
             "fields": ("fecha_hora_inicio", "duracion_total_minutos", "fecha_hora_fin")
         }),
     )
+    def boton_crear_venta(self, obj):
+        # Si el turno aún no está guardado, no mostrar el botón
+        if not obj.pk:
+            return "Guardar el turno primero"
+
+        # Solo disponible si está completado
+        if obj.estado != "completado":
+            return "Solo disponible al completar"
+
+        url = reverse("admin:ventas_venta_add") + f"?turno_id={obj.pk}"
+        return format_html('<a class="button" href="{}">Crear Venta</a>', url)
+
+    boton_crear_venta.short_description = "Generar Venta"
+
     
     # --- Añadimos el inline de servicios ---
     inlines = [TurnoServicioInline]
     
     # --- Búsqueda predictiva para el cliente ---
     autocomplete_fields = ("cliente",)
+
+
+
+    

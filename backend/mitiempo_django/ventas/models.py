@@ -1,62 +1,78 @@
-from django.conf import settings  
-from django.core.exceptions import ValidationError
 from django.db import models
+from cliente.models import Cliente
+from empleado.models import Empleado
+from caja.models import Caja
+from turnos.models import Turno
 from servicio.models import Servicio
+from inventario.models import Producto
 
-class Ventas(models.Model):
-    id_venta = models.AutoField(primary_key=True)
-    id_caja = models.ForeignKey('cajas.Cajas', models.DO_NOTHING, db_column='id_caja')
-    cliente = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.DO_NOTHING
-    )
 
-    fech_hs_vent = models.DateTimeField()
-    tipo_venta = models.CharField(max_length=100)
-    total_venta = models.DecimalField(max_digits=10, decimal_places=2)
-    tipo_pago = models.CharField(max_length=100)
+class Estado_Venta(models.Model):
+    estado_venta_nombre = models.CharField(max_length=200)
 
     class Meta:
-        managed = True
-        db_table = 'ventas'
+        verbose_name = "Estado de Venta"
+        verbose_name_plural = "Estados de Ventas"
 
     def __str__(self):
-        return f"Venta #{self.id_venta} - Cliente: {self.cliente.email}"
+        return self.estado_venta_nombre
 
 
+class Venta(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True)
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    caja = models.ForeignKey(Caja, on_delete=models.SET_NULL, null=True, blank=True)
 
-class DetVentas(models.Model):
-    id_det_venta = models.AutoField(primary_key=True)
-    id_venta = models.ForeignKey('ventas.Ventas', models.DO_NOTHING, db_column='id_venta')
+    turno = models.ForeignKey(Turno, on_delete=models.SET_NULL, null=True, blank=True)
 
-    id_prod = models.ForeignKey(
-        'productos.Productos',
-        models.DO_NOTHING, 
-        db_column='id_prod', 
-        blank=True, null=True
+    estado_venta = models.ForeignKey(Estado_Venta, on_delete=models.CASCADE)
+
+    venta_fecha_hora = models.DateTimeField(auto_now_add=True)
+
+    venta_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    MEDIO_PAGO_CHOICES = (
+        ('efectivo', 'Efectivo'),
+        ('transferencia', 'Transferencia'),
     )
-   
-    id_serv = models.ForeignKey(
-        'servicio.Servicio', 
-        models.DO_NOTHING, 
-        db_column='id_serv', 
-        blank=True, null=True
-    )
+    venta_medio_pago = models.CharField(max_length=20, choices=MEDIO_PAGO_CHOICES, default='efectivo')
+    venta_descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    cantidad_venta = models.IntegerField()
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
+    class Meta:
+        verbose_name = "Venta"
+        verbose_name_plural = "Ventas"
 
-    def clean(self):
-        # Validar que al menos id_prod o id_serv esté presente
-        if not self.id_prod and not self.id_serv:
-            raise ValidationError("Debe tener al menos un producto o un servicio.")
+    def __str__(self):
+        return f"Venta N°{self.id}"
 
-    def save(self, *args, **kwargs):
-        self.clean()
-        # Subtotal según lo que tenga la fila
-        if self.id_prod:
-            self.subtotal = self.precio_unitario * self.cantidad_venta
-        elif self.id_serv:
-            self.subtotal = self.precio_unitario * self.cantidad_venta
-        super().save(*args, **kwargs)
+
+class Detalle_Venta(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE)
+
+    detalle_venta_cantidad = models.IntegerField()
+    detalle_venta_precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    detalle_venta_descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        verbose_name = "Detalle de Venta"
+        verbose_name_plural = "Detalles de Ventas"
+
+    def __str__(self):
+        return f"Detalle de Venta N°{self.id}"
+
+
+class Detalle_Venta_Servicio(models.Model):
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE)
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
+
+    cantidad = models.IntegerField(default=1)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        verbose_name = "Detalle de Venta (Servicio)"
+        verbose_name_plural = "Detalles de Venta (Servicios)"
+
+    def __str__(self):
+        return f"Servicio {self.servicio.nombre_serv} en Venta {self.venta.id}"
