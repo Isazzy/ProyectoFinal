@@ -8,6 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&6d6+j=1xg#sw)%g25)*k&0&xyg57r^kwdu(5z_u72hv(5dqfb'
 
+LOGIN_REDIRECT_URL = '/empleado/panel/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']

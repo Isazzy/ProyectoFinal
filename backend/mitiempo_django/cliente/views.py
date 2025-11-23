@@ -2,34 +2,42 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from .models import Cliente
 from .serializers import ClienteSerializer, ClienteRegisterSerializer
-from django.contrib.auth.models import User
 
-# List / create (admin uses admin panel; this endpoint lists clientes)
+
+# Lista / creación (crear Clientes desde UI administrativa lo dejamos por admin)
 class ClienteListCreateView(generics.ListCreateAPIView):
-    queryset = Cliente.objects.all().order_by('cliente_nombre', 'cliente_apellido')
+    queryset = Cliente.objects.all().order_by('nombre', 'apellido')
     serializer_class = ClienteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        # Crear mediante esta vista lo dejamos solo para personal autenticado (opcional)
+        # Permitimos listar a usuarios autenticados.
+        # Crear por API lo dejamos sólo a admins para evitar duplicados manuales.
         if self.request.method == "POST":
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
-# Detail view
+# Detalle (GET/PATCH/DELETE) — autenticado
 class ClienteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-# Registro público (frontend) -> crea User + Cliente
+# Registro público (frontend) -> crea User + Cliente, permite anonymous
+
+
+
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .serializers import ClienteRegisterSerializer, ClienteSerializer
+
 class ClienteRegisterView(generics.CreateAPIView):
     serializer_class = ClienteRegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = []
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cliente = serializer.save()
-        data = ClienteSerializer(cliente, context={'request': request}).data
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response(ClienteSerializer(cliente).data, status=status.HTTP_201_CREATED)

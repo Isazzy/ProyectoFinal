@@ -1,0 +1,51 @@
+/* ========================================
+   src/components/ui/Badge.module.css
+   ======================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.default {
+  background: var(--border-light);
+  color: var(--text-muted);
+}
+
+.primary {
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--primary);
+}
+
+.success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.info {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}

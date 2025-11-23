@@ -1,69 +1,15 @@
+// src/api/axiosConfig.js
 import axios from "axios";
 
-//  Tu URL base ya incluye /api, ¡perfecto!
-const BASE_API_URL = "http://127.0.0.1:8000/api";
-
 const api = axios.create({
-  baseURL: BASE_API_URL,
+  baseURL: "http://localhost:8000/api", // cambiar cuando tengas dominio
 });
 
-api.interceptors.request.use(
-  (config) => {
-    //  Asegura que los endpoints de lectura pública no necesiten token
-    const isPublic =
-      config.method === "get" &&
-      (config.url.startsWith("/servicios") );
-
-    if (isPublic) {
-      delete config.headers.Authorization;
-      return config;
-    }
-
-    //  Para todos los demás, agrega el token si existe
-    const token = localStorage.getItem("access");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    //  Si da 401 (token expirado) y no es un reintento, intenta refrescar
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refresh");
-
-      if (refreshToken) {
-        try {
-          const res = await axios.post(`${BASE_API_URL}/token/refresh/`, {
-            refresh: refreshToken,
-          });
-
-          const newAccess = res.data.access;
-          localStorage.setItem("access", newAccess);
-
-          //  Reintenta con el nuevo token
-          originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-          return api(originalRequest);
-        } catch {
-          localStorage.clear();
-          window.location.href = "/login";
-        }
-      } else {
-        localStorage.clear();
-        window.location.href = "/login";
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+// interceptor para agregar token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 export default api;

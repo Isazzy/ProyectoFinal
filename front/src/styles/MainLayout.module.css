@@ -1,0 +1,39 @@
+
+.layout {
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+
+.mainContent {
+  margin-left: 0;
+  transition: margin-left var(--transition-slow);
+}
+
+@media (min-width: 1024px) {
+  .mainContent {
+    margin-left: 256px;
+  }
+}
+
+.main {
+  padding: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .main {
+    padding: var(--space-8);
+  }
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+

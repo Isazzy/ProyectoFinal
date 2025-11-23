@@ -26,14 +26,34 @@ class IsAdministrador(permissions.BasePermission):
         return request.user.groups.filter(name__iexact="Administrador").exists() or request.user.is_staff
 
 # --- Login JWT (email + password) usando serializer personalizado ---
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
+#from rest_framework_simplejwt.views import TokenObtainPairView
+
+#class MyTokenObtainPairView(TokenObtainPairView):
+ #   serializer_class = MyTokenObtainPairSerializer
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import MyTokenObtainPairSerializer
+
+class LoginView(APIView):
+    permission_classes = []  # Público
+
+    def post(self, request, *args, **kwargs):
+        serializer = MyTokenObtainPairSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
 
 # ----- Lista de empleados (solo admin) -----
 class EmpleadoListView(generics.ListAPIView):
-    queryset = User.objects.select_related('empleado').all().order_by('first_name')
+    queryset = User.objects.select_related('empleado').filter(groups__name__in=['Empleado', 'Administrador']).order_by('first_name')
     serializer_class = EmpleadoUserSerializer
     permission_classes = [IsAuthenticated, IsAdministrador]
+
 
 # ----- Crear empleado (solo admin) -----
 class EmpleadoCreateByAdminView(APIView):
@@ -45,6 +65,7 @@ class EmpleadoCreateByAdminView(APIView):
         empleado = serializer.save()
         return Response({"detail": "Empleado creado", "empleado_id": empleado.id}, status=status.HTTP_201_CREATED)
 
+
 # ----- Actualizar Empleado (solo admin) -----
 class EmpleadoUpdateView(generics.UpdateAPIView):
     queryset = Empleado.objects.all()
@@ -52,14 +73,15 @@ class EmpleadoUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated, IsAdministrador]
     lookup_field = "pk"
 
+
 # ----- Eliminar usuario/empleado (solo admin) -----
 class EmpleadoDeleteView(generics.DestroyAPIView):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsAdministrador]
     lookup_field = "pk"
 
+
 # ----- Listar roles (autenticado) -----
-from .serializers import RolSerializer
 class RolListView(generics.ListAPIView):
     queryset = Group.objects.all().order_by('name')
     serializer_class = RolSerializer

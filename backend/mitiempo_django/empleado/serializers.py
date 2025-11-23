@@ -1,63 +1,80 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Empleado
 
-# --- Token serializer personalizado (login por email) ---
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = User.EMAIL_FIELD  # indica que la "clave" para buscar será el email
+# --- Token serializer personalizado ---
+class MyTokenObtainPairSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
 
     def validate(self, attrs):
         email = attrs.get("email")
         password = attrs.get("password")
 
-        if not email or not password:
-            raise AuthenticationFailed("Debes ingresar email y contraseña.")
-
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            raise AuthenticationFailed("Email o contraseña incorrectos.")
+            raise serializers.ValidationError("No existe un usuario con este email.")
 
-        if not user.check_password(password):
-            raise AuthenticationFailed("Email o contraseña incorrectos.")
+        user_auth = authenticate(username=user.username, password=password)
 
-        if not user.is_active:
-            raise AuthenticationFailed("Tu cuenta no está activa.")
+        if not user_auth:
+            raise serializers.ValidationError("Credenciales inválidas.")
 
-        # Genera token usando username internamente
-        data = super().validate({
-            "username": user.username,
-            "password": password
-        })
+        if not user_auth.is_active:
+            raise serializers.ValidationError("Usuario desactivado.")
 
-        rol = user.groups.first().name if user.groups.exists() else None
+        refresh = RefreshToken.for_user(user_auth)
 
-        data["user"] = {
-            "id": user.id,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "rol": rol
+        # Detectar rol
+        if hasattr(user_auth, "empleado"):
+            role = user_auth.empleado.rol.name if user_auth.empleado.rol else "Empleado"
+        elif hasattr(user_auth, "cliente"):
+            role = "Cliente"
+        else:
+            role = "SinRol"
+
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user_auth.id,
+                "email": user_auth.email,
+                "first_name": user_auth.first_name,
+                "last_name": user_auth.last_name,
+                "role": role,
+            }
         }
 
-        return data
+# --- Serializers para Empleado ---
 
-
-# --- Serializers para Empleado (lectura / update por admin) ---
 class EmpleadoNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Empleado
         fields = ("id", "dni", "telefono", "especialidad", "rol")
 
+class EmpleadoUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer principal para LISTAR empleados.
+    Combina datos del User (nombre, email, activo) con datos del Empleado (dni, tel).
+    """
+    empleado = EmpleadoNestedSerializer(read_only=True)
+    rol = serializers.SerializerMethodField()
+    
+    # CORRECCIÓN: Agregamos is_active para el frontend
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name", "last_name", "email", "is_active", "empleado", "rol")
+
+    def get_rol(self, obj):
+        return obj.groups.first().name if obj.groups.exists() else "Sin Rol"
 
 class EmpleadoCreateByAdminSerializer(serializers.Serializer):
-    """
-    Usado sólo por admin para crear empleado+user.
-    """
     username = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -72,35 +89,37 @@ class EmpleadoCreateByAdminSerializer(serializers.Serializer):
         rol = validated_data.pop('rol')
         username = validated_data.pop('username')
         password = validated_data.pop('password')
-        user = User.objects.create_user(username=username, email=validated_data.get('email'), password=password,
-                                        first_name=validated_data.get('first_name',''),
-                                        last_name=validated_data.get('last_name',''))
+        email = validated_data.get('email', '')
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
+        )
         user.is_active = True
         user.groups.add(rol)
-        user.is_staff = (rol.name.lower() == "administrador")
+
+        if rol.name.lower() == "administrador":
+            user.is_staff = True
         user.save()
 
-        # Empleado perfil será creado por la señal m2m_changed / post_save, pero aseguramos campos:
-        empleado = user.empleado
-        empleado.dni = validated_data.get('dni', '') or None
-        empleado.telefono = validated_data.get('telefono','')
-        empleado.especialidad = validated_data.get('especialidad','otro')
-        empleado.rol = rol
-        empleado.save()
+        empleado, created = Empleado.objects.get_or_create(user=user, defaults={
+            'dni': validated_data.get('dni') or None,
+            'telefono': validated_data.get('telefono', ''),
+            'especialidad': validated_data.get('especialidad', 'otro'),
+            'rol': rol
+        })
+        # Si ya existía, actualizamos
+        if not created:
+            empleado.dni = validated_data.get('dni') or empleado.dni
+            empleado.telefono = validated_data.get('telefono', empleado.telefono)
+            empleado.especialidad = validated_data.get('especialidad', empleado.especialidad)
+            empleado.rol = rol
+            empleado.save()
+
         return empleado
-
-
-class EmpleadoUserSerializer(serializers.ModelSerializer):
-    empleado = EmpleadoNestedSerializer(read_only=True)
-    rol = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ("id", "username", "first_name", "last_name", "email", "empleado", "rol")
-
-    def get_rol(self, obj):
-        return obj.groups.first().name if obj.groups.exists() else None
-
 
 class EmpleadoUpdateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False, allow_blank=True)
@@ -124,7 +143,6 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
         user.first_name = validated_data.get("first_name", user.first_name)
         user.last_name = validated_data.get("last_name", user.last_name)
         user.email = validated_data.get("email", user.email)
-        user.save()
 
         if new_rol:
             user.groups.set([new_rol])
@@ -132,10 +150,9 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
         else:
             user.groups.clear()
             user.is_staff = False
+
         user.save()
         return instance
-
-    
 
 class RolSerializer(serializers.ModelSerializer):
     class Meta:

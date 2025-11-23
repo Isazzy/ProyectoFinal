@@ -1,20 +1,22 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     EmpleadoListView,
     EmpleadoCreateByAdminView,
     EmpleadoDeleteView,
     EmpleadoUpdateView,
     RolListView,
-    MyTokenObtainPairView,
+    LoginView 
 )
-from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    # JWT (login por email) -> /api/empleado/token/
-    path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Autenticación
+    path('api/login/', LoginView.as_view(), name="token_obtain_pair"),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # Empleado CRUD (admin)
+    # Gestión de Empleados (CRUD Admin)
+    # IMPORTANTE: Asegúrate de que el prefijo /api/empleado/ esté en el urls.py principal del proyecto
+    # si este archivo se incluye allí. Si no, ajusta estas rutas.
     path('list/', EmpleadoListView.as_view(), name='empleado-list'),
     path('create/', EmpleadoCreateByAdminView.as_view(), name='empleado-create-by-admin'),
     path('delete/<int:pk>/', EmpleadoDeleteView.as_view(), name='empleado-delete'),

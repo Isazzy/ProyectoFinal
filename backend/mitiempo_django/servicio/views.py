@@ -1,28 +1,27 @@
 # servicios/views.py
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, views
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
+from django.db import transaction
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
 
-from .models import Servicio
+from .models import Servicio, ServicioInsumo
 from .serializers import (
-    ServicioListSerializer,
-    ServicioDetailSerializer,
-    ServicioCreateUpdateSerializer
+    ServicioListSerializer, ServicioDetailSerializer, ServicioCreateUpdateSerializer,
+    ServicioInsumoSerializer
 )
 
-# Permisos personalizados
+# Permiso compacto
 class IsAdminOrEmpleado(permissions.BasePermission):
-    """
-    Permite acceso si el usuario está en grupo 'Administrador' o 'Empleado' o es staff.
-    """
     def has_permission(self, request, view):
         user = request.user
         if not user or not user.is_authenticated:
             return False
         if user.is_staff:
             return True
-        return user.groups.filter(name__in=['Administrador','Empleado']).exists()
+        return user.groups.filter(name__in=['Administrador', 'Empleado']).exists()
 
 
 class ServicioPagination(PageNumberPagination):
@@ -31,48 +30,46 @@ class ServicioPagination(PageNumberPagination):
     max_page_size = 100
 
 
+# List & Create
 class ServicioListCreateView(generics.ListCreateAPIView):
-    serializer_class = ServicioListSerializer
     pagination_class = ServicioPagination
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = Servicio.objects.all().order_by('nombre_serv')
-        # filtros
+        qs = Servicio.objects.all().order_by('nombre')
+        # filtros query params: tipo, min_price, max_price, activo, search
         tipo = self.request.query_params.get('tipo')
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
-        activo = self.request.query_params.get('activado')
+        activo = self.request.query_params.get('activo')
         search = self.request.query_params.get('search')
-
         if tipo:
-            qs = qs.filter(tipo_serv__icontains=tipo)
+            qs = qs.filter(tipo__icontains=tipo)
         if min_price:
             try:
-                qs = qs.filter(precio_serv__gte=float(min_price))
+                qs = qs.filter(precio__gte=float(min_price))
             except ValueError:
                 pass
         if max_price:
             try:
-                qs = qs.filter(precio_serv__lte=float(max_price))
+                qs = qs.filter(precio__lte=float(max_price))
             except ValueError:
                 pass
         if activo is not None:
             if str(activo).lower() in ['1','true','yes']:
-                qs = qs.filter(activado=True)
+                qs = qs.filter(activo=True)
             elif str(activo).lower() in ['0','false','no']:
-                qs = qs.filter(activado=False)
+                qs = qs.filter(activo=False)
         if search:
-            qs = qs.filter(Q(nombre_serv__icontains=search) | Q(descripcion_serv__icontains=search))
+            qs = qs.filter(Q(nombre__icontains=search) | Q(descripcion__icontains=search))
 
         user = self.request.user
+        # Clientes (no staff ni empleado) sólo ven activos
         if not (user.is_staff or user.groups.filter(name__in=['Administrador','Empleado']).exists()):
-            qs = qs.filter(activado=True)
-
+            qs = qs.filter(activo=True)
         return qs
 
     def get_serializer_class(self):
-        # POST usa el serializer de escritura
         if self.request.method == 'POST':
             return ServicioCreateUpdateSerializer
         return ServicioListSerializer
@@ -83,34 +80,108 @@ class ServicioListCreateView(generics.ListCreateAPIView):
         serializer.save()
 
 
+# Retrieve, update
 class ServicioDetailView(generics.RetrieveUpdateAPIView):
     queryset = Servicio.objects.all()
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrEmpleado]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
+            if not IsAdminOrEmpleado().has_permission(self.request, self):
+                self.permission_denied(self.request, message="No tienes permiso para editar servicios.")
             return ServicioCreateUpdateSerializer
         return ServicioDetailSerializer
 
-    def perform_update(self, serializer):
-        serializer.save()
 
-
-# Toggle activado endpoint
-from rest_framework.decorators import api_view, permission_classes
-
+# Toggle activo (route: /servicios/<pk>/activo/)
 @api_view(['PATCH'])
 @permission_classes([permissions.IsAuthenticated, IsAdminOrEmpleado])
-def toggle_activado(request, pk):
-    try:
-        servicio = Servicio.objects.get(pk=pk)
-    except Servicio.DoesNotExist:
-        return Response({"detail":"Servicio no encontrado."}, status=status.HTTP_404_NOT_FOUND)
-
-    activado = request.data.get('activado', None)
-    if activado is None:
-        return Response({"detail":"Enviar campo 'activado' (true/false)."}, status=status.HTTP_400_BAD_REQUEST)
-
-    servicio.activado = bool(activado)
+def toggle_activo(request, pk):
+    servicio = get_object_or_404(Servicio, pk=pk)
+    activo = request.data.get('activo')
+    if activo is None:
+        return Response({"detail": "Enviar campo 'activo' (true/false)."}, status=status.HTTP_400_BAD_REQUEST)
+    servicio.activo = bool(activo)
     servicio.save()
-    return Response({"id": servicio.id_serv, "activado": servicio.activado}, status=status.HTTP_200_OK)
+    return Response({"id": servicio.id, "activo": servicio.activo}, status=status.HTTP_200_OK)
+
+
+# ----------------------------
+# ServicioInsumo (CRUD)
+# ----------------------------
+class ServicioInsumoListCreateView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrEmpleado]
+    serializer_class = ServicioInsumoSerializer
+
+    def get_queryset(self):
+        servicio_pk = self.request.query_params.get('servicio')
+        qs = ServicioInsumo.objects.select_related('insumo', 'servicio').all()
+        if servicio_pk:
+            qs = qs.filter(servicio__pk=servicio_pk)
+        return qs
+
+
+class ServicioInsumoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrEmpleado]
+    queryset = ServicioInsumo.objects.select_related('insumo', 'servicio').all()
+    serializer_class = ServicioInsumoSerializer
+
+
+# ----------------------------
+# Endpoints relacionados a Inventario/Stock
+# ----------------------------
+# Listar insumos disponibles (global)
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def listar_insumos_disponibles(request):
+    """
+    Devuelve lista de insumos con stock > 0.
+    Query params:
+      - q: filtro por nombre
+      - page_size / page (paginación no implementada aquí; el frontend puede filtrar)
+    """
+    try:
+        from inventario.models import Insumo
+    except Exception:
+        return Response({"detail": "App inventario no disponible"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    q = request.query_params.get('q')
+    qs = Insumo.objects.all()
+    if q:
+        qs = qs.filter(insumo_nombre__icontains=q)
+    qs = qs.filter(insumo_stock__gt=0).order_by('insumo_nombre')
+    data = [{"id": i.id, "nombre": i.insumo_nombre, "unidad": i.insumo_unidad, "stock": float(i.insumo_stock)} for i in qs]
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated, IsAdminOrEmpleado])
+def consumir_stock_manual(request):
+    """
+    Consumir stock manualmente (payload ejemplo):
+    {
+      "insumos": [{"insumo_id": 1, "cantidad": 10.5}, {"insumo_id": 2, "cantidad": 1}],
+      "nota": "Consumo por venta #123"
+    }
+    """
+    payload = request.data
+    insumos = payload.get('insumos', [])
+    if not isinstance(insumos, list) or not insumos:
+        return Response({"detail": "Enviar lista 'insumos' con insumo_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        from inventario.models import Insumo
+    except Exception:
+        return Response({"detail": "App inventario no disponible"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    with transaction.atomic():
+        for item in insumos:
+            insumo_id = item.get('insumo_id')
+            cantidad = item.get('cantidad')
+            if insumo_id is None or cantidad is None:
+                return Response({"detail": "Cada item debe contener insumo_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
+            insumo = get_object_or_404(Insumo, pk=insumo_id)
+            if insumo.insumo_stock < float(cantidad):
+                return Response({"detail": f"Stock insuficiente para {insumo.insumo_nombre}"}, status=status.HTTP_400_BAD_REQUEST)
+            insumo.insumo_stock -= float(cantidad)
+            insumo.save()
+    return Response({"detail": "Stock consumido correctamente"}, status=status.HTTP_200_OK)

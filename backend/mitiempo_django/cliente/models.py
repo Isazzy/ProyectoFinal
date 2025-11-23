@@ -12,53 +12,47 @@ class Cliente(models.Model):
         related_name="cliente"
     )
 
-    cliente_nombre = models.CharField(max_length=200)
-    cliente_apellido = models.CharField(max_length=200, null=True, blank=True)
-    cliente_telefono = models.CharField(max_length=200, blank=True)
-    cliente_direccion = models.CharField(max_length=200, blank=True)
-    cliente_email = models.EmailField(max_length=200, null=True, blank=True)
+    nombre = models.CharField(max_length=200)
+    apellido = models.CharField(max_length=200, null=True, blank=True)
+    telefono = models.CharField(max_length=200, blank=True)
+    email = models.EmailField(max_length=200, null=True, blank=True)
+    rol = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         verbose_name = "Cliente"
         verbose_name_plural = "Clientes"
+        ordering = ("nombre", "apellido")
 
     def __str__(self):
-        nombre = self.cliente_nombre or (self.user.first_name if self.user else '')
-        apellido = self.cliente_apellido or (self.user.last_name if self.user else '')
-        return f"{nombre} {apellido}".strip()
+        return f"{self.nombre} {self.apellido}".strip()
 
 
-# ---------- Señales para crear perfil Cliente ----------
+# ---------- Señales ----------
 @receiver(post_save, sender=User)
 def crear_perfil_cliente_post_save(sender, instance, created, **kwargs):
-    """
-    Si al crearse el User ya pertenece al grupo 'Cliente', creamos perfil Cliente.
-    """
+    # Nota: Al crear un usuario con create_user, usualmente aún no tiene grupos.
+    # Esta señal sirve si se crean usuarios y grupos en una sola transacción o via Admin.
     if created:
         if instance.groups.filter(name__iexact="Cliente").exists():
             Cliente.objects.get_or_create(
                 user=instance,
                 defaults={
-                    'cliente_nombre': instance.first_name or '',
-                    'cliente_apellido': instance.last_name or '',
-                    'cliente_email': instance.email or ''
+                    'nombre': instance.first_name or '',
+                    'apellido': instance.last_name or '',
+                    'email': instance.email or ''
                 }
             )
 
 @receiver(m2m_changed, sender=User.groups.through)
 def crear_perfil_cliente_m2m(sender, instance, action, pk_set, **kwargs):
-    """
-    Si se agrega el grupo Cliente a un User ya existente -> crear perfil.
-    """
-    if action == 'post_add' and pk_set:
-        from django.contrib.auth.models import Group
-        grupos = Group.objects.filter(pk__in=pk_set, name__iexact="Cliente")
-        if grupos.exists():
+    if action == 'post_add':
+        # Verificamos si se agregó el grupo Cliente
+        if Group.objects.filter(pk__in=pk_set, name__iexact="Cliente").exists():
             Cliente.objects.get_or_create(
                 user=instance,
                 defaults={
-                    'cliente_nombre': instance.first_name or '',
-                    'cliente_apellido': instance.last_name or '',
-                    'cliente_email': instance.email or ''
+                    'nombre': instance.first_name or '',
+                    'apellido': instance.last_name or '',
+                    'email': instance.email or ''
                 }
             )

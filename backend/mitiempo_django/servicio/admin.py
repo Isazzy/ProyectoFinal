@@ -1,27 +1,20 @@
-# servicio/admin.py
+# servicios/admin.py
 from django.contrib import admin
 from .models import Servicio, ServicioInsumo
-
 
 class ServicioInsumoInline(admin.TabularInline):
     model = ServicioInsumo
     extra = 1
     autocomplete_fields = ("insumo",)
 
-
 @admin.register(Servicio)
 class ServicioAdmin(admin.ModelAdmin):
-    list_display = (
-        "id_serv", "nombre_serv", "tipo_serv",
-        "precio_serv", "duracion_minutos",
-        "activado"
-    )
-    list_filter = ("tipo_serv", "activado")
-    search_fields = ("nombre_serv", "tipo_serv")
-    ordering = ("nombre_serv",)
-    list_editable = ("activado",)
+    list_display = ("id_serv", "nombre", "tipo_serv", "precio", "duracion", "activo")
+    list_filter = ("tipo_serv", "activo")
+    search_fields = ("nombre", "tipo_serv")
+    ordering = ("nombre",)
+    list_editable = ("activo",)
     inlines = [ServicioInsumoInline]
-
 
 @admin.register(ServicioInsumo)
 class ServicioInsumoAdmin(admin.ModelAdmin):
