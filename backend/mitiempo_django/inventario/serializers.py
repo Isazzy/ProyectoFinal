@@ -1,45 +1,20 @@
 # inventario/serializers.py
 from rest_framework import serializers
-from .models import Producto, Tipo_Producto, Categoria_Insumo, Insumo, Producto_X_Insumo
+from .models import Producto, Tipo_Producto, Categoria_Insumo, Insumo, Marca
 import json
-
 
 # --- SERIALIZERS DE LECTURA ---
 
 class TipoProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tipo_Producto
-        fields = ["id", "tipo_producto_nombre"]
+        fields = ["id", "tipo_producto_nombre", "activo"]
 
 
 class MarcaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Producto._meta.get_field('marca').related_model
-        fields = ["id", "nombre"]
-
-
-class InsumoEnRecetaSerializer(serializers.ModelSerializer):
-    insumo_imagen = serializers.ImageField(max_length=None, use_url=True, read_only=True)
-    marca = serializers.StringRelatedField()
-
-    class Meta:
-        model = Insumo
-        fields = [
-            "id",
-            "insumo_nombre",
-            "insumo_unidad",
-            "insumo_imagen",
-            "insumo_imagen_url",
-            "marca",
-        ]
-
-
-class ProductoXInsumoReadSerializer(serializers.ModelSerializer):
-    insumo = InsumoEnRecetaSerializer()
-
-    class Meta:
-        model = Producto_X_Insumo
-        fields = ["insumo", "producto_insumo_cantidad"]
+        model = Marca
+        fields = ["id", "nombre", "activo"]
 
 
 class ProductoSerializer(serializers.ModelSerializer):
@@ -47,7 +22,6 @@ class ProductoSerializer(serializers.ModelSerializer):
     tipo_producto_id = serializers.PrimaryKeyRelatedField(source="tipo_producto", read_only=True)
     marca = serializers.StringRelatedField()
     producto_imagen = serializers.ImageField(max_length=None, use_url=True, read_only=True)
-    receta = ProductoXInsumoReadSerializer(many=True, source="receta", read_only=True)
 
     class Meta:
         model = Producto
@@ -56,27 +30,23 @@ class ProductoSerializer(serializers.ModelSerializer):
             "producto_nombre",
             "producto_descripcion",
             "producto_precio",
-            "producto_disponible",
+            "stock",
+            "stock_minimo",
             "producto_imagen",
             "producto_imagen_url",
             "tipo_producto",
             "tipo_producto_id",
             "marca",
-            "receta",
+            "activo",
             "producto_fecha_hora_creacion",
         ]
 
 
 # --- SERIALIZERS DE ESCRITURA ---
 
-class RecetaWriteSerializer(serializers.Serializer):
-    insumo_id = serializers.IntegerField()
-    cantidad = serializers.DecimalField(max_digits=12, decimal_places=3)
-
-
 class ProductoWriteSerializer(serializers.ModelSerializer):
+    producto_imagen_url = serializers.URLField(required=False, allow_blank=True)
     producto_imagen = serializers.ImageField(max_length=None, use_url=True, required=False, allow_null=True)
-    receta = RecetaWriteSerializer(many=True, required=False, write_only=True)
 
     class Meta:
         model = Producto
@@ -86,74 +56,66 @@ class ProductoWriteSerializer(serializers.ModelSerializer):
             "producto_nombre",
             "producto_descripcion",
             "producto_precio",
-            "producto_disponible",
+            "stock",
+            "stock_minimo",
             "producto_imagen",
             "producto_imagen_url",
-            "receta",
+            "activo"
         ]
 
     def to_internal_value(self, data):
         mutable_data = data.copy()
+        
+        # Limpieza de campos vacíos (convertir strings vacíos a None)
         for field in ["producto_imagen", "producto_imagen_url", "producto_descripcion"]:
             if field in mutable_data and isinstance(mutable_data[field], str) and not mutable_data[field]:
                 mutable_data[field] = None
 
-        # Convierte "producto_disponible" de string a boolean
-        disp = mutable_data.get("producto_disponible")
-        if isinstance(disp, str):
-            mutable_data["producto_disponible"] = disp.lower() in ("true", "on")
-
-        # Convierte IDs de FK de string a int
+        # Convierte IDs de FK de string a int (manejo de FormData)
         for fk in ["tipo_producto", "marca"]:
-            if isinstance(mutable_data.get(fk), str) and mutable_data[fk].isdigit():
-                mutable_data[fk] = int(mutable_data[fk])
+            val = mutable_data.get(fk)
+            if isinstance(val, str) and val.isdigit():
+                mutable_data[fk] = int(val)
+            elif val == "" or val == "null":
+                mutable_data[fk] = None
 
-        # Convierte receta JSON string a lista si viene de FormData
-        receta_str = mutable_data.get("receta")
-        if isinstance(receta_str, str):
-            try:
-                mutable_data["receta"] = json.loads(receta_str)
-            except json.JSONDecodeError:
-                pass
+        # Conversión segura de números (Stock y Precio)
+        if 'stock' in mutable_data and mutable_data['stock']:
+             mutable_data['stock'] = float(mutable_data['stock'])
+        
+        if 'stock_minimo' in mutable_data and mutable_data['stock_minimo']:
+             mutable_data['stock_minimo'] = float(mutable_data['stock_minimo'])
+             
+        if 'producto_precio' in mutable_data and mutable_data['producto_precio']:
+             mutable_data['producto_precio'] = float(mutable_data['producto_precio'])
+
+        # Manejo de booleano 'activo' desde FormData
+        activo_val = mutable_data.get("activo")
+        if isinstance(activo_val, str):
+            mutable_data["activo"] = activo_val.lower() in ("true", "on", "1")
 
         return super().to_internal_value(mutable_data)
 
-    def _guardar_receta(self, producto, receta_data):
-        producto.receta.all().delete()
-        for item in receta_data:
-            insumo = Insumo.objects.get(id=item["insumo_id"])
-            Producto_X_Insumo.objects.create(
-                producto=producto,
-                insumo=insumo,
-                producto_insumo_cantidad=item["cantidad"],
-            )
-
     def create(self, validated_data):
-        receta_data = validated_data.pop("receta", [])
-        if validated_data.get("producto_imagen"):
-            validated_data["producto_imagen_url"] = None
-        elif validated_data.get("producto_imagen_url"):
+        # Prioridad URL sobre Archivo físico (Lógica Cloudinary)
+        if validated_data.get("producto_imagen_url"):
             validated_data["producto_imagen"] = None
+        elif validated_data.get("producto_imagen"):
+            validated_data["producto_imagen_url"] = None
 
-        producto = super().create(validated_data)
-        self._guardar_receta(producto, receta_data)
-        return producto
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        receta_data = validated_data.pop("receta", None)
-
-        # Manejo de imágenes
-        if validated_data.get("producto_imagen") is not None:
+        # Prioridad URL sobre Archivo físico
+        if validated_data.get("producto_imagen_url"):
+            validated_data["producto_imagen"] = None
+            # Si existía una imagen física anterior, se desvincula aquí
+            instance.producto_imagen.delete(save=False)
+        elif validated_data.get("producto_imagen"):
             validated_data["producto_imagen_url"] = None
             instance.producto_imagen.delete(save=False)
-        elif validated_data.get("producto_imagen_url") is not None:
-            validated_data["producto_imagen"] = None
-            instance.producto_imagen.delete(save=False)
 
-        producto = super().update(instance, validated_data)
-        if receta_data is not None:
-            self._guardar_receta(producto, receta_data)
-        return producto
+        return super().update(instance, validated_data)
 
 
 # --- SERIALIZERS DE INSUMOS ---
@@ -161,7 +123,7 @@ class ProductoWriteSerializer(serializers.ModelSerializer):
 class CategoriaInsumoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria_Insumo
-        fields = ["id", "categoria_insumo_nombre"]
+        fields = ["id", "categoria_insumo_nombre", "activo"]
 
 
 class InsumoReadSerializer(serializers.ModelSerializer):
@@ -181,11 +143,13 @@ class InsumoReadSerializer(serializers.ModelSerializer):
             "marca",
             "insumo_imagen",
             "insumo_imagen_url",
+            "activo"
         ]
 
 
 class InsumoWriteSerializer(serializers.ModelSerializer):
-    insumo_imagen = serializers.ImageField(max_length=None, use_url=True, required=False, allow_null=True)
+    insumo_imagen_url = serializers.URLField(required=False, allow_blank=True)
+    insumo_imagen = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Insumo
@@ -198,30 +162,42 @@ class InsumoWriteSerializer(serializers.ModelSerializer):
             "insumo_stock_minimo",
             "insumo_imagen",
             "insumo_imagen_url",
+            "activo"
         ]
 
     def to_internal_value(self, data):
         mutable_data = data.copy()
+        
         for field in ["insumo_imagen", "insumo_imagen_url"]:
             if field in mutable_data and isinstance(mutable_data[field], str) and not mutable_data[field]:
                 mutable_data[field] = None
+        
         for fk in ["categoria_insumo", "marca"]:
-            if isinstance(mutable_data.get(fk), str) and mutable_data[fk].isdigit():
-                mutable_data[fk] = int(mutable_data[fk])
+            val = mutable_data.get(fk)
+            if isinstance(val, str) and val.isdigit():
+                mutable_data[fk] = int(val)
+            elif val == "" or val == "null":
+                mutable_data[fk] = None
+        
+        # Manejo de booleano 'activo'
+        activo_val = mutable_data.get("activo")
+        if isinstance(activo_val, str):
+            mutable_data["activo"] = activo_val.lower() in ("true", "on", "1")
+
         return super().to_internal_value(mutable_data)
 
     def create(self, validated_data):
-        if validated_data.get("insumo_imagen"):
-            validated_data["insumo_imagen_url"] = None
-        elif validated_data.get("insumo_imagen_url"):
+        if validated_data.get("insumo_imagen_url"):
             validated_data["insumo_imagen"] = None
+        elif validated_data.get("insumo_imagen"):
+            validated_data["insumo_imagen_url"] = None
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if validated_data.get("insumo_imagen") is not None:
-            validated_data["insumo_imagen_url"] = None
-            instance.insumo_imagen.delete(save=False)
-        elif validated_data.get("insumo_imagen_url") is not None:
+        if validated_data.get("insumo_imagen_url"):
             validated_data["insumo_imagen"] = None
+            instance.insumo_imagen.delete(save=False)
+        elif validated_data.get("insumo_imagen"):
+            validated_data["insumo_imagen_url"] = None
             instance.insumo_imagen.delete(save=False)
         return super().update(instance, validated_data)

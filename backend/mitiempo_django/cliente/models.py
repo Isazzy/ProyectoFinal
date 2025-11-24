@@ -4,19 +4,12 @@ from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 
 class Cliente(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="cliente"
-    )
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cliente")
     nombre = models.CharField(max_length=200)
     apellido = models.CharField(max_length=200, null=True, blank=True)
     telefono = models.CharField(max_length=200, blank=True)
     email = models.EmailField(max_length=200, null=True, blank=True)
-    rol = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+    # Eliminamos 'rol' aquí, el rol lo define el Grupo de Django, no es necesario duplicarlo en el modelo.
 
     class Meta:
         verbose_name = "Cliente"
@@ -26,32 +19,23 @@ class Cliente(models.Model):
     def __str__(self):
         return f"{self.nombre} {self.apellido}".strip()
 
-
 # ---------- Señales ----------
-@receiver(post_save, sender=User)
-def crear_perfil_cliente_post_save(sender, instance, created, **kwargs):
-    # Nota: Al crear un usuario con create_user, usualmente aún no tiene grupos.
-    # Esta señal sirve si se crean usuarios y grupos en una sola transacción o via Admin.
-    if created:
-        if instance.groups.filter(name__iexact="Cliente").exists():
-            Cliente.objects.get_or_create(
-                user=instance,
-                defaults={
-                    'nombre': instance.first_name or '',
-                    'apellido': instance.last_name or '',
-                    'email': instance.email or ''
-                }
-            )
 
 @receiver(m2m_changed, sender=User.groups.through)
-def crear_perfil_cliente_m2m(sender, instance, action, pk_set, **kwargs):
+def gestionar_perfil_cliente(sender, instance, action, pk_set, **kwargs):
+    """
+    Si se agrega el grupo 'Cliente', se crea el perfil.
+    Si se quita el grupo 'Cliente', NO borramos el perfil (para mantener historial de ventas).
+    """
     if action == 'post_add':
-        # Verificamos si se agregó el grupo Cliente
-        if Group.objects.filter(pk__in=pk_set, name__iexact="Cliente").exists():
+        # Obtenemos los nombres de los grupos agregados
+        grupos = Group.objects.filter(pk__in=pk_set).values_list('name', flat=True)
+        
+        if "Cliente" in grupos:
             Cliente.objects.get_or_create(
                 user=instance,
                 defaults={
-                    'nombre': instance.first_name or '',
+                    'nombre': instance.first_name or instance.username,
                     'apellido': instance.last_name or '',
                     'email': instance.email or ''
                 }

@@ -6,7 +6,9 @@ from .views import (
     EmpleadoDeleteView,
     EmpleadoUpdateView,
     RolListView,
-    LoginView 
+    LoginView,
+    ProfileView
+
 )
 
 urlpatterns = [
@@ -21,7 +23,7 @@ urlpatterns = [
     path('create/', EmpleadoCreateByAdminView.as_view(), name='empleado-create-by-admin'),
     path('delete/<int:pk>/', EmpleadoDeleteView.as_view(), name='empleado-delete'),
     path('update/<int:pk>/', EmpleadoUpdateView.as_view(), name='empleado-update'),
-
+    path('api/auth/profile/', ProfileView.as_view(), name='user-profile'),
     # Roles
     path('roles/', RolListView.as_view(), name='rol-list'),
 ]

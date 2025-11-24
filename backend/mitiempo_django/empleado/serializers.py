@@ -4,6 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Empleado
+from django.db import transaction
 
 # --- Token serializer personalizado ---
 class MyTokenObtainPairSerializer(serializers.Serializer):
@@ -29,14 +30,14 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user_auth)
 
-        # Detectar rol
-        if hasattr(user_auth, "empleado"):
-            role = user_auth.empleado.rol.name if user_auth.empleado.rol else "Empleado"
-        elif hasattr(user_auth, "cliente"):
-            role = "Cliente"
-        else:
-            role = "SinRol"
-
+        role = "Cliente" # Default
+        if user_auth.is_superuser:
+            role = "Administrador"
+        elif user_auth.groups.filter(name="Administrador").exists():
+            role = "Administrador"
+        elif user_auth.groups.filter(name="Empleado").exists():
+            role = "Empleado"
+        
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -91,35 +92,27 @@ class EmpleadoCreateByAdminSerializer(serializers.Serializer):
         password = validated_data.pop('password')
         email = validated_data.get('email', '')
 
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
-        user.is_active = True
-        user.groups.add(rol)
-
-        if rol.name.lower() == "administrador":
-            user.is_staff = True
-        user.save()
-
-        empleado, created = Empleado.objects.get_or_create(user=user, defaults={
-            'dni': validated_data.get('dni') or None,
-            'telefono': validated_data.get('telefono', ''),
-            'especialidad': validated_data.get('especialidad', 'otro'),
-            'rol': rol
-        })
-        # Si ya existía, actualizamos
-        if not created:
-            empleado.dni = validated_data.get('dni') or empleado.dni
-            empleado.telefono = validated_data.get('telefono', empleado.telefono)
-            empleado.especialidad = validated_data.get('especialidad', empleado.especialidad)
-            empleado.rol = rol
+        with transaction.atomic():
+            # 1. Crear Usuario
+            user = User.objects.create_user(
+                username=validated_data['email'], # Usar email como username
+                email=validated_data['email'],
+                password=validated_data['password'],
+                first_name=validated_data.get('first_name', ''),
+                last_name=validated_data.get('last_name', '')
+            )
+            
+            # 2. Asignar Grupo (Dispara la señal m2m_changed definida en models)
+            user.groups.add(rol)
+            
+            # La señal ya creó el Empleado, aquí solo actualizamos datos extra
+            empleado = Empleado.objects.get(user=user)
+            empleado.dni = validated_data.get('dni')
+            empleado.telefono = validated_data.get('telefono', '')
+            empleado.especialidad = validated_data.get('especialidad', 'otro')
             empleado.save()
 
-        return empleado
+            return empleado
 
 class EmpleadoUpdateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False, allow_blank=True)

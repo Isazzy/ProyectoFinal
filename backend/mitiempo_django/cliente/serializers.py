@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
+from django.db import transaction
 from .models import Cliente
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -8,6 +9,7 @@ class ClienteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cliente
+        # Eliminamos 'rol' de los campos porque ya no existe en el modelo
         fields = [
             'id',
             'user_id',
@@ -48,33 +50,33 @@ class ClienteRegisterSerializer(serializers.Serializer):
         apellido = validated_data.get("apellido", "")
         telefono = validated_data["telefono"]
 
-        # 1. Crear usuario
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            first_name=nombre,
-            last_name=apellido
-        )
+        with transaction.atomic():
+            # 1. Crear usuario
+            user = User.objects.create_user(
+                username=email, # Usamos email como username
+                email=email,
+                password=password,
+                first_name=nombre,
+                last_name=apellido
+            )
 
-        # 2. Asignar Grupo
-        group, _ = Group.objects.get_or_create(name="Cliente")
-        
-        # ¡IMPORTANTE! Al ejecutar la siguiente línea, se dispara la señal 'm2m_changed'
-        # y se crea el Cliente automáticamente en la base de datos.
-        user.groups.add(group) 
+            # 2. Asignar Grupo (Esto define el rol en Django)
+            group, _ = Group.objects.get_or_create(name="Cliente")
+            user.groups.add(group) 
+            # Al hacer .add(group), la SEÑAL 'm2m_changed' en models.py se dispara 
+            # y crea el Cliente automáticamente.
 
-        # 3. Obtener y actualizar el Cliente existente (creado por la señal)
-        # Usamos update_or_create para estar seguros y actualizar el teléfono que la señal no tenía.
-        cliente, created = Cliente.objects.update_or_create(
-            user=user,
-            defaults={
-                'nombre': nombre,
-                'apellido': apellido,
-                'telefono': telefono,
-                'email': email,
-                'rol': group
-            }
-        )
+            # 3. Actualizar datos extra (teléfono)
+            # Recuperamos el cliente creado por la señal y actualizamos el teléfono
+            cliente, created = Cliente.objects.update_or_create(
+                user=user,
+                defaults={
+                    'nombre': nombre,
+                    'apellido': apellido,
+                    'email': email,
+                    'telefono': telefono, 
+                    # 'rol': group  <--- ESTO ERA EL ERROR. SE ELIMINA.
+                }
+            )
 
-        return cliente
+            return cliente

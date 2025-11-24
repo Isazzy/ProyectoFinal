@@ -86,3 +86,32 @@ class RolListView(generics.ListAPIView):
     queryset = Group.objects.all().order_by('name')
     serializer_class = RolSerializer
     permission_classes = [IsAuthenticated]
+
+class ProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        # Lógica para determinar el rol (Idéntica a tu Login)
+        role = "SinRol"
+        if user.is_superuser or user.groups.filter(name="Administrador").exists():
+            role = "Administrador"
+        elif hasattr(user, "empleado"):
+            role = user.empleado.rol.name if user.empleado.rol else "Empleado"
+        elif hasattr(user, "cliente"):
+            role = "Cliente"
+
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": role,
+        }
+
+        # Si es empleado, agregamos datos extra útiles
+        if hasattr(user, "empleado"):
+            data["empleado_id"] = user.empleado.id
+            
+        return Response(data, status=status.HTTP_200_OK)

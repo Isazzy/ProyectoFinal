@@ -39,4 +39,11 @@ export const serviciosApi = {
     return response.data;
   },
 
+  // NUEVO: Obtener lista de insumos para el selector
+  getInsumosDisponibles: async (q = '') => {
+    // El backend espera ?q=nombre
+    const response = await api.get('/servicio/insumos/disponibles/', { params: { q } });
+    return response.data;
+  },
+
 };

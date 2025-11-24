@@ -1,59 +1,119 @@
 from django.contrib import admin
-from .models import Tipo_Producto, Categoria_Insumo, Producto, Insumo, Producto_X_Insumo
+from .models import (
+    Tipo_Producto, 
+    Categoria_Insumo, 
+    Producto, 
+    Insumo, 
+    Marca
+)
 
-# Register your models here.
+# --- MARCA ---
+@admin.register(Marca)
+class MarcaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'descripcion', 'activo') # Agregado activo
+    list_display_links = ('nombre',)
+    search_fields = ('nombre',)
+    list_filter = ('activo',) # Filtro para ver borrados vs activos
+    list_editable = ('activo',) # Permite activar/desactivar rápido desde la lista
+    ordering = ('nombre',)
 
+# --- TIPO DE PRODUCTO ---
+@admin.register(Tipo_Producto)
 class Tipo_ProductoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'tipo_producto_nombre')
-    list_display_links = ('id', 'tipo_producto_nombre')
+    list_display = ('id', 'tipo_producto_nombre', 'activo')
+    list_display_links = ('tipo_producto_nombre',)
     search_fields = ('tipo_producto_nombre',)
-    list_per_page = 25
+    list_filter = ('activo',)
+    list_editable = ('activo',)
 
-admin.site.register(Tipo_Producto, Tipo_ProductoAdmin)
-
-
+# --- CATEGORÍA DE INSUMO ---
+@admin.register(Categoria_Insumo)
 class Categoria_InsumoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'categoria_insumo_nombre')
-    list_display_links = ('id', 'categoria_insumo_nombre')
+    list_display = ('id', 'categoria_insumo_nombre', 'activo')
+    list_display_links = ('categoria_insumo_nombre',)
     search_fields = ('categoria_insumo_nombre',)
-    list_per_page = 25
+    list_filter = ('activo',)
+    list_editable = ('activo',)
 
-admin.site.register(Categoria_Insumo, Categoria_InsumoAdmin)
 
-
+# --- PRODUCTO ---
+@admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('producto_nombre', 'tipo_producto', 'producto_precio', 'producto_disponible', 'producto_fecha_hora_creacion')
+    list_display = (
+        'producto_nombre', 
+        'marca', 
+        'tipo_producto', 
+        'producto_precio', 
+        'stock', 
+        'stock_minimo', # Útil ver el mínimo al lado del stock real
+        'activo'
+    )
     list_display_links = ('producto_nombre',)
-    search_fields = ('producto_nombre', 'producto_descripcion')
-    list_filter = ('tipo_producto', 'producto_disponible')
-    list_editable = ('producto_precio', 'producto_disponible')
+    search_fields = ('producto_nombre', 'producto_descripcion', 'marca__nombre')
+    
+    # Filtros útiles: Por estado (activo), tipo, marca y si el stock es 0
+    list_filter = ('activo', 'tipo_producto', 'marca')
+    
+    # Edición rápida de precio y stock sin entrar al detalle
+    list_editable = ('producto_precio', 'stock', 'activo')
+    
     list_per_page = 25
     ordering = ('producto_nombre',)
-    readonly_fields = ('producto_fecha_hora_creacion',)
+    
+    # Fechas automáticas siempre solo lectura
+    readonly_fields = ('producto_fecha_hora_creacion', 'producto_fecha_actualizacion') 
+    
+    # Organizar campos en el detalle
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('producto_nombre', 'tipo_producto', 'marca', 'producto_precio', 'producto_descripcion')
+        }),
+        ('Inventario', {
+            'fields': ('stock', 'stock_minimo', 'activo')
+        }),
+        ('Multimedia', {
+            'fields': ('producto_imagen', 'producto_imagen_url')
+        }),
+        ('Auditoría', {
+            'fields': ('producto_fecha_hora_creacion', 'producto_fecha_actualizacion')
+        }),
+    )
 
-admin.site.register(Producto, ProductoAdmin)
 
-
+# --- INSUMO ---
+@admin.register(Insumo)
 class InsumoAdmin(admin.ModelAdmin):
-    # Eliminamos 'insumo_precio_compra' de list_display
-    list_display = ('insumo_nombre', 'categoria_insumo', 'insumo_unidad', 'insumo_stock', 'insumo_stock_minimo')
+    list_display = (
+        'insumo_nombre', 
+        'marca', 
+        'categoria_insumo', 
+        'insumo_unidad', 
+        'insumo_stock', 
+        'insumo_stock_minimo',
+        'activo'
+    )
     list_display_links = ('insumo_nombre',)
-    search_fields = ('insumo_nombre',)
-    list_filter = ('categoria_insumo',)
-    # Eliminamos 'insumo_precio_compra' de list_editable
-    list_editable = ('insumo_stock', 'insumo_stock_minimo')
+    search_fields = ('insumo_nombre', 'marca__nombre')
+    
+    list_filter = ('activo', 'categoria_insumo', 'marca')
+    list_editable = ('insumo_stock', 'insumo_stock_minimo', 'activo')
+    
     list_per_page = 25
     ordering = ('insumo_nombre',)
+    
+    readonly_fields = ('insumo_fecha_actualizacion',) # Si agregaste este campo en models
 
-admin.site.register(Insumo, InsumoAdmin)
-
-
-class Producto_X_InsumoAdmin(admin.ModelAdmin):
-    list_display = ('producto', 'insumo', 'producto_insumo_cantidad')
-    list_display_links = ('producto', 'insumo')
-    search_fields = ('producto__producto_nombre', 'insumo__insumo_nombre')
-    list_filter = ('producto', 'insumo')
-    list_per_page = 25
-    autocomplete_fields = ('producto', 'insumo')
-
-admin.site.register(Producto_X_Insumo, Producto_X_InsumoAdmin)
+    fieldsets = (
+        ('Detalle', {
+            'fields': ('insumo_nombre', 'categoria_insumo', 'marca', 'insumo_unidad')
+        }),
+        ('Inventario', {
+            'fields': ('insumo_stock', 'insumo_stock_minimo', 'activo')
+        }),
+        ('Multimedia', {
+            'fields': ('insumo_imagen', 'insumo_imagen_url')
+        }),
+        ('Auditoría', {
+            'fields': ('insumo_fecha_actualizacion',) # Asegúrate que exista en el modelo
+        }),
+    )

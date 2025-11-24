@@ -3,6 +3,7 @@ from django.db import models
 from datetime import timedelta
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.apps import apps # Importante para evitar ciclos
 
 # Intentamos importar Insumo (si no existe, dejamos None y validamos luego)
 try:
@@ -90,40 +91,36 @@ class Servicio(models.Model):
         return True, None
 
     def consumir_stock(self):
-        """
-        Descuenta stock según la receta del servicio.
-        Retorna (True, None) si OK, o (False, mensaje).
-        """
-        if Insumo is None:
-            return False, "El modelo Insumo no está disponible."
+        # Obtenemos el modelo dinámicamente para evitar circular imports al inicio del archivo
+        Insumo = apps.get_model('inventario', 'Insumo') 
+        
+        receta = self.servicioinsumo_set.all()
+        
+        # 1. Validar primero (evita descontar la mitad y fallar luego)
+        for item in receta:
+            if item.insumo.insumo_stock < item.cantidad_usada:
+                return False, f"Falta stock de {item.insumo.insumo_nombre}"
 
-        ok, msg = self.check_stock_suficiente()
-        if not ok:
-            return False, msg
-
+        # 2. Descontar
         with transaction.atomic():
-            for si in self.get_receta():
-                ins = si.insumo
-                nuevo = ins.insumo_stock - si.cantidad_usada
-                if nuevo < 0:
-                    raise ValidationError(f"Stock insuficiente al consumir {ins.insumo_nombre}")
-                ins.insumo_stock = nuevo
-                ins.save()
+            for item in receta:
+                insumo = item.insumo
+                insumo.insumo_stock -= item.cantidad_usada
+                insumo.save()
+                
         return True, None
 
 
 class ServicioInsumo(models.Model):
-    """
-    Relación: cuánto insumo consume un servicio.
-    """
-    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
-    insumo = models.ForeignKey('inventario.Insumo', on_delete=models.PROTECT)
-    cantidad_usada = models.DecimalField(max_digits=12, decimal_places=3)
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, related_name='insumos_receta')
+    # Usamos string 'inventario.Insumo' para evitar conflictos de importación
+    insumo = models.ForeignKey('inventario.Insumo', on_delete=models.PROTECT) 
+    cantidad = models.DecimalField(max_digits=10, decimal_places=3)
 
     class Meta:
-        verbose_name = "Insumo por Servicio"
-        verbose_name_plural = "Insumos por Servicio"
+        db_table = "servicioInsumo"
         unique_together = ('servicio', 'insumo')
+        verbose_name = "Insumo por Servicio"
 
     def __str__(self):
-        return f"{self.servicio.nombre} -> {self.insumo.insumo_nombre} ({self.cantidad_usada})"
+        return f"{self.servicio.nombre} usa {self.cantidad}"

@@ -23,8 +23,10 @@ import { VentasList } from '../pages/Ventas/VentasList';
 import {CrearVenta } from '../pages/Ventas/CrearVenta';
 import { ClientesList } from '../pages/Clientes/ClientesList';
 import { EmpleadosList } from '../pages/Empleados/EmpleadosList';
-import { InventarioList } from '../pages/Inventario/InventarioList';
-
+//import { InventarioList } from '../pages/Inventario/InventarioList';
+import { InventarioPage } from '../pages/Inventario/InventarioPage';
+import { CajaPage } from '../pages/Caja/CajaPage';
+import { VentaDetail } from '../pages/Ventas/VentaDetail';
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -116,11 +118,22 @@ export const AppRouter = () => {
           {/* Ventas */}
           <Route path="/ventas" element={<VentasList />} />
           <Route path="/ventas/nuevo" element={<CrearVenta />} />
+          <Route path="/ventas/:id" element={<VentaDetail />} />
 
           {/* Clientes */}
           <Route path="/clientes" element={<ClientesList />} />
 
+        
+
           {/* Empleados (Admin only) */}
+          <Route
+            path="/caja"
+            element={
+              <ProtectedRoute adminOnly>
+                <CajaPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/empleados"
             element={
@@ -131,7 +144,7 @@ export const AppRouter = () => {
           />
 
           {/* Inventario */}
-          <Route path="/inventario" element={<InventarioList />} />
+          <Route path="/inventario" element={<InventarioPage />} />
         </Route>
 
         {/* 404 - Redirect to home */}

@@ -7,7 +7,10 @@ from .views import (
     InsumoListCreateView,       # ¡Importamos las vistas de Insumo!
     InsumoDetailView,
     CategoriaInsumoListCreateView, # ¡Importamos las vistas de Categoría!
-    CategoriaInsumoDetailView
+    CategoriaInsumoDetailView,
+    movimiento_stock,
+    MarcaListCreateView,
+    MarcaDetailView
 )
 
 urlpatterns = [
@@ -20,9 +23,11 @@ urlpatterns = [
     # --- ¡NUEVAS RUTAS PARA INSUMOS! ---
     path('insumos/', InsumoListCreateView.as_view(), name='insumo-list-create'),
     path('insumos/<int:pk>/', InsumoDetailView.as_view(), name='insumo-detail'),
-    
+    path('insumos/<int:pk>/movimiento/', movimiento_stock, name='insumo-movimiento'),
     # --- ¡RUTAS PARA CATEGORÍAS DE INSUMOS CORREGIDAS! ---
     path('categorias-insumo/', CategoriaInsumoListCreateView.as_view(), name='categoriainsumo-list-create'),
     path('categorias-insumo/<int:pk>/', CategoriaInsumoDetailView.as_view(), name='categoriainsumo-detail'),
+    path('marcas/', MarcaListCreateView.as_view(), name='marca-list-create'),
+    path('marcas/<int:pk>/', MarcaDetailView.as_view(), name='marca-detail'),
 ]
 

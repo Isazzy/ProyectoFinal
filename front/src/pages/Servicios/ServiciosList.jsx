@@ -9,6 +9,8 @@ import { useServicios } from '../../hooks/useServicios';
 import { Card, Button, Badge, Input, Modal } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Servicios.module.css';
+import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager'; // o ruta correcta
+
 
 // ===============================
 // FORMULARIO DEL SERVICIO
@@ -23,6 +25,9 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     dias_disponibles: servicio?.dias_disponibles || ["lunes"],
     activo: servicio?.activo ?? true, // Correcto: 'activo'
   });
+
+  // Si viene del backend, 'servicio.receta' trae [{insumo: 1, insumo_nombre: 'x', ...}]
+  const [receta, setReceta] = useState(servicio?.receta || []);
 
   const [errors, setErrors] = useState({});
 
@@ -62,10 +67,18 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
+    // Preparamos la receta en el formato que espera el Serializer de Escritura (ServicioInsumoWriteSerializer)
+    // Espera: { insumo_id: int, cantidad_usada: decimal }
+    const recetaPayload = receta.map(item => ({
+      insumo_id: item.insumo, // 'insumo' es el ID en el objeto que viene del serializer de lectura o del manager
+      cantidad_usada: item.cantidad_usada
+    }));
+
     onSubmit({
       ...form,
       duracion: parseInt(form.duracion),
-      precio: form.precio, // Se envía como string o number según convenga
+      precio: form.precio,
+      receta: recetaPayload, // Se envía como string o number según convenga
     });
   };
 
@@ -88,6 +101,12 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
         ))}
       </div>
       {errors.dias_disponibles && <p className={styles.error}>{errors.dias_disponibles}</p>}
+
+        <InsumoRecetaManager 
+        recetaActual={receta} 
+        setRecetaActual={setReceta} 
+        error={errors.receta} // Puedes agregar validación de receta si quieres
+      />
 
       <div className={styles.textareaGroup}>
         <label>Descripción</label>

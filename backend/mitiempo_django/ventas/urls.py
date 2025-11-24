@@ -2,16 +2,20 @@ from django.urls import path
 from .views import (
     VentaListCreateView,
     VentaDetailView,
-    EstadoVentaListView
+    EstadoVentaListView,
+    resumen_ventas
 )
 
 urlpatterns = [
-    # GET /api/venta/ventas/ (Para la lista)
+    # Lista y Crear: /api/ventas/ventas/
     path('ventas/', VentaListCreateView.as_view(), name='venta-list'),
     
-    # GET, PUT, PATCH /api/venta/ventas/<id>/ (Para actualizar)
+    # Detalle, Editar, Anular: /api/ventas/ventas/<id>/
     path('ventas/<int:pk>/', VentaDetailView.as_view(), name='venta-detail'),
     
-    # GET /api/venta/estados-venta/ (Para el dropdown del modal)
+    # Estados: /api/ventas/estados-venta/
     path('estados-venta/', EstadoVentaListView.as_view(), name='estado-venta-list'),
+    
+    # Resumen: /api/ventas/resumen/
+    path('resumen/', resumen_ventas, name='venta-resumen'),
 ]

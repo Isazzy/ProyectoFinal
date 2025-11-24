@@ -1,133 +1,102 @@
-// ========================================
-// src/pages/Turnos/TurnosList.jsx
-// ========================================
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Calendar, Plus, Eye, Check, CreditCard, X, 
-  ChevronLeft, ChevronRight, Filter, List, Grid
+  Calendar, Plus, Eye, CheckCircle, ThumbsUp, DollarSign, 
+  ChevronLeft, ChevronRight, RefreshCw, ReceiptText 
 } from 'lucide-react';
 import { useTurnos } from '../../hooks/useTurnos';
 import { Card, Button, Badge, Input } from '../../components/ui';
-import { formatDate, formatTime } from '../../utils/formatters';
 import styles from '../../styles/Turnos.module.css';
 
-// View Toggle Component
-const ViewToggle = ({ view, setView }) => (
-  <div className={styles.viewToggle}>
-    <button
-      className={`${styles.toggleBtn} ${view === 'list' ? styles.active : ''}`}
-      onClick={() => setView('list')}
-      aria-label="Vista lista"
-    >
-      <List size={18} />
-    </button>
-    <button
-      className={`${styles.toggleBtn} ${view === 'calendar' ? styles.active : ''}`}
-      onClick={() => setView('calendar')}
-      aria-label="Vista calendario"
-    >
-      <Grid size={18} />
-    </button>
-  </div>
-);
-
-// Status Filter Component
-const StatusFilter = ({ selected, onChange }) => {
-  const statuses = [
-    { value: 'todos', label: 'Todos' },
-    { value: 'pendiente', label: 'Pendiente' },
-    { value: 'confirmado', label: 'Confirmado' },
-    { value: 'completado', label: 'Completado' },
-    { value: 'cancelado', label: 'Cancelado' },
-  ];
-
-  return (
-    <div className={styles.statusFilter}>
-      {statuses.map(status => (
-        <button
-          key={status.value}
-          className={`${styles.filterBtn} ${selected === status.value ? styles.active : ''}`}
-          onClick={() => onChange(status.value)}
-        >
-          {status.label}
-        </button>
-      ))}
-    </div>
-  );
-};
-
-// Turno Row Component
-const TurnoRow = ({ turno, onView, onComplete, onCreateSale }) => {
+const TurnoRow = ({ turno, onView, onConfirm, onComplete, onCreateSale, onViewSale }) => {
   const statusColors = {
     pendiente: 'warning',
     confirmado: 'primary',
-    completado: 'success',
+    completado: 'info',
     cancelado: 'danger',
   };
+  
+  const getHora = (iso) => iso ? new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--';
+
+  // Detectamos si el turno ya fue cobrado
+  const isPaid = !!turno.venta_id; 
 
   return (
-    <motion.tr
-      className={styles.turnoRow}
-      whileHover={{ backgroundColor: 'var(--bg)' }}
-    >
-      <td className={styles.timeCell}>
-        <span className={styles.timeText}>{formatTime(turno.hora)}</span>
-      </td>
+    <motion.tr className={styles.turnoRow} whileHover={{ backgroundColor: 'var(--bg)' }}>
+      <td className={styles.timeCell}><span className={styles.timeText}>{getHora(turno.fecha_hora_inicio)}</span></td>
       <td className={styles.clienteCell}>
         <div className={styles.clienteInfo}>
-          <div className={styles.clienteAvatar}>
-            {(turno.cliente_nombre || turno.cliente)?.[0] || 'C'}
-          </div>
-          <span>{turno.cliente_nombre || turno.cliente}</span>
+          <div className={styles.clienteAvatar}>{(turno.cliente || 'C')[0]}</div>
+          <span>{turno.cliente || 'Cliente Eventual'}</span>
         </div>
       </td>
       <td className={styles.serviciosCell}>
         <div className={styles.serviciosTags}>
           {(turno.servicios || []).slice(0, 2).map((s, i) => (
-            <span key={i} className={styles.servicioTag}>
-              {s.nombre || s}
-            </span>
+            <span key={i} className={styles.servicioTag}>{s.nombre}</span>
           ))}
-          {(turno.servicios?.length || 0) > 2 && (
-            <span className={styles.servicioMore}>
-              +{turno.servicios.length - 2}
-            </span>
-          )}
+          {(turno.servicios?.length || 0) > 2 && <span className={styles.servicioMore}>+{turno.servicios.length - 2}</span>}
         </div>
       </td>
       <td className={styles.estadoCell}>
-        <Badge variant={statusColors[turno.estado]}>
-          {turno.estado}
-        </Badge>
+          <Badge variant={statusColors[turno.estado] || 'default'}>{turno.estado}</Badge>
+          {isPaid && <Badge variant="success" style={{marginLeft: 5, fontSize: '0.7rem'}}>Pagado</Badge>}
       </td>
       <td className={styles.actionsCell}>
         <div className={styles.actions}>
-          <button 
-            className={styles.actionBtn}
-            onClick={() => onView(turno)}
-            title="Ver detalle"
-          >
-            <Eye size={18} />
+          <button className={styles.actionBtn} onClick={() => onView(turno)} title="Ver detalle">
+            <Eye size={18}/>
           </button>
-          {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
+          
+          {/* --- FLUJO DE ACCIONES SEGÚN ESTADO --- */}
+          
+          {/* 1. PENDIENTE -> CONFIRMAR */}
+          {turno.estado === 'pendiente' && (
             <button 
-              className={`${styles.actionBtn} ${styles.successBtn}`}
-              onClick={() => onComplete(turno)}
-              title="Marcar completado"
+                className={`${styles.actionBtn} ${styles.primaryBtn}`} 
+                onClick={() => onConfirm(turno)} 
+                title="Confirmar asistencia"
             >
-              <Check size={18} />
+              <ThumbsUp size={18}/>
             </button>
           )}
-          {turno.estado === 'completado' && (
+
+          {/* 2. CONFIRMADO -> COMPLETAR (Realizar servicio) */}
+          {turno.estado === 'confirmado' && (
             <button 
-              className={`${styles.actionBtn} ${styles.primaryBtn}`}
-              onClick={() => onCreateSale(turno)}
-              title="Crear venta"
+                className={`${styles.actionBtn} ${styles.infoBtn}`} 
+                onClick={() => onComplete(turno)} 
+                title="Marcar servicio como realizado"
+                style={{ color: '#0284c7', background: '#e0f2fe' }}
             >
-              <CreditCard size={18} />
+              <CheckCircle size={18}/>
             </button>
+          )}
+
+          {/* 3. COMPLETADO -> COBRAR o VER COMPROBANTE */}
+          {turno.estado === 'completado' && (
+            isPaid ? (
+                // YA COBRADO: Mostrar botón para ver el recibo/detalle de venta
+                <button 
+                    className={`${styles.actionBtn}`} 
+                    onClick={() => onViewSale(turno.venta_id)} 
+                    title="Ver Comprobante de Venta"
+                    style={{ color: '#64748b', background: '#f1f5f9', border: '1px solid #cbd5e1' }}
+                >
+                  <ReceiptText size={18} />
+                </button>
+            ) : (
+                // PENDIENTE DE COBRO: Mostrar botón de cobrar
+                <button 
+                    className={`${styles.actionBtn}`} 
+                    onClick={() => onCreateSale(turno)} 
+                    title="Cobrar / Crear Venta"
+                    style={{ color: '#16a34a', background: '#dcfce7', border: '1px solid #16a34a' }}
+                >
+                  <DollarSign size={18} strokeWidth={2.5} />
+                </button>
+            )
           )}
         </div>
       </td>
@@ -135,133 +104,105 @@ const TurnoRow = ({ turno, onView, onComplete, onCreateSale }) => {
   );
 };
 
-// Main TurnosList Component
 export const TurnosList = () => {
   const navigate = useNavigate();
-  const { turnos, loading, fetchTurnos, completarTurno } = useTurnos();
+  const { turnos, loading, fetchTurnos, confirmarTurno, completarTurno } = useTurnos();
   
-  const [view, setView] = useState('list');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch turnos on date change
-  useEffect(() => {
-    fetchTurnos({ fecha: selectedDate });
+  useEffect(() => { 
+      fetchTurnos({ fecha: selectedDate }); 
   }, [selectedDate, fetchTurnos]);
 
-  // Filtered turnos
   const filteredTurnos = useMemo(() => {
-    return turnos.filter(turno => {
-      const matchesStatus = statusFilter === 'todos' || turno.estado === statusFilter;
-      const matchesSearch = !searchQuery || 
-        (turno.cliente_nombre || turno.cliente || '').toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
+    if (!Array.isArray(turnos)) return [];
+    return turnos.filter(t => {
+      const st = statusFilter === 'todos' || t.estado === statusFilter;
+      const sr = !searchQuery || (t.cliente || '').toLowerCase().includes(searchQuery.toLowerCase());
+      return st && sr;
     });
   }, [turnos, statusFilter, searchQuery]);
 
-  // Handlers
-  const handleView = (turno) => navigate(`/turnos/${turno.id}`);
-  const handleComplete = (turno) => completarTurno(turno.id, turno.cliente_nombre || turno.cliente);
-  const handleCreateSale = (turno) => navigate(`/ventas/nuevo?turno_id=${turno.id}`);
-
-  // Date navigation
-  const changeDate = (days) => {
+  const changeDate = (d) => {
     const date = new Date(selectedDate);
-    date.setDate(date.getDate() + days);
+    date.setDate(date.getDate() + d);
     setSelectedDate(date.toISOString().split('T')[0]);
   };
 
+  // --- HANDLERS ---
+  const handleView = (t) => navigate(`/turnos/${t.id}`);
+  
+  const handleConfirm = async (t) => {
+      await confirmarTurno(t.id);
+  };
+
+  const handleComplete = async (t) => {
+      await completarTurno(t.id);
+  };
+
+  const handleCreateSale = (t) => {
+      // Ir a crear venta
+      navigate(`/ventas/nuevo?turno_id=${t.id}`);
+  };
+
+  const handleViewSale = (ventaId) => {
+      // Ir a ver detalle de venta existente
+      navigate(`/ventas/${ventaId}`);
+  };
+
   return (
-    <motion.div
-      className={styles.turnosPage}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {/* Header */}
+    <motion.div className={styles.turnosPage} initial={{opacity:0}} animate={{opacity:1}}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Agenda de Turnos</h1>
-        <div className={styles.headerActions}>
-          <ViewToggle view={view} setView={setView} />
-          <Button icon={Plus} onClick={() => navigate('/turnos/nuevo')}>
-            Nuevo Turno
-          </Button>
-        </div>
+        <h1 className={styles.title}>Agenda</h1>
+        <Button icon={Plus} onClick={() => navigate('/turnos/nuevo')}>Nuevo Turno</Button>
       </header>
 
-      {/* Date Navigation */}
       <div className={styles.dateNav}>
-        <button className={styles.dateNavBtn} onClick={() => changeDate(-1)}>
-          <ChevronLeft size={20} />
-        </button>
-        <Input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className={styles.dateInput}
-        />
-        <button className={styles.dateNavBtn} onClick={() => changeDate(1)}>
-          <ChevronRight size={20} />
-        </button>
-        <button 
-          className={styles.todayBtn}
-          onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-        >
-          Hoy
-        </button>
+        <button onClick={() => changeDate(-1)}><ChevronLeft/></button>
+        <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}/>
+        <button onClick={() => changeDate(1)}><ChevronRight/></button>
       </div>
 
-      {/* Filters */}
       <div className={styles.filters}>
-        <StatusFilter selected={statusFilter} onChange={setStatusFilter} />
-        <Input
-          placeholder="Buscar cliente..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={styles.searchInput}
-        />
+        {['todos','pendiente','confirmado','completado'].map(s => (
+            <button key={s} className={statusFilter===s ? styles.active : ''} onClick={() => setStatusFilter(s)}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+        ))}
+        <Input placeholder="Buscar cliente..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
       </div>
 
-      {/* Turnos Table */}
-      <Card className={styles.tableCard}>
+      <Card>
         {loading ? (
-          <div className={styles.loading}>Cargando turnos...</div>
+            <div className={styles.loading}>
+                <RefreshCw className="animate-spin"/> Cargando agenda...
+            </div>
         ) : filteredTurnos.length > 0 ? (
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.th}>Hora</th>
-                  <th className={styles.th}>Cliente</th>
-                  <th className={styles.th}>Servicios</th>
-                  <th className={styles.th}>Estado</th>
-                  <th className={styles.th} style={{ textAlign: 'right' }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTurnos.map(turno => (
-                  <TurnoRow
-                    key={turno.id}
-                    turno={turno}
-                    onView={handleView}
-                    onComplete={handleComplete}
-                    onCreateSale={handleCreateSale}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <table className={styles.table}>
+            <thead>
+              <tr><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              {filteredTurnos.map(t => (
+                <TurnoRow 
+                  key={t.id} 
+                  turno={t} 
+                  onView={handleView} 
+                  onConfirm={handleConfirm} 
+                  onComplete={handleComplete} 
+                  onCreateSale={handleCreateSale}
+                  onViewSale={handleViewSale} // Nueva prop para ver el recibo
+                />
+              ))}
+            </tbody>
+          </table>
         ) : (
-          <div className={styles.emptyState}>
-            <Calendar size={48} className={styles.emptyIcon} />
-            <p>No hay turnos para esta fecha</p>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/turnos/nuevo')}
-            >
-              Agendar turno
-            </Button>
-          </div>
+            <div className={styles.emptyState}>
+                <Calendar size={48} color="#ccc"/>
+                <p>No hay turnos para esta fecha.</p>
+            </div>
         )}
       </Card>
     </motion.div>

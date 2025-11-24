@@ -4,17 +4,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Check, X, CreditCard, Clock, User, FileText } from 'lucide-react';
+import { ChevronLeft, Check, X, CreditCard, Clock, User, FileText, ThumbsUp, CheckCircle, } from 'lucide-react';
 import { turnosApi } from '../../api/turnosApi';
 import { useTurnos } from '../../hooks/useTurnos';
 import { Card, Button, Badge } from '../../components/ui';
+// Asegúrate de importar las funciones nuevas que te pasé arriba
 import { formatDate, formatTime, formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/TurnoDetail.module.css';
 
 export const TurnoDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { completarTurno, cancelarTurno } = useTurnos();
+  const { confirmarTurno, completarTurno, cancelarTurno } = useTurnos();
   
   const [turno, setTurno] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export const TurnoDetail = () => {
     const fetchTurno = async () => {
       try {
         const data = await turnosApi.getTurno(id);
+        console.log("Datos del turno:", data); // Debug para ver qué llega
         setTurno(data);
       } catch (error) {
         console.error('Error fetching turno:', error);
@@ -36,6 +38,7 @@ export const TurnoDetail = () => {
   if (loading) return <div>Cargando...</div>;
   if (!turno) return <div>Turno no encontrado</div>;
 
+  // Mapa de colores para badges
   const statusColors = {
     pendiente: 'warning',
     confirmado: 'primary',
@@ -43,8 +46,13 @@ export const TurnoDetail = () => {
     cancelado: 'danger',
   };
 
+  const handleConfirm = async () => {
+    const success = await confirmarTurno(turno.id);
+    if (success) setTurno(prev => ({ ...prev, estado: 'confirmado' }));
+  };
+
   const handleComplete = async () => {
-    const success = await completarTurno(turno.id, turno.cliente_nombre);
+    const success = await completarTurno(turno.id, turno.cliente);
     if (success) setTurno(prev => ({ ...prev, estado: 'completado' }));
   };
 
@@ -60,23 +68,33 @@ export const TurnoDetail = () => {
           <ChevronLeft size={24} />
         </button>
         <h1>Detalle del Turno</h1>
-        <Badge variant={statusColors[turno.estado]}>{turno.estado}</Badge>
+        <Badge variant={statusColors[turno.estado] || 'default'}>{turno.estado}</Badge>
       </header>
 
       <div className={styles.grid}>
         <Card>
           <h2><Clock size={20} /> Información del Turno</h2>
           <div className={styles.infoGrid}>
-            <div><label>Fecha</label><p>{formatDate(turno.fecha)}</p></div>
-            <div><label>Hora</label><p className={styles.time}>{formatTime(turno.hora)}</p></div>
-            <div><label>Duración</label><p>{turno.duracion_total || 60} minutos</p></div>
+            {/* Uso seguro de formateadores */}
+            <div>
+                <label>Fecha</label>
+                <p>{formatDate(turno.fecha_hora_inicio)}</p>
+            </div>
+            <div>
+                <label>Hora</label>
+                <p className={styles.time}>{formatTime(turno.fecha_hora_inicio)}</p>
+            </div>
+            <div>
+                <label>Duración</label>
+                <p>{turno.duracion_total || '--'} minutos</p>
+            </div>
           </div>
         </Card>
 
         <Card>
           <h2><User size={20} /> Cliente</h2>
-          <p className={styles.clientName}>{turno.cliente_nombre || turno.cliente}</p>
-          {turno.cliente_telefono && <p>{turno.cliente_telefono}</p>}
+          <p className={styles.clientName}>{turno.cliente || 'Sin nombre'}</p>
+          <p>{turno.cliente_telefono || 'Sin teléfono'}</p>
         </Card>
 
         <Card>
@@ -84,14 +102,10 @@ export const TurnoDetail = () => {
           <div className={styles.servicesList}>
             {(turno.servicios || []).map((s, i) => (
               <div key={i} className={styles.serviceItem}>
-                <span>{s.nombre || s}</span>
-                <span>{formatCurrency(s.precio || 0)}</span>
+                <span>{s.nombre}</span>
+                <span>{formatCurrency(s.precio)}</span>
               </div>
             ))}
-          </div>
-          <div className={styles.total}>
-            <span>Total</span>
-            <span>{formatCurrency(turno.total || 0)}</span>
           </div>
         </Card>
 
@@ -104,21 +118,33 @@ export const TurnoDetail = () => {
       </div>
 
       <div className={styles.actions}>
-        {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
+        {/* Flujo PENDIENTE */}
+        {turno.estado === 'pendiente' && (
           <>
-            <Button icon={Check} variant="success" onClick={handleComplete}>
-              Marcar Completado
+            <Button icon={ThumbsUp} variant="primary" onClick={handleConfirm}>
+              Confirmar Asistencia
             </Button>
             <Button icon={X} variant="danger" onClick={handleCancel}>
               Cancelar Turno
             </Button>
           </>
         )}
+
+        {/* Flujo CONFIRMADO */}
+        {turno.estado === 'confirmado' && (
+          <>
+            <Button icon={CheckCircle} variant="success" onClick={handleComplete}>
+              Finalizar Servicio
+            </Button>
+            <Button icon={X} variant="danger" onClick={handleCancel}>
+              Cancelar
+            </Button>
+          </>
+        )}
+
+        {/* Flujo COMPLETADO */}
         {turno.estado === 'completado' && (
-          <Button 
-            icon={CreditCard} 
-            onClick={() => navigate(`/ventas/nuevo?turno_id=${turno.id}`)}
-          >
+          <Button icon={CreditCard} onClick={() => navigate(`/ventas/nuevo?turno_id=${turno.id}`)}>
             Crear Venta
           </Button>
         )}

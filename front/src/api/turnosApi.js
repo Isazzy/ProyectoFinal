@@ -14,9 +14,19 @@ export const turnosApi = {
     return response.data;
   },
 
-  crearTurno: async (data) => {
-    // data: { fecha, hora, cliente_id, servicios_ids, observaciones }
-    const response = await api.post('/turnos/', data);
+  crearTurno: async ({ fecha, hora, cliente_id, servicios_ids, observaciones }) => {
+    // CORRECCIÓN: Combinar fecha y hora en ISO String para Django
+    // fecha: "2023-10-25", hora: "09:30" -> "2023-10-25T09:30:00"
+    const fechaHoraInicio = `${fecha}T${hora}:00`;
+
+    const payload = {
+      fecha_hora_inicio: fechaHoraInicio,
+      cliente: cliente_id,      // Backend espera ID
+      servicios: servicios_ids, // Backend espera 'servicios' (lista de ints)
+      observaciones
+    };
+
+    const response = await api.post('/turnos/', payload);
     return response.data;
   },
 
@@ -25,18 +35,21 @@ export const turnosApi = {
     return response.data;
   },
 
+  confirmarTurno: async (id) => {
+    const response = await api.patch(`/turnos/${id}/`, { estado: 'confirmado' });
+    return response.data;
+  },
+
+  // CORRECCIÓN: Usar acciones personalizadas si existen en viewset, 
+  // o PATCH parcial si es REST estándar.
   cancelarTurno: async (id) => {
-    const response = await api.patch(`/turnos/${id}/`, { estado: 'cancelado' });
+    // Si usas la @action definida en viewset: /turnos/{id}/solicitar_cancelacion/
+    const response = await api.post(`/turnos/${id}/solicitar_cancelacion/`);
     return response.data;
   },
 
   completarTurno: async (id) => {
     const response = await api.patch(`/turnos/${id}/`, { estado: 'completado' });
-    return response.data;
-  },
-
-  confirmarTurno: async (id) => {
-    const response = await api.patch(`/turnos/${id}/`, { estado: 'confirmado' });
     return response.data;
   },
 
@@ -46,13 +59,6 @@ export const turnosApi = {
       params.servicios_ids = serviciosIds.join(',');
     }
     const response = await api.get('/turnos/horarios-disponibles/', { params });
-    return response.data;
-  },
-
-  getTurnosByFecha: async (fechaInicio, fechaFin) => {
-    const response = await api.get('/turnos/', {
-      params: { fecha_inicio: fechaInicio, fecha_fin: fechaFin },
-    });
     return response.data;
   },
 };

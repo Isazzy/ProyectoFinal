@@ -1,0 +1,60 @@
+/* src/styles/Inventario.module.css */
+
+.pageContainer {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- ESTILOS DE TABS --- */
+.tabsContainer {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px; /* Para superponer la línea base */
+}
+
+.tabBtn:hover {
+  color: #374151;
+  background-color: #f9fafb;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.activeTab {
+  color: #2563eb; /* Tu color primario */
+  font-weight: 600;
+  border-bottom: 2px solid #2563eb;
+}
+
+.activeTab svg {
+  color: #2563eb;
+}
+
+/* --- AJUSTES PARA LOS COMPONENTES HIJOS --- */
+/* Como InventarioList y ProductosList tienen su propio header h1, 
+   podemos ajustar un poco para que no quede demasiado espacio arriba */
+.tabContent header {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* ... (El resto de tus estilos de cards, tablas, botones, etc.) ... */
