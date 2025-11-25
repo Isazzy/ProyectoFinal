@@ -6,7 +6,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, Calendar, Scissors, ShoppingBag, Users, 
-  User, Package, X, DollarSign 
+  User, Package, X, DollarSign, Truck 
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useUI } from '../../context/UIContext';
@@ -17,6 +17,7 @@ const menuItems = [
   { path: '/turnos', label: 'Turnos', icon: Calendar },
   { path: '/servicios', label: 'Servicios', icon: Scissors },
   { path: '/ventas', label: 'Ventas', icon: ShoppingBag },
+  { path: '/compras', label: 'Compras', icon: Truck },
   { path: '/caja', label: 'Caja', icon: DollarSign }, // <--- NUEVO ÍTEM
   { path: '/clientes', label: 'Clientes', icon: Users },
   { path: '/empleados', label: 'Empleados', icon: User, adminOnly: true },

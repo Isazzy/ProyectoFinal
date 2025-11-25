@@ -1,0 +1,12 @@
+.createActions {
+    padding: 10px;
+    border-top: 1px solid #eee;
+    background: #f8fafc;
+}
+
+.createLabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 5px;
+    font-weight: 600;
+}

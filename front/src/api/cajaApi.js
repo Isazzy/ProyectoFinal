@@ -37,7 +37,7 @@ export const cajaApi = {
     const response = await api.get(`/movimiento-caja/`, { 
         params: { caja_id: cajaId } 
     });
-    return response.data;
+    return response.data; 
   },
   
   // Historial de cajas cerradas

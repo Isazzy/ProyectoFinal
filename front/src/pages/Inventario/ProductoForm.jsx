@@ -1,5 +1,8 @@
+// ========================================
+// src/pages/Inventario/ProductoForm.jsx
+// ========================================
 import React, { useState, useEffect } from 'react';
-import { X, Save, Upload, Link as LinkIcon, RefreshCw } from 'lucide-react';
+import { X, Save, Upload, Link as LinkIcon, RefreshCw, Calculator } from 'lucide-react';
 import { Button, Input } from '../../components/ui/';
 import styles from '../../styles/Inventario.module.css';
 import { uploadToCloudinary } from '../../utils/cloudinary';
@@ -12,7 +15,11 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [imageMode, setImageMode] = useState('archivo');
-  const isReadOnly = mode === 'ver'; // Flag para modo lectura
+  const isReadOnly = mode === 'ver';
+
+  // Estados para la Calculadora de Precio (Auxiliar)
+  const [costoRef, setCostoRef] = useState('');
+  const [margenRef, setMargenRef] = useState(50); // Margen por defecto 50%
 
   const [form, setForm] = useState({
     producto_nombre: '',
@@ -26,10 +33,12 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     producto_imagen_url: ''
   });
 
+  // Carga de datos
   useEffect(() => {
-    if (!isReadOnly) fetchDependencias(); // No hace falta cargar selects si solo vamos a ver texto
+    if (!isReadOnly) fetchDependencias();
     
     if (productoToEdit) {
+      // Mapear datos básicos con seguridad
       const tipoVal = productoToEdit.tipo_producto && typeof productoToEdit.tipo_producto === 'object' 
         ? productoToEdit.tipo_producto.id 
         : productoToEdit.tipo_producto;
@@ -77,10 +86,22 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     }
   };
 
+  // Lógica de la Calculadora Auxiliar
+  const aplicarCalculo = () => {
+    if (!costoRef) return;
+    const costo = parseFloat(costoRef);
+    const margen = parseFloat(margenRef) / 100;
+    // Precio Venta = Costo * (1 + %Margen)
+    const precioVenta = costo * (1 + margen);
+    
+    // Redondeamos hacia arriba para evitar centavos extraños
+    setForm(prev => ({ ...prev, producto_precio: Math.ceil(precioVenta) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isReadOnly) return; // Seguridad
-    
+    if (isReadOnly) return;
+
     if (!form.producto_nombre || !form.producto_precio || !form.tipo_producto) {
         alert("Completa los campos obligatorios (*)");
         return;
@@ -89,6 +110,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     try {
         let finalUrl = form.producto_imagen_url;
 
+        // 1. Subir imagen si es archivo local
         if (imageMode === 'archivo' && file) {
             setUploadingImage(true);
             try {
@@ -101,6 +123,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
             setUploadingImage(false);
         }
 
+        // 2. Payload
         const payload = {
             ...form,
             producto_precio: parseFloat(form.producto_precio),
@@ -127,13 +150,6 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     }
   };
 
-  // Helper para obtener nombre en modo lectura (ya que el form tiene IDs)
-  const getLabel = (list, id) => {
-      const item = list.find(i => i.id === parseInt(id));
-      return item ? (item.tipo_producto_nombre || item.nombre) : '-';
-  };
-
-  // Título del Modal
   const getTitle = () => {
       if (mode === 'ver') return 'Detalle del Producto';
       if (mode === 'editar') return 'Editar Producto';
@@ -150,34 +166,67 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
 
         <form onSubmit={handleSubmit} className={styles.formGrid} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
             
-            {/* --- IMAGEN PRIMERO EN MODO VER --- */}
+            {/* --- IMAGEN EN MODO VER --- */}
             {isReadOnly && preview && (
                 <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                    <img src={preview} alt="Producto" style={{ height: 200, borderRadius: 8, objectFit: 'contain', border: '1px solid #eee' }} />
+                    <img src={preview} alt="Producto" style={{ height: 150, borderRadius: 8, objectFit: 'contain', border: '1px solid #eee' }} />
                 </div>
             )}
 
-            {/* Fila 1 */}
+            {/* --- AYUDA DE CÁLCULO DE PRECIO (Solo al crear) --- */}
+            {!isReadOnly && mode === 'crear' && (
+                <div style={{background: '#f0f9ff', padding: 12, borderRadius: 8, border: '1px solid #bae6fd'}}>
+                    <div style={{display:'flex', alignItems:'center', gap: 5, marginBottom: 8, color: '#0284c7', fontSize: '0.9rem', fontWeight: 600}}>
+                        <Calculator size={16} /> Calculadora Rápida
+                    </div>
+                    <div style={{display:'flex', gap: 10, alignItems: 'flex-end'}}>
+                        <div style={{flex: 1}}>
+                            <label style={{fontSize: '0.75rem', display:'block', marginBottom:4, color:'#334155'}}>Costo (Factura)</label>
+                            <Input 
+                                type="number" 
+                                value={costoRef} 
+                                onChange={e => setCostoRef(e.target.value)} 
+                                placeholder="$ Costo" 
+                                style={{background:'white', height: 35}}
+                            />
+                        </div>
+                        <div style={{width: 100}}>
+                            <label style={{fontSize: '0.75rem', display:'block', marginBottom:4, color:'#334155'}}>Margen %</label>
+                            <Input 
+                                type="number" 
+                                value={margenRef} 
+                                onChange={e => setMargenRef(e.target.value)} 
+                                style={{background:'white', height: 35}}
+                            />
+                        </div>
+                        <Button type="button" size="sm" onClick={aplicarCalculo} disabled={!costoRef} style={{height: 35}}>
+                            Aplicar
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Fila 1: Nombre y Precio */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {isReadOnly ? (
                     <>
-                        <div><label className={styles.labelView}>Nombre</label><p className={styles.valueView}>{form.producto_nombre}</p></div>
-                        <div><label className={styles.labelView}>Precio</label><p className={styles.valueView}>${form.producto_precio}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Nombre</label><p style={{fontWeight:500}}>{form.producto_nombre}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Precio Venta</label><p style={{fontWeight:500}}>${form.producto_precio}</p></div>
                     </>
                 ) : (
                     <>
                         <Input label="Nombre *" name="producto_nombre" value={form.producto_nombre} onChange={handleChange} required disabled={isReadOnly} />
-                        <Input label="Precio *" type="number" name="producto_precio" value={form.producto_precio} onChange={handleChange} required disabled={isReadOnly} />
+                        <Input label="Precio Venta *" type="number" name="producto_precio" value={form.producto_precio} onChange={handleChange} required disabled={isReadOnly} />
                     </>
                 )}
             </div>
 
-            {/* Fila 2 */}
+            {/* Fila 2: Stocks */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {isReadOnly ? (
                     <>
-                        <div><label className={styles.labelView}>Stock Actual</label><p className={styles.valueView}>{form.stock}</p></div>
-                        <div><label className={styles.labelView}>Stock Mínimo</label><p className={styles.valueView}>{form.stock_minimo}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Stock Actual</label><p>{form.stock}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Stock Mínimo</label><p>{form.stock_minimo}</p></div>
                     </>
                 ) : (
                     <>
@@ -187,12 +236,12 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 )}
             </div>
 
-            {/* Fila 3 */}
+            {/* Fila 3: Selectores */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {isReadOnly ? (
                     <>
-                        <div><label className={styles.labelView}>Tipo</label><p className={styles.valueView}>{productoToEdit?.tipo_producto_nombre || '-'}</p></div>
-                        <div><label className={styles.labelView}>Marca</label><p className={styles.valueView}>{productoToEdit?.marca_nombre || '-'}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Tipo</label><p>{productoToEdit?.tipo_producto_nombre || '-'}</p></div>
+                        <div><label style={{fontSize:'0.8rem', color:'#666'}}>Marca</label><p>{productoToEdit?.marca_nombre || '-'}</p></div>
                     </>
                 ) : (
                     <>
@@ -200,14 +249,18 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                             <label>Tipo Producto *</label>
                             <select name="tipo_producto" value={form.tipo_producto} onChange={handleChange} className={styles.selectInput}>
                                 <option value="">Seleccionar</option>
-                                {Array.isArray(tipos) && tipos.map(t => <option key={t.id} value={t.id}>{t.tipo_producto_nombre}</option>)}
+                                {Array.isArray(tipos) && tipos.map(t => (
+                                    <option key={t.id} value={t.id}>{t.tipo_producto_nombre}</option>
+                                ))}
                             </select>
                         </div>
                         <div className={styles.inputGroup}>
                             <label>Marca</label>
                             <select name="marca" value={form.marca} onChange={handleChange} className={styles.selectInput}>
                                 <option value="">Ninguna</option>
-                                {Array.isArray(marcas) && marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                                {Array.isArray(marcas) && marcas.map(m => (
+                                    <option key={m.id} value={m.id}>{m.nombre}</option>
+                                ))}
                             </select>
                         </div>
                     </>
@@ -218,7 +271,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
             <div>
                 <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Descripción</label>
                 {isReadOnly ? (
-                    <p className={styles.valueView} style={{background: '#f9fafb', padding: 10, borderRadius: 5, minHeight: 60}}>
+                    <p style={{background: '#f9fafb', padding: 10, borderRadius: 5, minHeight: 60, marginTop: 5}}>
                         {form.producto_descripcion || 'Sin descripción'}
                     </p>
                 ) : (
@@ -226,7 +279,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 )}
             </div>
 
-            {/* Estado y Fechas (Solo visible en Ver) */}
+            {/* Estado y Fechas (Solo Ver) */}
             {isReadOnly && (
                 <div style={{ marginTop: 10, fontSize: '0.85rem', color: '#666', display:'flex', justifyContent:'space-between' }}>
                     <span>Estado: <strong>{form.activo ? 'Activo' : 'Inactivo'}</strong></span>
@@ -236,15 +289,18 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 </div>
             )}
 
-            {/* Edición Activo (Solo en modo Editar/Crear) */}
+            {/* Checkbox Activo (Solo Editar/Crear) */}
             {!isReadOnly && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} style={{ width: 18, height: 18 }} />
-                    <label>Producto Activo</label>
+                    <label>
+                        Producto Activo 
+                        {form.producto_precio == 0 && <span style={{color:'#ef4444', fontSize:'0.8rem', marginLeft: 5}}>(Precio es $0)</span>}
+                    </label>
                 </div>
             )}
 
-            {/* Imagen en modo edición */}
+            {/* Sección Imagen (Solo Editar/Crear) */}
             {!isReadOnly && (
                 <div className={styles.imageSection} style={{ borderTop: '1px solid #eee', paddingTop: 10 }}>
                     <label style={{ fontWeight: 600 }}>Imagen del Producto</label>
@@ -260,7 +316,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                     ) : (
                         <Input name="producto_imagen_url" value={form.producto_imagen_url} onChange={handleChange} placeholder="https://..." />
                     )}
-                    {preview && !isReadOnly && <div style={{ marginTop: 10, textAlign: 'center' }}><img src={preview} alt="Preview" style={{ height: 100 }} /></div>}
+                    {preview && <div style={{ marginTop: 10, textAlign: 'center' }}><img src={preview} alt="Preview" style={{ height: 100 }} /></div>}
                 </div>
             )}
 
@@ -268,7 +324,6 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 <Button type="button" variant="secondary" onClick={onClose}>
                     {isReadOnly ? 'Cerrar' : 'Cancelar'}
                 </Button>
-                
                 {!isReadOnly && (
                     <Button type="submit" icon={uploadingImage ? RefreshCw : Save} loading={loading || uploadingImage} disabled={loading || uploadingImage}>
                         {uploadingImage ? 'Subiendo...' : (mode === 'editar' ? 'Guardar Cambios' : 'Crear')}

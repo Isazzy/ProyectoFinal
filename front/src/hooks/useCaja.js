@@ -3,41 +3,56 @@ import { cajaApi } from '../api/cajaApi';
 import { useSwal } from './useSwal';
 
 export const useCaja = () => {
-  const [caja, setCaja] = useState(null); // Objeto caja o null
+  const [caja, setCaja] = useState(null); 
   const [movimientos, setMovimientos] = useState([]);
+  
+  // NUEVO ESTADO
+  const [historial, setHistorial] = useState([]); 
+  
   const [loading, setLoading] = useState(true);
   const { showSuccess, showError, confirm } = useSwal();
 
-  // 1. Cargar Estado Inicial
+  // ... (fetchEstadoCaja y fetchMovimientos se mantienen igual) ...
   const fetchEstadoCaja = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await cajaApi.getStatus();
-      // Si el backend devuelve { caja_estado: false } o data vacía
-      if (data && data.caja_estado) {
-          setCaja(data);
-          // Si está abierta, cargamos sus movimientos
-          fetchMovimientos(data.id);
-      } else {
-          setCaja(null);
+      setLoading(true);
+      try {
+        const data = await cajaApi.getStatus();
+        if (data && data.caja_estado) {
+            setCaja(data);
+            fetchMovimientos(data.id);
+        } else {
+            setCaja(null);
+        }
+      } catch (error) {
+        console.error("Error status caja", error);
+        setCaja(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("No hay caja abierta o error:", error);
-      setCaja(null);
-    } finally {
-      setLoading(false);
-    }
   }, []);
 
-  // 2. Cargar Movimientos
   const fetchMovimientos = async (cajaId) => {
       try {
           const data = await cajaApi.getMovimientos(cajaId);
           setMovimientos(data);
       } catch (err) {
-          console.error("Error cargando movimientos", err);
+          console.error(err);
       }
   };
+
+  // --- NUEVA FUNCIÓN: Cargar Historial ---
+  const fetchHistorial = useCallback(async () => {
+      setLoading(true);
+      try {
+          const data = await cajaApi.getHistorial();
+          setHistorial(data.results || data);
+      } catch (error) {
+          console.error("Error historial", error);
+          showError('Error', 'No se pudo cargar el historial.');
+      } finally {
+          setLoading(false);
+      }
+  }, [showError]);
 
   // 3. Abrir Caja
   const abrirCaja = async (montoInicial) => {
@@ -74,6 +89,36 @@ export const useCaja = () => {
     }
   };
 
+  const registrarIngreso = async (descripcion, monto) => {
+    try {
+        await cajaApi.crearIngreso({
+            ingreso_descripcion: descripcion,
+            ingreso_monto: parseFloat(monto)
+        });
+        showSuccess('Ingreso Registrado');
+        fetchEstadoCaja(); // Actualiza saldo y lista
+        return true;
+    } catch (error) {
+        showError('Error', 'No se pudo registrar el ingreso.');
+        return false;
+    }
+  };
+
+  const registrarEgreso = async (descripcion, monto) => {
+    try {
+        await cajaApi.crearEgreso({
+            egreso_descripcion: descripcion,
+            egreso_monto: parseFloat(monto)
+        });
+        showSuccess('Egreso Registrado');
+        fetchEstadoCaja(); 
+        return true;
+    } catch (error) {
+        showError('Error', 'No se pudo registrar el egreso.');
+        return false;
+    }
+  };
+
   useEffect(() => {
     fetchEstadoCaja();
   }, [fetchEstadoCaja]);
@@ -81,9 +126,13 @@ export const useCaja = () => {
   return {
     caja,
     movimientos,
+    historial, // Exportar estado
     loading,
     abrirCaja,
     cerrarCaja,
-    refrescar: fetchEstadoCaja
+    registrarIngreso,
+    registrarEgreso,
+    refrescar: fetchEstadoCaja,
+    fetchHistorial // Exportar función
   };
 };

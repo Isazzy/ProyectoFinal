@@ -5,7 +5,8 @@ class Egreso(models.Model):
     caja=models.ForeignKey(Caja, on_delete=models.CASCADE)
     egreso_descripcion=models.CharField(max_length=200)
     egreso_monto=models.DecimalField(max_digits=10, decimal_places=2)
-    egreso_fecha_hora=models.DateTimeField(auto_now_add=True)
+    egreso_fecha = models.DateField(auto_now_add=True) # Campo de Fecha
+    egreso_hora = models.TimeField(auto_now_add=True) # Campo de Hora
 
     class Meta:
         verbose_name="Egreso"
@@ -19,7 +20,8 @@ class Ingreso(models.Model):
     caja=models.ForeignKey(Caja, on_delete=models.CASCADE)
     ingreso_descripcion=models.CharField(max_length=200)
     ingreso_monto=models.DecimalField(max_digits=10, decimal_places=2)
-    ingreso_fecha_hora=models.DateTimeField(auto_now_add=True)
+    ingreso_fecha = models.DateField(auto_now_add=True) # Campo de Fecha
+    ingreso_hora = models.TimeField(auto_now_add=True) # Campo de Hora
 
     class Meta:
         verbose_name="ingreso"

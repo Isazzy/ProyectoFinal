@@ -1,35 +1,33 @@
 from rest_framework import serializers
 from .models import Ingreso, Egreso
 
-# --- Serializer para CREAR movimientos (este ya lo tenías) ---
+# --- Serializers individuales ---
 class IngresoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingreso
-        fields = ['id', 'ingreso_descripcion', 'ingreso_monto', 'ingreso_fecha_hora']
-        read_only_fields = ['id', 'ingreso_fecha_hora']
-        # 'caja' se asignará en la vista
+        fields = ['id', 'caja', 'ingreso_descripcion', 'ingreso_monto', 'ingreso_fecha', 'ingreso_hora']
+        # CORRECCIÓN: 'caja' debe ser read_only para que no falle la validación
+        read_only_fields = ['id', 'caja', 'ingreso_fecha', 'ingreso_hora']
 
 class EgresoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Egreso
-        fields = ['id', 'egreso_descripcion', 'egreso_monto', 'egreso_fecha_hora']
-        read_only_fields = ['id', 'egreso_fecha_hora']
+        fields = ['id', 'caja', 'egreso_descripcion', 'egreso_monto', 'egreso_fecha', 'egreso_hora']
+        # CORRECCIÓN: 'caja' debe ser read_only
+        read_only_fields = ['id', 'caja', 'egreso_fecha', 'egreso_hora']
         # 'caja' se asignará en la vista
 
-# --- NUEVO: Serializer para LEER movimientos combinados ---
-# Un serializer genérico para formatear los datos que vienen de 
-# diferentes modelos (Ingreso, Venta, Egreso, Compra)
+# --- Serializer Consolidado (Lectura) ---
 class MovimientoConsolidadoSerializer(serializers.Serializer):
     """
-    Formatea una lista combinada de movimientos (Ventas, Ingresos, Compras, Egresos)
-    para la vista de detalle de caja.
+    Formatea una lista combinada de movimientos.
+    La vista se encarga de combinar fecha y hora en un objeto datetime.
     """
     id = serializers.SerializerMethodField()
-    tipo = serializers.CharField() # 'Venta', 'Ingreso', 'Compra', 'Egreso'
-    fecha_hora = serializers.DateTimeField(source='fecha') # Renombramos el campo
+    tipo = serializers.CharField() 
+    fecha = serializers.DateTimeField()# La vista debe entregar un datetime completo
     descripcion = serializers.CharField()
     monto = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     def get_id(self, obj):
-        # Crea un ID único compuesto (ej: "venta-101", "ingreso-5")
         return f"{obj['tipo'].lower()}-{obj['id']}"

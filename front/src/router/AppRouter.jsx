@@ -27,6 +27,7 @@ import { EmpleadosList } from '../pages/Empleados/EmpleadosList';
 import { InventarioPage } from '../pages/Inventario/InventarioPage';
 import { CajaPage } from '../pages/Caja/CajaPage';
 import { VentaDetail } from '../pages/Ventas/VentaDetail';
+import { ComprasPage } from '../pages/Compras/ComprasPage';
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
@@ -122,7 +123,7 @@ export const AppRouter = () => {
 
           {/* Clientes */}
           <Route path="/clientes" element={<ClientesList />} />
-
+          <Route path='/compras' element={<ComprasPage/>}/>
         
 
           {/* Empleados (Admin only) */}
@@ -133,6 +134,7 @@ export const AppRouter = () => {
                 <CajaPage />
               </ProtectedRoute>
             }
+
           />
           <Route
             path="/empleados"

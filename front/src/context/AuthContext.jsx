@@ -1,5 +1,5 @@
 // ========================================
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx (CORREGIDO)
 // ========================================
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { authApi } from '../api/authApi';
@@ -59,6 +59,9 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => ({ ...prev, ...userData }));
   }, []);
 
+  // --- CORRECCIÓN DE ROLES ---
+  const userRole = user?.role?.toLowerCase() || '';
+
   const value = {
     user,
     loading,
@@ -67,9 +70,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     updateUser,
-    isAdmin: user?.role === 'administrador',
-    isEmpleado: user?.role === 'empleado' || user?.role === 'administrador',
-
+    // Comparamos en minúsculas para evitar errores
+    isAdmin: userRole === 'administrador',
+    isEmpleado: userRole === 'empleado' || userRole === 'administrador',
   };
 
   return (

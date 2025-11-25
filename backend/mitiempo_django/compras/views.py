@@ -36,7 +36,7 @@ class CompraViewSet(
         Compra.objects.all()
         .select_related("proveedor", "empleado__user", "caja")
         .prefetch_related("detalle_compra_set__insumo")  # Optimiza la carga de detalles
-        .order_by("-compra_fecha_hora")
+        .order_by("-compra_fecha", "-compra_hora")
     )  # Más nuevas primero
 
     permission_classes = [permissions.IsAuthenticated]  # O [permissions.IsAdminUser]
