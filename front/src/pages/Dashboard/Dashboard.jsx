@@ -13,12 +13,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { Card, Button, Badge } from '../../components/ui';
 import { formatCurrency, formatTime } from '../../utils/formatters';
 import styles from '../../styles/Dashboard.module.css';
+import { IngresosChart } from '../../components/Charts/IngresosChart';
 
 // APIs para data real
 import { turnosApi } from '../../api/turnosApi';
 import { ventasApi } from '../../api/ventasApi';
 import { inventarioApi } from '../../api/inventarioApi';
 import { clientesApi } from '../../api/clientesApi';
+
+
 
 
 // --- COMPONENTES UI INTERNOS ---
@@ -254,7 +257,9 @@ export const Dashboard = () => {
                 <span className={styles.headerTag}>Este Mes</span>
             </div>
             <ServiceBarChart data={dashboardData.serviciosPopulares} />
-            
+              <div style={{marginTop: -20}}>
+                  <IngresosChart />
+              </div>
             {/* Resumen extra o accesos rápidos */}
             <div className={styles.quickActions}>
                  <h4>Accesos Rápidos</h4>

@@ -1,38 +1,57 @@
-// ========================================
-// src/components/ui/Card.jsx
-// ========================================
-import React from 'react';
-import { motion } from 'framer-motion';
-import classNames from 'classnames';
-import styles from '../../styles/Card.module.css';
+import * as React from "react"
+import { cn } from "../../lib/utils"
 
-export const Card = ({
-  children,
-  className = '',
-  hover = true,
-  padding = 'md',
-  onClick,
-  as: Component = 'div',
-  ...props
-}) => {
-  const paddings = { none: '', sm: styles.paddingSm, md: styles.paddingMd, lg: styles.paddingLg };
-  const cardClasses = classNames(
-    styles.card,
-    paddings[padding],
-    { [styles.hoverable]: hover, [styles.clickable]: onClick },
-    className
-  );
+const Card = React.forwardRef(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-xl border bg-card text-card-foreground shadow-sm bg-white",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
 
-  const MotionComponent = motion[Component] || motion.div;
+const CardHeader = React.forwardRef(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
 
-  return (
-    <MotionComponent
-      className={cardClasses}
-      onClick={onClick}
-      whileHover={hover ? { y: -4, boxShadow: '0 12px 24px rgba(0,0,0,0.1)' } : {}}
-      {...props}
-    >
-      {children}
-    </MotionComponent>
-  );
-};
+const CardTitle = React.forwardRef(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn("font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground text-gray-500", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }

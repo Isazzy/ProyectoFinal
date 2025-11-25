@@ -1,104 +1,180 @@
-/* ========================================
-   src/components/nav/Sidebar.module.css
-   ======================================== */
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: calc(var(--z-fixed) - 1);
-}
-
+/* =========================================
+   LAYOUT PRINCIPAL
+   ========================================= */
 .sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  width: 256px;
-  background: var(--surface);
-  box-shadow: var(--shadow-xl);
-  z-index: var(--z-fixed);
-  display: flex;
-  flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    background-color: #ffffff;
+    border-right: 1px solid #f1f5f9; /* Borde sutil */
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.015); /* Sombra muy suave */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (min-width: 1024px) {
-  .sidebar {
-    box-shadow: none;
-    border-right: 1px solid var(--border);
-    transform: translateX(0) !important;
-  }
-}
-
+/* =========================================
+   HEADER
+   ========================================= */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
+    padding: 32px 24px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Opcional: border-bottom: 1px dashed #e2e8f0; */
 }
 
 .logo {
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  color: var(--primary);
+    font-family: 'Great Vibes', cursive; /* Tipografía de marca */
+    font-size: 2.2rem;
+    color: #9B8DC5; /* Color Primario (Lila) */
+    margin: 0;
+    line-height: 1;
+    cursor: pointer;
+    text-shadow: 0 2px 4px rgba(155, 141, 197, 0.15);
+    user-select: none;
 }
 
 .closeButton {
-  padding: 0.5rem;
-  border-radius: var(--radius-lg);
-  background: none;
-  border: none;
-  color: var(--text);
-  cursor: pointer;
+    display: none; /* Oculto en desktop */
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
 }
 
-@media (min-width: 1024px) {
-  .closeButton {
-    display: none;
-  }
+.closeButton:hover {
+    background-color: #fef2f2;
+    color: #ef4444;
 }
 
+/* =========================================
+   NAVEGACIÓN
+   ========================================= */
 .nav {
-  flex: 1;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+    flex: 1;
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Espacio vertical entre items */
+    overflow-y: auto;
 }
 
+/* Scrollbar estilizado (para navegaciones largas) */
+.nav::-webkit-scrollbar {
+    width: 4px;
+}
+.nav::-webkit-scrollbar-thumb {
+    background-color: #e2e8f0;
+    border-radius: 4px;
+}
+
+/* --- Item Individual --- */
 .navItem {
-  display: block;
-  text-decoration: none;
-  color: var(--text);
-  border-radius: var(--radius-xl);
-  transition: all var(--transition-base);
+    text-decoration: none;
+    color: #64748b; /* Slate 500 - Color base neutro */
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
 
 .navItemInner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    width: 100%;
 }
 
-.navItem:hover {
-  background: var(--border-light);
+/* Estado Hover */
+.navItem:hover:not(.active) {
+    background-color: #f8fafc;
+    color: #334155; /* Slate 700 - Un poco más oscuro */
 }
 
-.navItem.active {
-  background: var(--primary);
-  color: white;
+/* Estado Activo */
+.active {
+    background-color: #fbf7ff; /* Fondo lila muy tenue */
+    color: #7c3aed; /* Violeta vibrante para texto */
+    font-weight: 600;
 }
 
+/* Indicador lateral activo (Barra de acento) */
+.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 4px;
+    background-color: #9B8DC5;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Iconos */
+.navItem svg {
+    opacity: 0.7;
+    transition: all 0.2s;
+    width: 20px;
+    height: 20px;
+}
+
+.navItem:hover svg {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.active svg {
+    opacity: 1;
+    color: #9B8DC5; /* El icono toma el color de marca */
+    filter: drop-shadow(0 2px 4px rgba(155, 141, 197, 0.2));
+}
+
+/* =========================================
+   FOOTER
+   ========================================= */
 .footer {
-  padding: 1rem;
-  border-top: 1px solid var(--border);
+    padding: 20px;
+    border-top: 1px solid #f1f5f9;
+    text-align: center;
+    background-color: #fff;
 }
 
 .version {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  text-align: center;
+    color: #cbd5e1;
+    font-size: 0.75rem;
+    font-family: monospace;
+    margin: 0;
+    letter-spacing: 0.05em;
+}
+
+/* =========================================
+   OVERLAY (Móvil)
+   ========================================= */
+
+   
+
+/* =========================================
+   RESPONSIVIDAD
+   ========================================= */
+@media (max-width: 1024px) {
+    .sidebar {
+        /* En móvil el sidebar estará oculto por defecto vía JS (transform) */
+        border-right: none;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .closeButton {
+        display: block; /* Mostrar botón cerrar */
+    }
 }

@@ -1,195 +1,233 @@
-import React, { useEffect, useState } from 'react';
+// ========================================
+// src/pages/Ventas/VentasList.jsx
+// ========================================
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Eye, ShoppingBag, Calendar, RefreshCw, X } from 'lucide-react';
+import { 
+    Plus, Eye, ShoppingBag, Calendar, RefreshCw, 
+    Search, X, DollarSign, TrendingUp, Ban 
+} from 'lucide-react';
 import { ventasApi } from '../../api/ventasApi';
 import { Card, Button, Badge, Input } from '../../components/ui';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import styles from '../../styles/Ventas.module.css';
 
+// --- Sub-componente: Tarjeta de Estadística ---
+const StatCard = ({ label, value, icon: Icon, color }) => (
+    <div className={styles.statCard}>
+        <div className={styles.statIcon} style={{ backgroundColor: `${color}15`, color: color }}>
+            <Icon size={24} />
+        </div>
+        <div>
+            <p className={styles.statLabel}>{label}</p>
+            <p className={styles.statValue}>{value}</p>
+        </div>
+    </div>
+);
+
 export const VentasList = () => {
   const navigate = useNavigate();
+  
+  // Estados de Datos
   const [ventas, setVentas] = useState([]);
+  const [stats, setStats] = useState({ hoy: 0, mes: 0 });
   const [loading, setLoading] = useState(true);
   
-  // CAMBIO: Inicializamos fecha vacía para ver TODO el historial al principio
-  // O puedes dejarlo en 'hoy' pero permitir limpiar.
-  const [dateFilter, setDateFilter] = useState(''); 
-  
-  const [stats, setStats] = useState({ hoy: 0, semana: 0, mes: 0 });
+  // Estados de Filtros
+  const [dateFilter, setDateFilter] = useState(''); // Vacío = Ver todo
+  const [searchQuery, setSearchQuery] = useState('');
 
+  // 1. Cargar Datos
   useEffect(() => {
-    const fetchVentas = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        // Preparamos los parámetros. Si dateFilter es '', enviamos objeto vacío {}
+        // Params para la API
         const params = dateFilter ? { fecha: dateFilter } : {};
         
-        console.log("Pidiendo ventas con params:", params); // DEBUG
+        const [ventasData, resumenData] = await Promise.all([
+            ventasApi.getVentas(params),
+            ventasApi.getResumenVentas() // Dashboard de ventas
+        ]);
 
-        const data = await ventasApi.getVentas(params);
-        
-        console.log("Respuesta API Ventas:", data); // DEBUG
-
-        // DRF Pagination support: data.results o data directo
-        const lista = data.results || data;
+        const lista = ventasData.results || ventasData;
         setVentas(lista);
-        
+        setStats(resumenData);
+
       } catch (error) {
-        console.error('Error cargando ventas:', error);
+        console.error('Error cargando módulo ventas:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchVentas();
+    fetchData();
   }, [dateFilter]);
 
-  // Cargar Resumen
-  useEffect(() => {
-      const fetchResumen = async () => {
-          try {
-              const data = await ventasApi.getResumenVentas(); 
-              setStats(data);
-          } catch (error) {
-              console.error("Error resumen:", error);
-          }
-      };
-      fetchResumen();
-  }, []);
+  // 2. Filtrado Local (Por nombre de cliente)
+  const filteredVentas = useMemo(() => {
+      return ventas.filter(v => {
+          const cliente = v.cliente 
+            ? `${v.cliente.cliente_nombre} ${v.cliente.cliente_apellido}` 
+            : 'Consumidor Final';
+          
+          return cliente.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+  }, [ventas, searchQuery]);
+
+  // Helpers
+  const handleClearFilters = () => {
+      setDateFilter('');
+      setSearchQuery('');
+  };
 
   const getStatusColor = (nombreEstado) => {
-      const estado = nombreEstado?.toLowerCase() || '';
+      const estado = (nombreEstado || '').toLowerCase();
       if (estado.includes('pagado') || estado.includes('completado')) return 'success';
       if (estado.includes('pendiente')) return 'warning';
+      if (estado.includes('devolución') || estado.includes('parcial')) return 'warning'; 
       if (estado.includes('anulado') || estado.includes('cancelado')) return 'danger';
       return 'default';
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <header className={styles.header}>
-        <h1>Ventas</h1>
-        <Button icon={Plus} onClick={() => navigate('/ventas/nuevo')}>
-          Nueva Venta
-        </Button>
-      </header>
-
-      {/* Stats Cards */}
-      <div className={styles.statsGrid}>
-        <Card className={styles.statCard}>
-          <p className={styles.statLabel}>Ventas Hoy</p>
-          <p className={styles.statValue} style={{ color: 'var(--success)' }}>
-            {formatCurrency(stats.hoy || 0)}
-          </p>
-        </Card>
-        <Card className={styles.statCard}>
-          <p className={styles.statLabel}>Ventas Mes</p>
-          <p className={styles.statValue} style={{ color: 'var(--accent)' }}>
-            {formatCurrency(stats.mes || 0)}
-          </p>
-        </Card>
-        <Card className={styles.statCard}>
-          <p className={styles.statLabel}>Total Histórico</p> 
-          {/* Puedes usar otro dato aquí si quieres */}
-          <p className={styles.statValue} style={{ color: 'var(--primary)' }}>
-            {/* Placeholder o calculo local */}
-            {ventas.length} ops.
-          </p>
-        </Card>
-      </div>
-
-      {/* Filtros */}
-      <div className={styles.filters} style={{display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20}}>
-        <div style={{position: 'relative', flex: 1, maxWidth: 300}}>
-            <Input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            icon={Calendar}
-            placeholder="Filtrar por fecha"
-            />
-            {dateFilter && (
-                <button 
-                    onClick={() => setDateFilter('')}
-                    style={{
-                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                        background: 'none', border: 'none', cursor: 'pointer', color: '#666'
-                    }}
-                    title="Ver todas"
-                >
-                    <X size={16} />
-                </button>
-            )}
+    <motion.div className={styles.pageContainer} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      
+      {/* HEADER */}
+      <div className={styles.topBar}>
+        <div>
+            <h1 className={styles.title}>Ventas</h1>
+            <p className={styles.subtitle}>Historial de transacciones y facturación</p>
         </div>
-        {dateFilter && <span style={{fontSize:'0.9rem', color:'#666'}}>Viendo fecha: {dateFilter}</span>}
-        {!dateFilter && <span style={{fontSize:'0.9rem', color:'#666'}}>Viendo: Todo el historial</span>}
+        <Button icon={Plus} onClick={() => navigate('/ventas/nuevo')}>Nueva Venta</Button>
       </div>
 
-      {/* Tabla de Ventas */}
-      <Card>
+      {/* STATS ROW */}
+      <div className={styles.statsGrid}>
+        <StatCard 
+            label="Ventas Hoy" 
+            value={formatCurrency(stats.hoy || 0)} 
+            icon={DollarSign} 
+            color="#10b981" // Verde Esmeralda
+        />
+        <StatCard 
+            label="Acumulado Mes" 
+            value={formatCurrency(stats.mes || 0)} 
+            icon={TrendingUp} 
+            color="#6366f1" // Índigo
+        />
+        {/* Puedes agregar más stats aquí si el backend los provee */}
+      </div>
+
+      {/* FILTROS */}
+      <div className={styles.controlsContainer}>
+          <div className={styles.searchBox}>
+            <Input 
+                placeholder="Buscar por cliente..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)}
+                icon={Search}
+            />
+          </div>
+
+          <div className={styles.filtersGroup}>
+              <div className={styles.dateWrapper}>
+                  <Calendar size={18} className={styles.dateIcon}/>
+                  <input 
+                    type="date" 
+                    className={styles.dateInput}
+                    value={dateFilter}
+                    onChange={e => setDateFilter(e.target.value)}
+                  />
+              </div>
+              
+              {(dateFilter || searchQuery) && (
+                  <button onClick={handleClearFilters} className={styles.clearBtn} title="Limpiar filtros">
+                      <X size={18} />
+                  </button>
+              )}
+          </div>
+      </div>
+
+      {/* TABLA DE RESULTADOS */}
+      <Card className={styles.tableCard}>
         {loading ? (
-          <div className={styles.loading} style={{padding: 20, textAlign:'center'}}>
-             <RefreshCw className="animate-spin" /> Cargando ventas...
+          <div className={styles.loadingState}>
+             <RefreshCw className="animate-spin" size={24}/> 
+             <p>Cargando transacciones...</p>
           </div>
-        ) : ventas.length > 0 ? (
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th style={{ textAlign: 'right' }}>Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                {ventas.map(venta => {
-                    const clienteNombre = venta.cliente 
-                        ? `${venta.cliente.cliente_nombre || venta.cliente.nombre} ${venta.cliente.cliente_apellido || venta.cliente.apellido}`.trim()
-                        : 'Consumidor Final';
+        ) : filteredVentas.length > 0 ? (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th style={{ textAlign: 'right' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVentas.map(venta => {
+                const clienteNombre = venta.cliente 
+                    ? `${venta.cliente.cliente_nombre || ''} ${venta.cliente.cliente_apellido || ''}`.trim()
+                    : <span className={styles.consumerTag}>Consumidor Final</span>;
+                
+                const estadoNombre = venta.estado_venta?.estado_venta_nombre || 'Desconocido';
+                const isCanceled = estadoNombre.toLowerCase().includes('anulado');
+
+                return (
+                  <motion.tr 
+                    key={venta.id} 
+                    className={`${styles.tableRow} ${isCanceled ? styles.rowCancelled : ''}`}
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }}
+                    whileHover={{ backgroundColor: 'var(--bg-hover)' }}
+                  >
+                    <td className={styles.idCell}>#{venta.id}</td>
+                    <td className={styles.dateCell}>
+                        {formatDate(venta.venta_fecha_hora)}
+                        <span className={styles.timeLabel}>
+                            {new Date(venta.venta_fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                    </td>
                     
-                    const estadoNombre = venta.estado_venta 
-                        ? venta.estado_venta.estado_venta_nombre 
-                        : 'Desconocido';
+                    <td className={styles.clientCell}>{clienteNombre}</td>
                     
-                    return (
-                    <tr key={venta.id}>
-                        <td>#{venta.id}</td>
-                        <td>{formatDate(venta.venta_fecha_hora)}</td>
-                        
-                        <td>{clienteNombre}</td>
-                        
-                        <td className={styles.total} style={{fontWeight:'bold'}}>
-                            {formatCurrency(venta.venta_total)}
-                        </td>
-                        
-                        <td>
-                        <Badge variant={getStatusColor(estadoNombre)}>{estadoNombre}</Badge>
-                        </td>
-                        
-                        <td style={{ textAlign: 'right' }}>
-                        <button 
-                            className={styles.actionBtn}
-                            onClick={() => navigate(`/ventas/${venta.id}`)}
-                            title="Ver Detalle"
-                        >
-                            <Eye size={18} />
-                        </button>
-                        </td>
-                    </tr>
-                    );
-                })}
-                </tbody>
-            </table>
-          </div>
+                    <td className={styles.totalCell}>
+                        {formatCurrency(venta.venta_total)}
+                    </td>
+                    
+                    <td>
+                      <Badge variant={getStatusColor(estadoNombre)}>{estadoNombre}</Badge>
+                    </td>
+                    
+                    <td className={styles.actionsCell}>
+                      <button 
+                        className={styles.actionBtn}
+                        onClick={() => navigate(`/ventas/${venta.id}`)}
+                        title="Ver Detalle / Ticket"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
         ) : (
           <div className={styles.emptyState}>
-            <ShoppingBag size={48} />
-            <p>No se encontraron ventas.</p>
-            {dateFilter && <Button variant="outline" onClick={() => setDateFilter('')} size="sm">Ver todo el historial</Button>}
+            <div className={styles.emptyIconBox}><ShoppingBag size={40} /></div>
+            <h3>No se encontraron ventas</h3>
+            <p>Intenta cambiar los filtros o registra una nueva venta.</p>
+            {dateFilter && (
+                <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                    Ver todo el historial
+                </Button>
+            )}
           </div>
         )}
       </Card>

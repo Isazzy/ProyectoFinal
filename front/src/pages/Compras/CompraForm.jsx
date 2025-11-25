@@ -2,7 +2,7 @@
 // src/pages/Compras/CompraForm.jsx
 // ========================================
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Package, DollarSign, Save, ShoppingCart, X, Tag, Calculator } from 'lucide-react';
+import { Plus, Package, DollarSign, Save, ShoppingCart, X, Tag, Calculator, Truck, CreditCard, Search } from 'lucide-react';
 import { useCompras } from '../../hooks/useCompras';
 import { inventarioApi } from '../../api/inventarioApi'; 
 import { Card, Button, Input, Badge, Modal } from '../../components/ui';
@@ -12,25 +12,49 @@ import { formatCurrency } from '../../utils/formatters';
 // Importamos los formularios para creación rápida
 import { InsumoForm } from '../../components/forms/InsumoForm';
 import { ProductoForm } from '../Inventario/ProductoForm';
-// Importamos Hooks para pasarlos a los formularios hijos
 import { useInventario } from '../../hooks/useInventario';
 import { useProductos } from '../../hooks/useProductos';
 
-// --- Componente de Fila del Carrito (Sin cambios) ---
+// --- Componente de Fila del Carrito ---
 const CompraItemRow = ({ item, index, updateItem, removeItem }) => {
     return (
-        <div className={styles.itemRow}>
-            <div className={styles.itemName}>
-                <div style={{fontWeight: 600}}>{item.nombre}</div>
-                <div style={{fontSize: '0.75rem', color: '#666', display:'flex', gap: 5}}>
+        <div className={styles.cartItem}>
+            <div className={styles.cartItemInfo}>
+                <span className={styles.cartItemName}>{item.nombre}</span>
+                <div className={styles.cartItemMeta}>
                     {item.tipo === 'insumo' ? <Badge variant="secondary" size="sm">Insumo</Badge> : <Badge variant="info" size="sm">Producto</Badge>}
-                    <span>({item.unidad})</span>
+                    <span className={styles.unitLabel}>{item.unidad}</span>
                 </div>
             </div>
-            <Input type="number" value={item.cantidad} onChange={(e) => updateItem(index, 'cantidad', e.target.value)} style={{width: 90}} min="0.01" step="any" title={`Cantidad en ${item.unidad}`}/>
-            <Input type="number" value={item.precio} onChange={(e) => updateItem(index, 'precio', e.target.value)} style={{width: 110}} startIcon={DollarSign} min="0" step="0.01" title="Costo Unitario"/>
-            <div className={styles.itemTotal}>{formatCurrency(item.cantidad * item.precio)}</div>
-            <button type="button" onClick={() => removeItem(index)} className={styles.removeBtn}><X size={16}/></button>
+            
+            <div className={styles.cartInputs}>
+                <Input 
+                    type="number"
+                    value={item.cantidad}
+                    onChange={(e) => updateItem(index, 'cantidad', e.target.value)}
+                    style={{width: 80}}
+                    min="0.01" step="any"
+                    title="Cantidad"
+                />
+                <div className={styles.multiply}>x</div>
+                <Input 
+                    type="number"
+                    value={item.precio}
+                    onChange={(e) => updateItem(index, 'precio', e.target.value)}
+                    style={{width: 100}}
+                    startIcon={DollarSign}
+                    min="0" step="0.01"
+                    title="Costo Unitario"
+                />
+            </div>
+
+            <div className={styles.cartItemTotal}>
+                {formatCurrency(item.cantidad * item.precio)}
+            </div>
+
+            <button type="button" onClick={() => removeItem(index)} className={styles.removeBtn} title="Eliminar">
+                <X size={16}/>
+            </button>
         </div>
     );
 };
@@ -39,7 +63,6 @@ const CompraItemRow = ({ item, index, updateItem, removeItem }) => {
 export const CompraForm = ({ onClose }) => {
     const { proveedores, crearCompra, loading, fetchProveedores } = useCompras();
     
-    // Hooks auxiliares para los modales de creación
     const inventarioHook = useInventario();
     const productosHook = useProductos();
 
@@ -59,10 +82,10 @@ export const CompraForm = ({ onClose }) => {
     const [unitMode, setUnitMode] = useState('base'); 
     const [priceInput, setPriceInput] = useState(0);
 
-    // Estado para Modales de Creación Rápida
-    const [createModal, setCreateModal] = useState({ open: false, type: null }); // type: 'insumo' | 'producto'
+    // Estado para Modales
+    const [createModal, setCreateModal] = useState({ open: false, type: null }); 
 
-    // Función para recargar catálogo
+    // Carga de Catálogos
     const cargarCatalogo = useCallback(async () => {
         setLoadingItems(true);
         try {
@@ -95,22 +118,21 @@ export const CompraForm = ({ onClose }) => {
         }
     }, []);
 
-    // Carga inicial
     useEffect(() => {
         fetchProveedores();
         cargarCatalogo();
     }, [fetchProveedores, cargarCatalogo]);
 
-    // Filtrado local
+    // Filtrado
     const filteredItems = allItems.filter(i => 
         i.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 6);
 
-    // --- LÓGICA DE UNIDADES ---
+    // Lógica de Unidades
     const isConvertible = selectedItem && (['ml', 'g', 'cm3'].includes(selectedItem.unidad.toLowerCase()));
     const getRealQuantity = () => (isConvertible && unitMode === 'kilo') ? parseFloat(qtyInput) * 1000 : parseFloat(qtyInput);
 
-    // --- HANDLERS DEL CARRITO ---
+    // Handlers
     const handleAddItem = () => {
         if (!selectedItem || qtyInput <= 0) return;
 
@@ -121,7 +143,6 @@ export const CompraForm = ({ onClose }) => {
         };
 
         setDetalles(prev => [...prev, newItem]);
-        // Reset
         setSearchTerm('');
         setSelectedItem(null);
         setQtyInput(1);
@@ -133,22 +154,18 @@ export const CompraForm = ({ onClose }) => {
         const val = value === '' ? 0 : parseFloat(value);
         setDetalles(prev => prev.map((item, i) => i === index ? {...item, [field]: val} : item));
     };
+
     const removeItem = (index) => setDetalles(prev => prev.filter((_, i) => i !== index));
 
-    // --- HANDLER CREACIÓN RÁPIDA (CORREGIDO) ---
     const handleQuickCreate = (tipo) => {
-        // Asignamos la variable 'tipo' a la propiedad 'type'
         setCreateModal({ open: true, type: tipo });
     };
 
     const handleCreationSuccess = async () => {
-        // 1. Cerramos modal
         setCreateModal({ open: false, type: null });
-        // 2. Recargamos el catálogo
         await cargarCatalogo();
     };
 
-    // --- SUBMIT ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!proveedorId || detalles.length === 0) return;
@@ -171,160 +188,178 @@ export const CompraForm = ({ onClose }) => {
     const totalCompra = detalles.reduce((sum, item) => sum + (item.cantidad * item.precio), 0);
 
     return (
-        <Card>
-            <form onSubmit={handleSubmit}>
-                <h2><ShoppingCart size={24}/> Registrar Compra</h2>
-
-                {/* 1. Cabecera */}
-                <div className={styles.section}>
-                    <div className={styles.formRow}>
-                        <div className={styles.inputGroup}>
-                            <label>Proveedor *</label>
-                            <select value={proveedorId} onChange={e => setProveedorId(e.target.value)} className={styles.selectInput} required>
-                                <option value="">-- Seleccionar --</option>
-                                {proveedores.map(p => <option key={p.id} value={p.id}>{p.proveedor_nombre}</option>)}
-                            </select>
+        <div className={styles.container}>
+            {/* --- LAYOUT 2 COLUMNAS --- */}
+            <div className={styles.grid}>
+                
+                {/* COLUMNA IZQUIERDA: OPERACIÓN */}
+                <div className={styles.leftCol}>
+                    
+                    {/* 1. DATOS DE CONTEXTO */}
+                    <Card className={styles.contextCard}>
+                        <div className={styles.cardHeader}>
+                            <h3><Truck size={18}/> Datos del Proveedor</h3>
                         </div>
-                        <div className={styles.inputGroup}>
-                            <label>Pago *</label>
-                            <select value={metodoPago} onChange={e => setMetodoPago(e.target.value)} className={styles.selectInput} required>
-                                <option value="efectivo">Efectivo</option>
-                                <option value="transferencia">Transferencia</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. Buscador y Agregado */}
-                <div className={styles.itemSelector}>
-                    <h3>Agregar Ítems</h3>
-                    <Input 
-                        placeholder="Buscar o crear nuevo..." 
-                        value={searchTerm} 
-                        onChange={e => setSearchTerm(e.target.value)} 
-                        icon={Package}
-                        disabled={!!selectedItem} 
-                    />
-
-                    {/* Lista de Resultados */}
-                    {!selectedItem && searchTerm && (
-                        <div className={styles.searchResults}>
-                            {filteredItems.map(i => (
-                                <div key={i.key} onClick={() => {setSelectedItem(i); setSearchTerm(i.nombre);}}>
-                                    {i.tipo === 'insumo' ? <Package size={14} /> : <Tag size={14} />}
-                                    <span style={{marginLeft: 5}}>{i.nombre}</span>
-                                    <span style={{fontSize:'0.8em', color:'#888', marginLeft:5}}>({i.unidad})</span>
-                                </div>
-                            ))}
-                            
-                            {/* --- BOTONES DE CREACIÓN RÁPIDA --- */}
-                            <div className={styles.createActions}>
-                                <div className={styles.createLabel}>¿No está en la lista?</div>
-                                <div style={{display:'flex', gap:5}}>
-                                    <Button type="button" size="sm" variant="outline" onClick={() => handleQuickCreate('insumo')}>
-                                        <Plus size={14}/> Crear Insumo
-                                    </Button>
-                                    <Button type="button" size="sm" variant="outline" onClick={() => handleQuickCreate('producto')}>
-                                        <Plus size={14}/> Crear Producto
-                                    </Button>
-                                </div>
+                        <div className={styles.contextRow}>
+                             <div className={styles.inputGroup}>
+                                <label>Proveedor *</label>
+                                <select value={proveedorId} onChange={e => setProveedorId(e.target.value)} className={styles.selectInput} required>
+                                    <option value="">Seleccionar...</option>
+                                    {proveedores.map(p => <option key={p.id} value={p.id}>{p.proveedor_nombre}</option>)}
+                                </select>
+                            </div>
+                            <div className={styles.inputGroup}>
+                                <label>Método Pago *</label>
+                                <select value={metodoPago} onChange={e => setMetodoPago(e.target.value)} className={styles.selectInput} required>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
                             </div>
                         </div>
-                    )}
+                    </Card>
 
-                    {/* Barra de Edición */}
-                    {selectedItem && (
-                        <div className={styles.selectedItemBar}>
-                            <div style={{flex: 1}}>
-                                <div style={{fontWeight:600, color: '#2563eb'}}>
-                                    {selectedItem.nombre}
-                                    <Badge variant={selectedItem.tipo === 'insumo'?'secondary':'info'} size="sm" style={{marginLeft:5}}>{selectedItem.tipo}</Badge>
+                    {/* 2. BUSCADOR Y AGREGADO */}
+                    <Card className={`${styles.searchCard} ${styles.overflowVisible}`}>
+                        <div className={styles.cardHeader}>
+                            <h3><Package size={18}/> Agregar Ítems</h3>
+                        </div>
+                        
+                        <div className={styles.searchWrapper}>
+                            <Input 
+                                placeholder="Buscar insumo o producto..." 
+                                value={searchTerm} 
+                                onChange={e => setSearchTerm(e.target.value)} 
+                                icon={Search}
+                                disabled={!!selectedItem} 
+                            />
+                            
+                            {/* Dropdown Resultados */}
+                            {!selectedItem && searchTerm && (
+                                <div className={styles.searchResults}>
+                                    {filteredItems.map(i => (
+                                        <div key={i.key} className={styles.resultItem} onClick={() => {setSelectedItem(i); setSearchTerm(i.nombre);}}>
+                                            {i.tipo === 'insumo' ? <Package size={14} className={styles.iconGray}/> : <Tag size={14} className={styles.iconBlue}/>}
+                                            <span className={styles.resName}>{i.nombre}</span>
+                                            <span className={styles.resUnit}>({i.unidad})</span>
+                                        </div>
+                                    ))}
+                                    {/* Botones Crear Nuevo */}
+                                    <div className={styles.createActions}>
+                                        <span className={styles.createLabel}>¿No está en la lista?</span>
+                                        <div className={styles.createBtns}>
+                                            <Button size="sm" variant="outline" onClick={() => handleQuickCreate('insumo')}>+ Insumo</Button>
+                                            <Button size="sm" variant="outline" onClick={() => handleQuickCreate('producto')}>+ Producto</Button>
+                                        </div>
+                                    </div>
                                 </div>
-                                {isConvertible && (
-                                    <div style={{display:'flex', alignItems:'center', gap:5, marginTop:5}}>
-                                        <Calculator size={14} color="#666"/>
-                                        <select 
-                                            value={unitMode} 
-                                            onChange={e => setUnitMode(e.target.value)}
-                                            style={{padding:2, fontSize:'0.8rem', borderRadius:4, border:'1px solid #ccc'}}
-                                        >
-                                            <option value="base">{selectedItem.unidad}</option>
-                                            <option value="kilo">{selectedItem.unidad === 'ml' ? 'Litros (x1000)' : 'Kilos (x1000)'}</option>
-                                        </select>
+                            )}
+                        </div>
+
+                        {/* Panel Configuración Ítem */}
+                        {selectedItem && (
+                            <div className={styles.configPanel}>
+                                <div className={styles.configHeader}>
+                                    <span className={styles.configTitle}>{selectedItem.nombre}</span>
+                                    {isConvertible && (
+                                        <div className={styles.unitToggle}>
+                                            <Calculator size={14}/>
+                                            <select value={unitMode} onChange={e => setUnitMode(e.target.value)} className={styles.miniSelect}>
+                                                <option value="base">{selectedItem.unidad}</option>
+                                                <option value="kilo">{selectedItem.unidad === 'ml' ? 'Litros' : 'Kilos'}</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles.configInputs}>
+                                    <Input 
+                                        label="Cantidad" type="number" value={qtyInput} onChange={e => setQtyInput(parseFloat(e.target.value)||0)} style={{width: 100}} autoFocus
+                                    />
+                                    <Input 
+                                        label="Costo Total ($)" type="number" value={priceInput} onChange={e => setPriceInput(parseFloat(e.target.value)||0)} style={{width: 120}} startIcon={DollarSign}
+                                    />
+                                    <div className={styles.configActions}>
+                                        <Button icon={Plus} onClick={handleAddItem} disabled={qtyInput <= 0}>Agregar</Button>
+                                        <Button variant="ghost" onClick={() => {setSelectedItem(null); setSearchTerm('');}}><X size={18}/></Button>
+                                    </div>
+                                </div>
+                                {isConvertible && unitMode === 'kilo' && qtyInput > 0 && (
+                                    <div className={styles.conversionHint}>
+                                        Se guardarán <strong>{qtyInput * 1000} {selectedItem.unidad}</strong> en stock.
                                     </div>
                                 )}
                             </div>
-                            
-                            <div style={{display:'flex', gap: 10, alignItems:'flex-end'}}>
-                                <Input 
-                                    type="number" 
-                                    label={unitMode === 'kilo' ? (selectedItem.unidad === 'ml' ? 'Litros' : 'Kilos') : 'Cantidad'}
-                                    value={qtyInput} 
-                                    onChange={e => setQtyInput(parseFloat(e.target.value) || 0)} 
-                                    style={{width: 80}}
-                                />
-                                <Input 
-                                    type="number" 
-                                    label="Costo Unit."
-                                    value={priceInput} 
-                                    onChange={e => setPriceInput(parseFloat(e.target.value) || 0)} 
-                                    style={{width: 100}}
-                                    placeholder="$"
-                                />
-                                <div style={{paddingBottom: 8}}>
-                                    <Button type="button" icon={Plus} onClick={handleAddItem} disabled={qtyInput <= 0}>
-                                        Agregar
-                                    </Button>
-                                    <Button type="button" variant="ghost" onClick={() => {setSelectedItem(null); setSearchTerm('');}} style={{marginLeft:5}}>
-                                        <X size={18}/>
-                                    </Button>
-                                </div>
+                        )}
+                    </Card>
+
+                    {/* 3. LISTA CARRITO */}
+                    <div className={styles.cartContainer}>
+                        <h3 className={styles.sectionTitle}>Detalle de la Orden ({detalles.length})</h3>
+                        {detalles.length === 0 ? (
+                            <div className={styles.emptyState}>
+                                <ShoppingCart size={40} color="#cbd5e1"/>
+                                <p>El carrito de compra está vacío.</p>
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className={styles.itemsList}>
+                                {detalles.map((item, index) => (
+                                    <CompraItemRow key={index} item={item} index={index} updateItem={updateItem} removeItem={removeItem} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* 3. Tabla del Carrito */}
-                <div className={styles.cart}>
-                    <h3>Detalle ({detalles.length})</h3>
-                    {detalles.length === 0 ? (<p className={styles.emptyText}>Orden vacía.</p>) : (
-                        <div className={styles.itemsListContainer}>
-                            <div className={styles.itemRowHeader}>
-                                <span>Ítem</span><span>Cant.</span><span>Costo Unit.</span><span>Subtotal</span><span></span>
-                            </div>
-                            {detalles.map((item, index) => (
-                                <CompraItemRow key={index} item={item} index={index} updateItem={updateItem} removeItem={removeItem} />
-                            ))}
+                {/* COLUMNA DERECHA: RESUMEN STICKY */}
+                <div className={styles.rightCol}>
+                    <Card className={styles.summaryCard}>
+                        <h2 className={styles.summaryTitle}>Resumen</h2>
+                        
+                        <div className={styles.summaryRow}>
+                            <span>Ítems</span>
+                            <strong>{detalles.length}</strong>
                         </div>
-                    )}
-                </div>
-                
-                <div className={styles.totalFooter}>
-                    <h3>Total: {formatCurrency(totalCompra)}</h3>
-                    <Button type="submit" icon={Save} size="lg" loading={loading} disabled={detalles.length === 0 || !proveedorId}>
-                        Confirmar Compra
-                    </Button>
-                </div>
-            </form>
+                        <div className={styles.summaryRow}>
+                            <span>Proveedor</span>
+                            <strong>{proveedores.find(p => p.id == proveedorId)?.proveedor_nombre || '-'}</strong>
+                        </div>
 
-            {/* --- MODALES DE CREACIÓN ANIDADOS --- */}
+                        <div className={styles.divider}></div>
+
+                        <div className={styles.totalRow}>
+                            <span>Total</span>
+                            <span className={styles.totalValue}>{formatCurrency(totalCompra)}</span>
+                        </div>
+
+                        <Button 
+                            fullWidth 
+                            size="lg" 
+                            icon={Save} 
+                            onClick={handleSubmit} 
+                            loading={loading} 
+                            disabled={detalles.length === 0 || !proveedorId}
+                            className={styles.confirmBtn}
+                        >
+                            Confirmar Compra
+                        </Button>
+                        
+                        <Button variant="ghost" fullWidth onClick={onClose} style={{marginTop: 10}}>
+                            Cancelar
+                        </Button>
+                    </Card>
+                </div>
+
+            </div>
+
+            {/* MODALES */}
             {createModal.open && (
                 <Modal isOpen={true} onClose={() => setCreateModal({open:false})} title={createModal.type === 'insumo' ? 'Nuevo Insumo' : 'Nuevo Producto'}>
                     {createModal.type === 'insumo' ? (
-                        <InsumoForm 
-                            onClose={handleCreationSuccess} 
-                            useInventarioHook={inventarioHook} 
-                            mode="crear"
-                        />
+                        <InsumoForm onClose={handleCreationSuccess} useInventarioHook={inventarioHook} mode="crear" />
                     ) : (
-                        <ProductoForm 
-                            onClose={handleCreationSuccess}
-                            useProductosHook={productosHook}
-                            mode="crear"
-                        />
+                        <ProductoForm onClose={handleCreationSuccess} useProductosHook={productosHook} mode="crear" />
                     )}
                 </Modal>
             )}
-        </Card>
+        </div>
     );
 };

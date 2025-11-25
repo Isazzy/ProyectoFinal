@@ -41,3 +41,4 @@ class ClienteRegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         cliente = serializer.save()
         return Response(ClienteSerializer(cliente).data, status=status.HTTP_201_CREATED)
+

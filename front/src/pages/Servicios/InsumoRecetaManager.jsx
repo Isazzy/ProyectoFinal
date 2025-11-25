@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { serviciosApi } from '../../api/serviciosApi'; // Ajusta la ruta según tu estructura
-import { Button, Input } from '../../components/ui'; // Ajusta según tus componentes base
-import styles from '../../styles/Servicios.module.css'; // Usando tus estilos existentes
+import { Plus, Trash2, Package, AlertCircle, FlaskConical } from 'lucide-react';
+import { serviciosApi } from '../../api/serviciosApi';
+import { Button, Input } from '../../components/ui'; 
+import styles from '../../styles/Servicios.module.css';
 
 export const InsumoRecetaManager = ({ recetaActual, setRecetaActual, error }) => {
   const [disponibles, setDisponibles] = useState([]);
-  const [seleccion, setSeleccion] = useState(""); // ID del insumo seleccionado
+  const [seleccion, setSeleccion] = useState("");
   const [cantidad, setCantidad] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Cargar insumos al montar el componente
+  // Cargar insumos al montar
   useEffect(() => {
     const loadInsumos = async () => {
       try {
         setLoading(true);
-        const data = await serviciosApi.getInsumosDisponibles();
+        const data = await serviciosApi.getInsumosDisponibles(); 
         setDisponibles(data);
       } catch (err) {
         console.error("Error cargando insumos:", err);
@@ -27,30 +27,27 @@ export const InsumoRecetaManager = ({ recetaActual, setRecetaActual, error }) =>
   }, []);
 
   const handleAdd = () => {
-    if (!seleccion || !cantidad || parseFloat(cantidad) <= 0) return;
+    const qty = parseFloat(cantidad);
+    if (!seleccion || isNaN(qty) || qty <= 0) return;
 
-    // Buscar el objeto completo del insumo seleccionado para mostrar nombre/unidad
     const insumoObj = disponibles.find(d => d.id === parseInt(seleccion));
     if (!insumoObj) return;
 
-    // Verificar si ya existe en la receta para no duplicar (opcional, o sumar cantidad)
-    const existe = recetaActual.find(r => r.insumo === insumoObj.id);
-    if (existe) {
-      alert("Este insumo ya está en la receta. Elimínalo para corregir la cantidad.");
+    // Evitar duplicados
+    if (recetaActual.find(r => r.insumo === insumoObj.id)) {
+      alert("El insumo ya está en la lista.");
       return;
     }
 
     const nuevoItem = {
-      // Estructura interna temporal para el frontend
-      insumo: insumoObj.id, // ID para el backend
-      insumo_nombre: insumoObj.nombre, // Para mostrar en tabla
-      insumo_unidad: insumoObj.unidad, // Para mostrar en tabla
-      cantidad_usada: parseFloat(cantidad) // Valor
+      insumo: insumoObj.id,
+      insumo_nombre: insumoObj.nombre,
+      insumo_unidad: insumoObj.unidad,
+      cantidad_usada: qty,
+      stock_actual: insumoObj.stock 
     };
 
     setRecetaActual([...recetaActual, nuevoItem]);
-    
-    // Resetear inputs
     setSeleccion("");
     setCantidad("");
   };
@@ -59,69 +56,108 @@ export const InsumoRecetaManager = ({ recetaActual, setRecetaActual, error }) =>
     setRecetaActual(recetaActual.filter(item => item.insumo !== insumoId));
   };
 
+  // Helper para obtener info del seleccionado
+  const selectedInsumoData = disponibles.find(d => d.id === parseInt(seleccion));
+
   return (
-    <div className={styles.recetaContainer} style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-      <h3 style={{ fontSize: '1.1rem', marginBottom: '10px' }}>Receta de Insumos (Costo)</h3>
-      
-      {/* Selector y Input de Agregar */}
-      <div className={styles.formRow} style={{ alignItems: 'flex-end', gap: '10px' }}>
-        <div style={{ flex: 2 }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '4px' }}>Insumo</label>
-          <select 
-            className={styles.input} // Usando tus clases de estilo si aplican
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            value={seleccion} 
-            onChange={(e) => setSeleccion(e.target.value)}
-            disabled={loading}
-          >
-            <option value="">-- Seleccionar Insumo --</option>
-            {disponibles.map(ins => (
-              <option key={ins.id} value={ins.id}>
-                {ins.nombre} ({ins.unidad}) - Stock: {ins.stock}
-              </option>
-            ))}
-          </select>
+    <div className={styles.managerContainer}>
+      <div className={styles.managerHeader}>
+        <div className={styles.headerIcon}>
+            <FlaskConical size={20} />
         </div>
-
-        <div style={{ flex: 1 }}>
-          <Input 
-            label="Cantidad" 
-            type="number" 
-            value={cantidad} 
-            onChange={(e) => setCantidad(e.target.value)} 
-            placeholder="0.00"
-          />
+        <div>
+            <h3 className={styles.managerTitle}>Receta de Insumos</h3>
+            <p className={styles.managerSubtitle}>Define qué materiales se consumirán del stock al realizar este servicio.</p>
         </div>
-
-        <Button type="button" onClick={handleAdd} disabled={!seleccion || !cantidad}>
-          <Plus size={18} />
-        </Button>
       </div>
       
-      {error && <p className={styles.error}>{error}</p>}
+      {/* --- ÁREA DE CARGA --- */}
+      <div className={styles.addSection}>
+        <div className={styles.inputGrid}>
+            <div className={styles.selectWrapper}>
+                <label className={styles.inputLabel}>Seleccionar Insumo</label>
+                <select 
+                    className={styles.nativeSelect}
+                    value={seleccion} 
+                    onChange={(e) => setSeleccion(e.target.value)}
+                    disabled={loading}
+                >
+                    <option value="">-- Buscar en inventario --</option>
+                    {disponibles.map(ins => (
+                    <option key={ins.id} value={ins.id}>
+                        {ins.nombre} ({ins.unidad}) — Stock: {ins.stock}
+                    </option>
+                    ))}
+                </select>
+            </div>
 
-      {/* Tabla de Items Agregados */}
-      {recetaActual.length > 0 && (
-        <div className={styles.tableWrapper} style={{ marginTop: '10px', maxHeight: '200px', overflowY: 'auto' }}>
-          <table className={styles.table} style={{ fontSize: '0.9rem' }}>
+            <div style={{ maxWidth: '150px' }}>
+                 <Input 
+                    label={selectedInsumoData ? `Cant. (${selectedInsumoData.unidad})` : "Cantidad"}
+                    type="number" 
+                    value={cantidad} 
+                    onChange={(e) => setCantidad(e.target.value)} 
+                    placeholder="0.00"
+                    min="0.01"
+                    step="any"
+                />
+            </div>
+
+            <div style={{ paddingTop: '24px' }}>
+                <Button 
+                    type="button" 
+                    onClick={handleAdd} 
+                    disabled={!seleccion || !cantidad || parseFloat(cantidad) <= 0}
+                    icon={Plus}
+                >
+                    Añadir
+                </Button>
+            </div>
+        </div>
+        
+        {selectedInsumoData && (
+             <div className={styles.stockHint}>
+                Stock disponible: <strong>{selectedInsumoData.stock} {selectedInsumoData.unidad}</strong>
+             </div>
+        )}
+      </div>
+      
+      {error && (
+        <div className={styles.alertBox}>
+            <AlertCircle size={16}/>
+            <span>{error}</span>
+        </div>
+      )}
+
+      {/* --- LISTADO --- */}
+      <div className={styles.listContainer}>
+        {recetaActual.length > 0 ? (
+          <table className={styles.recipeTable}>
             <thead>
               <tr>
                 <th>Insumo</th>
-                <th>Cantidad</th>
-                <th>Acción</th>
+                <th style={{textAlign: 'right'}}>Consumo por Turno</th>
+                <th style={{width: 50}}></th>
               </tr>
             </thead>
             <tbody>
               {recetaActual.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.insumo_nombre}</td>
-                  <td>{item.cantidad_usada} {item.insumo_unidad}</td>
                   <td>
+                    <div className={styles.tableItemName}>
+                        <Package size={16} className={styles.itemIcon} />
+                        {item.insumo_nombre}
+                    </div>
+                  </td>
+                  <td style={{textAlign: 'right', fontWeight: 600}}>
+                    {item.cantidad_usada} <span className={styles.unitLabel}>{item.insumo_unidad}</span>
+                  </td>
+                  <td style={{textAlign: 'right'}}>
                     <button 
                       type="button"
-                      className={styles.dangerBtn} 
+                      className={styles.iconBtnDanger} 
                       onClick={() => handleRemove(item.insumo)}
-                      style={{ padding: '4px' }}
+                      title="Quitar de la receta"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -130,8 +166,16 @@ export const InsumoRecetaManager = ({ recetaActual, setRecetaActual, error }) =>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        ) : (
+            <div className={styles.emptyState}>
+                <div className={styles.emptyIconWrapper}>
+                    <FlaskConical size={24} />
+                </div>
+                <p>Aún no has agregado insumos a esta receta.</p>
+                <span>Selecciona materiales arriba para calcular el costo y descontar stock automáticamente.</span>
+            </div>
+        )}
+      </div>
     </div>
   );
 };

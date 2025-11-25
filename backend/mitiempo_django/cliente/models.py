@@ -40,3 +40,4 @@ def gestionar_perfil_cliente(sender, instance, action, pk_set, **kwargs):
                     'email': instance.email or ''
                 }
             )
+

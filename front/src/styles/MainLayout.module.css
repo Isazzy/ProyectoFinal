@@ -1,39 +1,47 @@
+/* =========================================
+   LAYOUT PRINCIPAL (Push Sidebar)
+   ========================================= */
 
-.layout {
-  min-height: 100vh;
-  background-color: var(--bg);
+.layoutWrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f8fafc; /* Fondo base de la app */
 }
 
-.mainContent {
-  margin-left: 0;
-  transition: margin-left var(--transition-slow);
+/* Contenedor del contenido (Navbar + Páginas) */
+.mainContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Previene overflow en flex items */
+    margin-left: 0; /* Estado cerrado por defecto */
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transición suave */
+    width: 100%;
 }
 
-@media (min-width: 1024px) {
-  .mainContent {
-    margin-left: 256px;
-  }
+/* Estado Desplazado (Sidebar Abierto) */
+.shifted {
+    margin-left: 280px; /* Debe coincidir con el ancho del Sidebar */
 }
 
-.main {
-  padding: var(--space-4);
+/* Área de contenido scrollable */
+.contentArea {
+    flex: 1;
+    padding: 24px;
+    overflow-x: hidden;
 }
 
-@media (min-width: 768px) {
-  .main {
-    padding: var(--space-6);
-  }
+/* RESPONSIVIDAD */
+/* En móviles, quizás quieras que el comportamiento sea diferente (overlay)
+   o mantener el push pero cuidado con el ancho de pantalla */
+@media (max-width: 768px) {
+    .shifted {
+        margin-left: 0; /* En móvil no empujamos para no romper el layout */
+        /* El sidebar se comportará como overlay o se ocultará según tu lógica de Sidebar.jsx */
+    }
+    
+    /* Si quieres que en móvil SÍ empuje (off-canvas), descomenta:
+    .shifted { transform: translateX(280px); } 
+    */
 }
-
-@media (min-width: 1024px) {
-  .main {
-    padding: var(--space-8);
-  }
-}
-
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-

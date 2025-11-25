@@ -3,7 +3,8 @@ from .views import (
     VentaListCreateView,
     VentaDetailView,
     EstadoVentaListView,
-    resumen_ventas
+    resumen_ventas,
+    stats_ingresos
 )
 
 urlpatterns = [
@@ -18,4 +19,6 @@ urlpatterns = [
     
     # Resumen: /api/ventas/resumen/
     path('resumen/', resumen_ventas, name='venta-resumen'),
+    
+    path('stats/ingresos/', stats_ingresos, name='venta-stats-ingresos'),
 ]

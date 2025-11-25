@@ -4,17 +4,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Eye, Scissors, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Scissors, Search, Clock, DollarSign, RefreshCw, EyeOff } from 'lucide-react';
 import { useServicios } from '../../hooks/useServicios';
 import { Card, Button, Badge, Input, Modal } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Servicios.module.css';
-import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager'; // o ruta correcta
+import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager'; // Ajusta la ruta si es necesario
 
-
-// ===============================
-// FORMULARIO DEL SERVICIO
-// ===============================
+// --- SUB-COMPONENTE: FORMULARIO ---
 const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   const [form, setForm] = useState({
     tipo_serv: servicio?.tipo_serv || "",
@@ -22,13 +19,11 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     duracion: servicio?.duracion?.toString() || "",
     precio: servicio?.precio?.toString() || "",
     descripcion: servicio?.descripcion || "",
-    dias_disponibles: servicio?.dias_disponibles || ["lunes"],
-    activo: servicio?.activo ?? true, // Correcto: 'activo'
+    dias_disponibles: servicio?.dias_disponibles || ["lunes", "martes", "miercoles", "jueves", "viernes"],
+    activo: servicio?.activo ?? true,
   });
 
-  // Si viene del backend, 'servicio.receta' trae [{insumo: 1, insumo_nombre: 'x', ...}]
   const [receta, setReceta] = useState(servicio?.receta || []);
-
   const [errors, setErrors] = useState({});
 
   const diasSemana = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
@@ -55,11 +50,11 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
 
   const validate = () => {
     const e = {};
-    if (!form.tipo_serv.trim()) e.tipo_serv = "Tipo requerido";
-    if (!form.nombre.trim()) e.nombre = "Nombre requerido";
-    if (!form.duracion || parseInt(form.duracion) <= 0) e.duracion = "Duración inválida";
-    if (!form.precio || parseFloat(form.precio) <= 0) e.precio = "Precio inválido";
-    if (form.dias_disponibles.length === 0) e.dias_disponibles = "Seleccione al menos 1 día";
+    if (!form.tipo_serv.trim()) e.tipo_serv = "Requerido";
+    if (!form.nombre.trim()) e.nombre = "Requerido";
+    if (!form.duracion || parseInt(form.duracion) <= 0) e.duracion = "Inválido";
+    if (!form.precio || parseFloat(form.precio) <= 0) e.precio = "Inválido";
+    if (form.dias_disponibles.length === 0) e.dias_disponibles = "Seleccione 1 día mín.";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -67,73 +62,89 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    // Preparamos la receta en el formato que espera el Serializer de Escritura (ServicioInsumoWriteSerializer)
-    // Espera: { insumo_id: int, cantidad_usada: decimal }
+
     const recetaPayload = receta.map(item => ({
-      insumo_id: item.insumo, // 'insumo' es el ID en el objeto que viene del serializer de lectura o del manager
-      cantidad_usada: item.cantidad_usada
+      insumo_id: item.insumo || item.id, // Aseguramos compatibilidad de ID
+      cantidad_usada: parseFloat(item.cantidad_usada || item.cantidad)
     }));
 
     onSubmit({
       ...form,
       duracion: parseInt(form.duracion),
-      precio: form.precio,
-      receta: recetaPayload, // Se envía como string o number según convenga
+      precio: parseFloat(form.precio),
+      receta: recetaPayload,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <Input label="Tipo de servicio" name="tipo_serv" value={form.tipo_serv} onChange={handleChange} error={errors.tipo_serv} required />
-      <Input label="Nombre del servicio" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} required />
-      <div className={styles.formRow}>
-        <Input label="Duración (min)" type="number" name="duracion" value={form.duracion} onChange={handleChange} error={errors.duracion} required />
-        <Input label="Precio" type="text" name="precio" value={form.precio} onChange={handleChange} error={errors.precio} required />
-      </div>
+    <form onSubmit={handleSubmit} className={styles.formGrid}>
+        {/* Sección Principal */}
+        <div className={styles.formSection}>
+            <div className={styles.row2}>
+                <Input label="Nombre del Servicio *" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} />
+                <Input label="Categoría *" name="tipo_serv" value={form.tipo_serv} onChange={handleChange} error={errors.tipo_serv} placeholder="Ej: Peluquería" />
+            </div>
+            
+            <div className={styles.row2}>
+                <Input label="Duración (min) *" type="number" name="duracion" value={form.duracion} onChange={handleChange} error={errors.duracion} startIcon={Clock} />
+                <Input label="Precio *" type="number" name="precio" value={form.precio} onChange={handleChange} error={errors.precio} startIcon={DollarSign} />
+            </div>
 
-      <label>Días disponibles</label>
-      <div className={styles.daysGroup}>
-        {diasSemana.map(dia => (
-          <label key={dia} className={styles.dayItem}>
-            <input type="checkbox" checked={form.dias_disponibles.includes(dia)} onChange={() => toggleDia(dia)} />
-            {dia}
-          </label>
-        ))}
-      </div>
-      {errors.dias_disponibles && <p className={styles.error}>{errors.dias_disponibles}</p>}
+            <div className={styles.inputGroup}>
+                <label>Descripción</label>
+                <textarea className={styles.textarea} name="descripcion" value={form.descripcion} onChange={handleChange} rows={2} />
+            </div>
+        </div>
 
-        <InsumoRecetaManager 
-        recetaActual={receta} 
-        setRecetaActual={setReceta} 
-        error={errors.receta} // Puedes agregar validación de receta si quieres
-      />
+        {/* Sección Disponibilidad */}
+        <div className={styles.formSection}>
+            <label className={styles.sectionLabel}>Días Disponibles</label>
+            <div className={styles.daysGrid}>
+                {diasSemana.map(dia => (
+                <label key={dia} className={`${styles.dayChip} ${form.dias_disponibles.includes(dia) ? styles.dayActive : ''}`}>
+                    <input type="checkbox" checked={form.dias_disponibles.includes(dia)} onChange={() => toggleDia(dia)} hidden />
+                    {dia.charAt(0).toUpperCase() + dia.slice(1, 3)}
+                </label>
+                ))}
+            </div>
+            {errors.dias_disponibles && <span className={styles.errorText}>{errors.dias_disponibles}</span>}
+        </div>
 
-      <div className={styles.textareaGroup}>
-        <label>Descripción</label>
-        <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={3} />
-      </div>
+        {/* Sección Insumos (Receta) */}
+        <div className={styles.formSection}>
+             <InsumoRecetaManager 
+                recetaActual={receta} 
+                setRecetaActual={setReceta} 
+                error={errors.receta}
+            />
+        </div>
 
-      <div className={styles.checkboxGroup}>
-        <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} />
-        <label>Servicio activo</label>
-      </div>
+        {/* Footer y Activo */}
+        <div className={styles.formFooter}>
+            <div className={styles.switchGroup}>
+                <input type="checkbox" id="activoSwitch" name="activo" checked={form.activo} onChange={handleChange} />
+                <label htmlFor="activoSwitch">Servicio Activo</label>
+            </div>
 
-      <div className={styles.formActions}>
-        <Button type="submit" loading={loading}>{servicio ? "Guardar cambios" : "Crear servicio"}</Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
-      </div>
+            <div className={styles.actions}>
+                <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
+                <Button type="submit" loading={loading}>{servicio ? "Guardar Cambios" : "Crear Servicio"}</Button>
+            </div>
+        </div>
     </form>
   );
 };
 
+
 // ===============================
-// LISTA DE SERVICIOS
+// VISTA PRINCIPAL
 // ===============================
 export const ServiciosList = () => {
   const navigate = useNavigate();
   const { servicios, loading, fetchServicios, crearServicio, actualizarServicio, eliminarServicio } = useServicios();
+  
   const [search, setSearch] = useState("");
-  const [filterActivo, setFilterActivo] = useState("todos");
+  const [filterActivo, setFilterActivo] = useState("todos"); // 'todos', 'activo', 'inactivo'
   const [modal, setModal] = useState({ open: false, servicio: null });
 
   useEffect(() => {
@@ -141,86 +152,135 @@ export const ServiciosList = () => {
   }, [fetchServicios]);
 
   const filteredServicios = servicios.filter(s => {
-    const matchesSearch = s.nombre.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = s.nombre.toLowerCase().includes(search.toLowerCase()) || s.tipo_serv.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filterActivo === "todos" || (filterActivo === "activo" && s.activo) || (filterActivo === "inactivo" && !s.activo);
     return matchesSearch && matchesFilter;
   });
 
   const handleSubmit = async (data) => {
+    let success = false;
     if (modal.servicio) {
-      // Usamos id_serv explícitamente
-      await actualizarServicio(modal.servicio.id_serv, data);
+      success = await actualizarServicio(modal.servicio.id_serv, data);
     } else {
-      await crearServicio(data);
+      success = await crearServicio(data);
     }
-    setModal({ open: false, servicio: null });
+    if (success) setModal({ open: false, servicio: null });
   };
 
   const handleDelete = async (servicio) => {
-    // Usamos id_serv explícitamente
-    await eliminarServicio(servicio.id_serv, servicio.nombre);
+      if(window.confirm(`¿Eliminar ${servicio.nombre}?`)) {
+         await eliminarServicio(servicio.id_serv);
+      }
   };
 
   return (
-    <motion.div className={styles.serviciosPage} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className={styles.pageContainer} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      
+      {/* HEADER */}
       <header className={styles.header}>
-        <h1 className={styles.title}>Servicios</h1>
+        <div>
+            <h1 className={styles.title}>Servicios</h1>
+            <p className={styles.subtitle}>Catálogo de tratamientos y precios</p>
+        </div>
         <Button icon={Plus} onClick={() => setModal({ open: true, servicio: null })}>Nuevo Servicio</Button>
       </header>
 
-      <div className={styles.filters}>
-        <Input placeholder="Buscar servicio..." value={search} onChange={(e) => setSearch(e.target.value)} icon={Search} />
-        <div className={styles.filterButtons}>
-          {["todos", "activo", "inactivo"].map(filter => (
-            <button key={filter} className={`${styles.filterBtn} ${filterActivo === filter ? styles.active : ""}`} onClick={() => setFilterActivo(filter)}>
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-            </button>
-          ))}
+      {/* FILTROS */}
+      <div className={styles.filtersBar}>
+        <div className={styles.searchWrapper}>
+            <Input 
+                placeholder="Buscar servicio..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                icon={Search} 
+            />
+        </div>
+        <div className={styles.filterTabs}>
+             {['todos', 'activo', 'inactivo'].map(filter => (
+                 <button 
+                    key={filter}
+                    className={`${styles.tabBtn} ${filterActivo === filter ? styles.tabActive : ''}`}
+                    onClick={() => setFilterActivo(filter)}
+                 >
+                     {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                 </button>
+             ))}
         </div>
       </div>
 
-      <Card>
-        {!loading && filteredServicios.length > 0 ? (
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Servicio</th>
-                  <th>Duración</th>
-                  <th>Precio</th>
-                  <th>Estado</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
+      {/* GRID DE TARJETAS */}
+      {loading ? (
+          <div className={styles.loading}><RefreshCw className="animate-spin"/> Cargando catálogo...</div>
+      ) : (
+          filteredServicios.length > 0 ? (
+            <div className={styles.grid}>
                 {filteredServicios.map(servicio => (
-                  <motion.tr key={servicio.id_serv} whileHover={{ opacity: 0.8 }}>
-                    <td>
-                      <div className={styles.servicioName}><Scissors size={20} />{servicio.nombre}</div>
-                    </td>
-                    <td>{servicio.duracion} min</td>
-                    <td>{formatCurrency(servicio.precio)}</td>
-                    <td>
-                      <Badge variant={servicio.activo ? "success" : "default"}>{servicio.activo ? "Activo" : "Inactivo"}</Badge>
-                    </td>
-                    <td className={styles.actions}>
-                      <button onClick={() => navigate(`/servicios/${servicio.id_serv}`)}><Eye size={18} /></button>
-                      <button onClick={() => setModal({ open: true, servicio })}><Edit size={18} /></button>
-                      <button className={styles.dangerBtn} onClick={() => handleDelete(servicio)}><Trash2 size={18} /></button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>No hay servicios.</p>
-        )}
-      </Card>
+                    <motion.div 
+                        key={servicio.id_serv} 
+                        className={`${styles.card} ${!servicio.activo ? styles.cardInactive : ''}`}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileHover={{ y: -5, boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}
+                    >
+                        <div className={styles.cardHeader}>
+                            <div className={styles.iconWrapper}>
+                                <Scissors size={20} />
+                            </div>
+                            <div className={styles.headerInfo}>
+                                <h3>{servicio.nombre}</h3>
+                                <span className={styles.categoryTag}>{servicio.tipo_serv}</span>
+                            </div>
+                            {!servicio.activo && <Badge variant="secondary" size="sm" icon={EyeOff}>Inactivo</Badge>}
+                        </div>
 
-      <Modal isOpen={modal.open} onClose={() => setModal({ open: false, servicio: null })} title={modal.servicio ? "Editar Servicio" : "Nuevo Servicio"}>
-        <ServicioForm servicio={modal.servicio} onSubmit={handleSubmit} onCancel={() => setModal({ open: false, servicio: null })} loading={loading} />
+                        <div className={styles.cardBody}>
+                             <div className={styles.metaRow}>
+                                 <span className={styles.metaItem}><Clock size={14}/> {servicio.duracion} min</span>
+                                 <span className={styles.priceTag}>{formatCurrency(servicio.precio)}</span>
+                             </div>
+                             <p className={styles.description}>
+                                 {servicio.descripcion || "Sin descripción disponible."}
+                             </p>
+                        </div>
+
+                        <div className={styles.cardFooter}>
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/servicios/${servicio.id_serv}`)}>
+                                <Eye size={16} />
+                            </Button>
+                            <div className={styles.dividerVertical}></div>
+                            <Button variant="ghost" size="sm" onClick={() => setModal({ open: true, servicio })}>
+                                <Edit size={16} />
+                            </Button>
+                            <Button variant="ghost" size="sm" className={styles.dangerBtn} onClick={() => handleDelete(servicio)}>
+                                <Trash2 size={16} />
+                            </Button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+                <Scissors size={48} />
+                <p>No se encontraron servicios.</p>
+            </div>
+          )
+      )}
+
+      {/* MODAL */}
+      <Modal 
+        isOpen={modal.open} 
+        onClose={() => setModal({ open: false, servicio: null })} 
+        title={modal.servicio ? "Editar Servicio" : "Nuevo Servicio"}
+      >
+        <ServicioForm 
+            servicio={modal.servicio} 
+            onSubmit={handleSubmit} 
+            onCancel={() => setModal({ open: false, servicio: null })} 
+            loading={loading} 
+        />
       </Modal>
+
     </motion.div>
   );
 };

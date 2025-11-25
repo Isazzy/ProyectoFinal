@@ -1,85 +1,60 @@
-// ========================================
-// src/api/turnosApi.js
-// ========================================
 import api from './axiosConfig';
+
+const MODULE_URL = '/turnos';
 
 export const turnosApi = {
   getTurnos: async (params = {}) => {
-    const response = await api.get('/turnos/', { params });
+    const response = await api.get(`${MODULE_URL}/`, { params });
     return response.data;
   },
 
   getTurno: async (id) => {
-    const response = await api.get(`/turnos/${id}/`);
+    const response = await api.get(`${MODULE_URL}/${id}/`);
     return response.data;
   },
 
-  crearTurno: async ({ fecha, hora, cliente_id, servicios_ids, observaciones }) => {
-    // CORRECCIÓN: Combinar fecha y hora en ISO String para Django
-    // fecha: "2023-10-25", hora: "09:30" -> "2023-10-25T09:30:00"
-    const fechaHoraInicio = `${fecha}T${hora}:00`;
-
-    const payload = {
-      fecha_hora_inicio: fechaHoraInicio,
-      cliente: cliente_id,      // Backend espera ID
-      servicios: servicios_ids, // Backend espera 'servicios' (lista de ints)
-      observaciones
-    };
-
-    const response = await api.post('/turnos/', payload);
+  crearTurno: async (data) => {
+    const response = await api.post(`${MODULE_URL}/`, data);
     return response.data;
   },
 
   actualizarTurno: async (id, data) => {
-    const response = await api.put(`/turnos/${id}/`, data);
+    const response = await api.put(`${MODULE_URL}/${id}/`, data);
     return response.data;
   },
 
   confirmarTurno: async (id) => {
-    const response = await api.patch(`/turnos/${id}/`, { estado: 'confirmado' });
+    const response = await api.patch(`${MODULE_URL}/${id}/`, { estado: 'confirmado' });
     return response.data;
   },
 
-  // CORRECCIÓN: Usar acciones personalizadas si existen en viewset, 
-  // o PATCH parcial si es REST estándar.
   cancelarTurno: async (id) => {
-    // Si usas la @action definida en viewset: /turnos/{id}/solicitar_cancelacion/
-    const response = await api.post(`/turnos/${id}/solicitar_cancelacion/`);
+    const response = await api.post(`${MODULE_URL}/${id}/solicitar_cancelacion/`);
     return response.data;
   },
 
   completarTurno: async (id) => {
-    const response = await api.patch(`/turnos/${id}/`, { estado: 'completado' });
+    const response = await api.patch(`${MODULE_URL}/${id}/`, { estado: 'completado' });
     return response.data;
   },
 
+  // CORRECCIÓN PRINCIPAL DEL ERROR: Manejo de tipos seguro
   getHorariosDisponibles: async (fecha, serviciosIds = []) => {
     const params = { fecha };
-    if (serviciosIds.length) {
-      params.servicios_ids = serviciosIds.join(',');
+    
+    if (Array.isArray(serviciosIds)) {
+        // Si es array, lo unimos
+        if (serviciosIds.length > 0) {
+            params.servicios_ids = serviciosIds.join(',');
+        }
+    } else if (typeof serviciosIds === 'string' && serviciosIds) {
+        // Si ya es string, lo usamos directo
+        params.servicios_ids = serviciosIds;
     }
-    const response = await api.get('/turnos/horarios-disponibles/', { params });
-    return response.data;
-  },
 
-  // NUEVO: Crear turno público (el backend asigna el cliente logueado)
-  crearTurnoCliente: async (data) => {
-    // data: { servicios: [id], fecha_hora_inicio }
-    const response = await api.post(`turnos/nuevo/`, data); 
-    // Nota: Asegúrate que tu backend tenga una ruta '/nuevo/' o usa el POST estándar '/' 
-    // Si usas el ViewSet estándar, es el mismo POST de siempre.
+    // Asegúrate que esta URL coincida con tu urls.py del backend
+    // Según tu view: 'horarios_disponibles'
+    const response = await api.get(`${MODULE_URL}/disponibilidad/`, { params });
     return response.data;
-  },
-  
-  // Método estándar de creación
-  crearTurno: async (data) => {
-     const response = await api.post(`turnos/`, data);
-     return response.data;
-  },
-
-  // Para verificar disponibilidad
-  getTurnosPorFecha: async (fecha) => {
-      const response = await api.get(`turnos/`, { params: { fecha } });
-      return response.data; // Se asume que devuelve array o {results: []}
-  },
+  }
 };

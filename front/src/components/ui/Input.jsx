@@ -1,108 +1,169 @@
-// ========================================
-// src/components/ui/Input.jsx
-// ========================================
 import React, { useState, forwardRef } from 'react';
-import { motion } from 'framer-motion';
-import classNames from 'classnames';
 import { Eye, EyeOff } from 'lucide-react';
-import styles from '../../styles/Input.module.css';
+
+// Estilos en JS para garantizar que funcione sin configurar CSS Modules extra
+const baseStyles = {
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        width: '100%',
+        position: 'relative'
+    },
+    label: {
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        color: '#334155', // Slate-700
+        marginBottom: '2px'
+    },
+    required: {
+        color: '#ef4444',
+        marginLeft: '4px'
+    },
+    wrapper: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%'
+    },
+    input: {
+        width: '100%',
+        padding: '10px 12px',
+        fontSize: '0.95rem',
+        lineHeight: '1.5',
+        color: '#1e293b',
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '0.5rem', // 8px
+        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+        outline: 'none',
+        height: '42px' // Altura consistente
+    },
+    iconStart: {
+        position: 'absolute',
+        left: '12px',
+        color: '#94a3b8', // Slate-400
+        display: 'flex',
+        alignItems: 'center',
+        pointerEvents: 'none'
+    },
+    toggleBtn: {
+        position: 'absolute',
+        right: '12px',
+        background: 'transparent',
+        border: 'none',
+        color: '#94a3b8',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        padding: 0
+    },
+    errorText: {
+        fontSize: '0.8rem',
+        color: '#ef4444',
+        marginTop: '4px'
+    },
+    helperText: {
+        fontSize: '0.8rem',
+        color: '#64748b',
+        marginTop: '4px'
+    }
+};
 
 export const Input = forwardRef(({
-  label,
-  type = 'text',
-  value,
-  onChange,
-  onBlur,
-  placeholder = '',
-  error,
-  helperText,
-  icon: Icon,
-  disabled = false,
-  required = false,
-  className = '',
-  inputClassName = '',
-  ...props
+    label,
+    type = 'text',
+    value,
+    onChange,
+    onBlur,
+    placeholder = '',
+    error,
+    helperText,
+    icon: Icon,      // Soporte legacy para prop 'icon'
+    startIcon: StartIcon, // Soporte explícito para icono al inicio (como en CompraForm)
+    disabled = false,
+    required = false,
+    className = '',
+    style = {},
+    ...props
 }, ref) => {
-  const [focused, setFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const hasValue = value && String(value).length > 0;
-  const isPassword = type === 'password';
-  const inputType = isPassword && showPassword ? 'text' : type;
+    const [focused, setFocused] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-  const handleFocus = () => setFocused(true);
-  const handleBlur = (e) => {
-    setFocused(false);
-    onBlur?.(e);
-  };
+    // Determinar qué icono usar al inicio
+    const FinalStartIcon = StartIcon || Icon;
 
-  const containerClasses = classNames(
-    styles.inputContainer,
-    {
-      [styles.focused]: focused,
-      [styles.hasError]: error,
-      [styles.disabled]: disabled,
-      [styles.hasIcon]: Icon,
-    },
-    className
-  );
+    const isPassword = type === 'password';
+    const inputType = isPassword && showPassword ? 'text' : type;
 
-  return (
-    <div className={containerClasses}>
-      <div className={styles.inputWrapper}>
-        {Icon && (
-          <div className={styles.iconWrapper}>
-            <Icon size={20} />
-          </div>
-        )}
-        <input
-          ref={ref}
-          type={inputType}
-          value={value}
-          onChange={onChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          disabled={disabled}
-          required={required}
-          placeholder={focused ? placeholder : ''}
-          className={classNames(styles.input, inputClassName)}
-          aria-invalid={!!error}
-          aria-describedby={error ? `${props.id}-error` : undefined}
-          {...props}
-        />
-        <motion.label
-          className={styles.label}
-          initial={false}
-          animate={{
-            y: focused || hasValue ? -28 : 0,
-            x: focused || hasValue ? (Icon ? -32 : 0) : 0,
-            scale: focused || hasValue ? 0.85 : 1,
-          }}
-        >
-          {label}
-          {required && <span className={styles.required}>*</span>}
-        </motion.label>
-        {isPassword && (
-          <button
-            type="button"
-            className={styles.togglePassword}
-            onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
-            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-        )}
-      </div>
-      {(error || helperText) && (
-        <p 
-          id={error ? `${props.id}-error` : undefined}
-          className={classNames(styles.helperText, { [styles.errorText]: error })}
-        >
-          {error || helperText}
-        </p>
-      )}
-    </div>
-  );
+    // Estilos dinámicos
+    const inputStyle = {
+        ...baseStyles.input,
+        paddingLeft: FinalStartIcon ? '38px' : '12px',
+        paddingRight: isPassword ? '40px' : '12px',
+        borderColor: error ? '#ef4444' : (focused ? '#9B8DC5' : '#e2e8f0'),
+        boxShadow: focused 
+            ? (error ? '0 0 0 3px rgba(239, 68, 68, 0.1)' : '0 0 0 3px rgba(155, 141, 197, 0.1)') 
+            : 'none',
+        backgroundColor: disabled ? '#f8fafc' : 'white',
+        cursor: disabled ? 'not-allowed' : 'text',
+        ...style // Permite sobreescribir desde props (ej: width)
+    };
+
+    return (
+        <div style={baseStyles.container} className={className}>
+            {label && (
+                <label style={baseStyles.label}>
+                    {label}
+                    {required && <span style={baseStyles.required}>*</span>}
+                </label>
+            )}
+
+            <div style={baseStyles.wrapper}>
+                {FinalStartIcon && (
+                    <div style={baseStyles.iconStart}>
+                        <FinalStartIcon size={18} />
+                    </div>
+                )}
+
+                <input
+                    ref={ref}
+                    type={inputType}
+                    value={value}
+                    onChange={onChange}
+                    onFocus={() => setFocused(true)}
+                    onBlur={(e) => {
+                        setFocused(false);
+                        onBlur?.(e);
+                    }}
+                    disabled={disabled}
+                    placeholder={placeholder}
+                    style={inputStyle}
+                    aria-invalid={!!error}
+                    {...props}
+                />
+
+                {isPassword && (
+                    <button
+                        type="button"
+                        style={baseStyles.toggleBtn}
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                )}
+            </div>
+
+            {error && (
+                <span style={baseStyles.errorText}>{error}</span>
+            )}
+            {!error && helperText && (
+                <span style={baseStyles.helperText}>{helperText}</span>
+            )}
+        </div>
+    );
 });
 
 Input.displayName = 'Input';

@@ -2,7 +2,7 @@
 // src/components/nav/Sidebar.jsx
 // ========================================
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, Calendar, Scissors, ShoppingBag, Users, 
@@ -12,27 +12,40 @@ import { useAuth } from '../../hooks/useAuth';
 import { useUI } from '../../context/UIContext';
 import styles from '../../styles/Sidebar.module.css';
 
-// CORRECCIÓN: 'Dashboard' apunta a /dashboard para no chocar con la Landing
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home }, 
-  { path: '/turnos', label: 'Turnos', icon: Calendar },
+  { path: '/turnos', label: 'Agenda', icon: Calendar },
   { path: '/servicios', label: 'Servicios', icon: Scissors },
   { path: '/ventas', label: 'Ventas', icon: ShoppingBag },
   { path: '/compras', label: 'Compras', icon: Truck },
   { path: '/caja', label: 'Caja', icon: DollarSign }, 
   { path: '/clientes', label: 'Clientes', icon: Users },
-  { path: '/empleados', label: 'Empleados', icon: User, adminOnly: true },
   { path: '/inventario', label: 'Inventario', icon: Package },
+  { path: '/empleados', label: 'Equipo', icon: User, adminOnly: true },
 ];
 
 export const Sidebar = () => {
   const { isAdmin } = useAuth();
   const { sidebarOpen, closeSidebar } = useUI();
 
+  // Filtrar ítems según rol
   const filteredItems = menuItems.filter(item => !item.adminOnly || isAdmin);
+
+  // Handler para cerrar solo en móvil al hacer clic
+  const handleLinkClick = () => {
+    if (window.innerWidth < 1024) {
+      closeSidebar();
+    }
+  };
+
+  const sidebarVariants = {
+    open: { x: 0 },
+    closed: { x: "-100%" },
+  };
 
   return (
     <>
+      {/* Overlay para Móviles (Fondo oscuro) */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -45,12 +58,15 @@ export const Sidebar = () => {
         )}
       </AnimatePresence>
 
+      {/* Sidebar Principal */}
       <motion.aside
         className={styles.sidebar}
-        initial={{ x: -280 }}
-        animate={{ x: sidebarOpen ? 0 : -280 }}
-        transition={{ type: 'tween', duration: 0.3 }}
+        initial={false}
+        animate={sidebarOpen ? "open" : "closed"}
+        variants={sidebarVariants}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
+        {/* Header / Logo */}
         <div className={styles.header}>
           <h2 className={styles.logo}>Mi Tiempo</h2>
           <button 
@@ -62,29 +78,30 @@ export const Sidebar = () => {
           </button>
         </div>
 
+        {/* Lista de Navegación */}
         <nav className={styles.nav}>
           {filteredItems.map(item => (
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={closeSidebar}
+              onClick={handleLinkClick}
               className={({ isActive }) => 
                 `${styles.navItem} ${isActive ? styles.active : ''}`
               }
             >
-              <motion.div
-                className={styles.navItemInner}
-                whileHover={{ x: 4 }}
-              >
-                <item.icon size={20} />
+              <div className={styles.navItemInner}>
+                <item.icon size={20} strokeWidth={2} />
                 <span>{item.label}</span>
-              </motion.div>
+              </div>
+              {/* Indicador visual activo (opcional, manejado por CSS) */}
             </NavLink>
           ))}
         </nav>
 
+        {/* Footer */}
         <div className={styles.footer}>
-          <p className={styles.version}>v1.0.0</p>
+          <p className={styles.version}>Versión 1.0.0</p>
+          <p className={styles.copyright}>© 2024 Mi Tiempo</p>
         </div>
       </motion.aside>
     </>

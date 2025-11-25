@@ -1,0 +1,267 @@
+/* LAYOUT */
+.pageContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 15px;
+}
+
+.title { margin: 0; color: #1e293b; font-size: 1.8rem; letter-spacing: -0.02em; }
+.subtitle { margin: 4px 0 0 0; color: #64748b; font-size: 0.95rem; }
+
+/* FILTROS */
+.controls {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+}
+
+.searchWrapper {
+    max-width: 400px;
+    width: 100%;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+/* CARD DE EMPLEADO */
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.card.inactive {
+    opacity: 0.7;
+    background: #f9fafb;
+}
+
+.cardHeader {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(to bottom, #ffffff, #f8fafc);
+    border-bottom: 1px solid #f1f5f9;
+    position: relative;
+}
+
+.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+}
+
+.headerInfo {
+    flex: 1;
+    overflow: hidden;
+}
+
+.headerInfo h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.username {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.roleBadge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+/* CARD BODY */
+.cardBody {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.icon {
+    color: #94a3b8;
+    width: 18px;
+    height: 18px;
+}
+
+.emailText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* CARD FOOTER */
+.cardFooter {
+    padding: 15px 20px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+.statusIndicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.online { background: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+.offline { background: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+.dangerBtn {
+    color: #ef4444;
+}
+.dangerBtn:hover {
+    background: #fee2e2;
+}
+
+/* FORMULARIO */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.formSection {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 20px;
+}
+
+.formSection:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sectionTitle {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.selectGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.selectGroup label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.95rem;
+    color: #334155;
+    height: 42px;
+    outline: none;
+}
+.select:focus { border-color: #9B8DC5; }
+
+.passwordRow {
+    background: #fffbeb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #fcd34d;
+}
+
+.hint {
+    margin: 5px 0 0 0;
+    font-size: 0.75rem;
+    color: #b45309;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+/* ESTADOS */
+.loadingState, .emptyState {
+    padding: 60px;
+    text-align: center;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}

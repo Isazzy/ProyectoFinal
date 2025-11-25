@@ -1,9 +1,10 @@
-// ========================================
-// src/components/ui/index.js
-// ========================================
-export { Button } from './Button';
-export { Input } from './Input';
-export { Modal } from './Modal';
-export { Card } from './Card';
-export { Badge } from './Badge';
-export { Table, Thead, Tbody, Tr, Th, Td } from './Table';
+// Exportamos todos los componentes UI desde un solo punto
+export * from './Button';
+export * from './Input';
+export * from './Cards'; // Exporta Card, CardHeader, CardTitle, etc.
+export * from './Badge';
+export * from './Modal';
+export * from './chart'; // Exporta ChartContainer, ChartTooltip, etc.
+export * from './select'; // Exporta Select, SelectItem, etc.
+// Si tienes Tabla, expórtala también
+// export * from './Table';

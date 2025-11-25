@@ -268,3 +268,18 @@ input, textarea, select {
 @media (min-width: 1024px) {
   .hide-desktop { display: none !important; }
 }
+
+@layer base {
+  :root {
+    /* Color 1: Lila (Servicios) - HSL */
+    --chart-1: 265 35% 66%; 
+    
+    /* Color 2: Verde (Productos) - HSL */
+    --chart-2: 160 84% 39%; 
+
+    /* Otros colores auxiliares */
+    --chart-3: 199 89% 48%;
+    --chart-4: 45 93% 47%;
+    --chart-5: 0 84% 60%;
+  }
+}

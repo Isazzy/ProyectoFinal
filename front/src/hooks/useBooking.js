@@ -11,81 +11,81 @@ export const useBooking = () => {
   const { servicios, fetchServicios } = useServicios();
   const { showSuccess, showError, confirm } = useSwal();
 
-  // Pasos: 0=Servicio, 1=Fecha/Hora, 2=Confirmación
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  
+  // Mensaje de error específico para la fecha (ej: "Cerrado los martes")
+  const [dateError, setDateError] = useState('');
 
-  // Datos de la reserva
   const [bookingData, setBookingData] = useState({
-    servicio: null, // Objeto servicio completo
-    fecha: '',      // YYYY-MM-DD
-    hora: '',       // HH:MM
+    servicio: null,
+    fecha: '',
+    hora: '',
   });
 
-  // Disponibilidad
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
 
-  // 1. Cargar Servicios al iniciar
   useEffect(() => {
     fetchServicios({ activo: true });
   }, [fetchServicios]);
 
-  // 2. Calcular Horarios cuando cambia la fecha o el servicio
-  const calcularDisponibilidad = useCallback(async (fechaStr) => {
+  // ------------------------------------------------------------
+  // VALIDACIÓN PREVIA DE DÍAS (Lógica de Frontend rápida)
+  // ------------------------------------------------------------
+  const validarDiaServicio = (fechaStr, servicio) => {
+      if (!servicio || !servicio.dias_disponibles) return true;
+      
+      // Creamos fecha asegurando la zona horaria local para obtener el día correcto
+      const [year, month, day] = fechaStr.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day); // Mes es 0-indexado
+      
+      const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+      const diaSeleccionado = diasSemana[dateObj.getDay()];
+
+      // Normalizar array del backend (por si viene con mayúsculas o espacios)
+      const diasPermitidos = servicio.dias_disponibles.map(d => d.toLowerCase().trim());
+
+      if (!diasPermitidos.includes(diaSeleccionado)) {
+          return `Este servicio solo está disponible los: ${diasPermitidos.join(', ')}.`;
+      }
+      return null;
+  };
+
+  // ------------------------------------------------------------
+  // CALCULAR DISPONIBILIDAD (Consulta al Backend)
+  // ------------------------------------------------------------
+  const consultarBackend = useCallback(async (fechaStr) => {
     if (!fechaStr || !bookingData.servicio) return;
-    setLoading(true);
     
+    // 1. Validación rápida de día
+    const errorDia = validarDiaServicio(fechaStr, bookingData.servicio);
+    if (errorDia) {
+        setDateError(errorDia);
+        setHorariosDisponibles([]);
+        return;
+    }
+
+    setLoading(true);
+    setDateError(''); // Limpiar errores previos
+
     try {
-        // Traemos los turnos ya ocupados de ese día
-        const ocupadosData = await turnosApi.getTurnosPorFecha(fechaStr);
-        const ocupados = ocupadosData.results || ocupadosData;
-
-        // Configuración del Local (Idealmente vendría de API)
-        const APERTURA = 9; // 9:00
-        const CIERRE = 20;  // 20:00
-        const INTERVALO = 30; // minutos
-
-        let slots = [];
-        let currentTime = new Date(`${fechaStr}T09:00:00`);
-        const endTime = new Date(`${fechaStr}T20:00:00`);
-        const duracionServicio = bookingData.servicio.duracion; // en minutos
-
-        // Generamos todos los slots posibles
-        while (currentTime < endTime) {
-            const slotStart = new Date(currentTime);
-            const slotEnd = new Date(currentTime.getTime() + duracionServicio * 60000);
-
-            // Si el servicio termina después del cierre, no sirve
-            if (slotEnd > endTime) break;
-
-            // Verificar colisión con turnos ocupados
-            const isBusy = ocupados.some(t => {
-                const tStart = new Date(t.fecha_hora_inicio);
-                // Estimamos fin del turno ocupado (si el backend no lo manda, asumimos 30 min o lo que sea)
-                // Lo ideal es que el backend mande 'fecha_hora_fin'
-                const tEnd = t.fecha_hora_fin ? new Date(t.fecha_hora_fin) : new Date(tStart.getTime() + 30 * 60000);
-                
-                // Lógica de superposición de rangos
-                return (slotStart < tEnd && slotEnd > tStart);
-            });
-
-            // Verificar si es pasado (si la fecha es hoy)
-            const now = new Date();
-            const isPast = slotStart < now;
-
-            if (!isBusy && !isPast) {
-                slots.push(slotStart.toTimeString().slice(0, 5)); // "09:00"
-            }
-
-            // Avanzamos por intervalo
-            currentTime = new Date(currentTime.getTime() + INTERVALO * 60000);
+        // Llamamos a TU endpoint de backend que calcula todo
+        const data = await turnosApi.getDisponibilidad(fechaStr, bookingData.servicio.id_serv);
+        
+        if (data.error) {
+            setDateError(data.error);
+            setHorariosDisponibles([]);
+        } else if (data.mensaje) {
+            // El backend dice "Cerrado los martes" o similar
+            setDateError(data.mensaje);
+            setHorariosDisponibles([]);
+        } else {
+            setHorariosDisponibles(data.disponibilidad || []);
         }
-
-        setHorariosDisponibles(slots);
 
     } catch (error) {
         console.error(error);
-        showError('Error', 'No se pudo verificar disponibilidad');
+        setDateError('No se pudo verificar la disponibilidad.');
     } finally {
         setLoading(false);
     }
@@ -94,49 +94,48 @@ export const useBooking = () => {
   // --- HANDLERS ---
 
   const selectServicio = (servicio) => {
-      setBookingData(prev => ({ ...prev, servicio, hora: '' })); // Reset hora si cambia servicio
+      setBookingData(prev => ({ ...prev, servicio, hora: '', fecha: '' })); 
       setStep(1);
+      setHorariosDisponibles([]);
+      setDateError('');
   };
 
   const selectFecha = (e) => {
       const fecha = e.target.value;
       setBookingData(prev => ({ ...prev, fecha, hora: '' }));
-      calcularDisponibilidad(fecha);
+      consultarBackend(fecha);
   };
 
   const selectHora = (hora) => {
       setBookingData(prev => ({ ...prev, hora }));
-      setStep(2); // Avanzar a confirmación
+      setStep(2);
   };
 
   const confirmarReserva = async () => {
       if (!isAuthenticated) {
-          navigate('/login?redirect=/reservar');
-          return;
+        // Guardar intento para redirigir post-login (opcional)
+        navigate('/login'); 
+        return;
       }
 
-      if (await confirm({ title: 'Confirmar Turno', text: '¿Deseas reservar este turno?' })) {
+      const textoConfirm = `Servicio: ${bookingData.servicio.nombre}\nFecha: ${bookingData.fecha} ${bookingData.hora}`;
+      
+      if (await confirm({ title: 'Confirmar Reserva', text: textoConfirm })) {
           setLoading(true);
           try {
-              // Construir ISO String
-              const fechaHoraInicio = `${bookingData.fecha}T${bookingData.hora}:00`;
-
-              // Payload para el backend
               const payload = {
-                  fecha_hora_inicio: fechaHoraInicio,
-                  servicios: [bookingData.servicio.id_serv], // Array de IDs
-                  observaciones: 'Reserva Web Cliente',
-                  cliente: user.id // Opcional si el backend usa request.user
+                  fecha_hora_inicio: `${bookingData.fecha}T${bookingData.hora}:00`,
+                  servicios: [bookingData.servicio.id_serv],
+                  observaciones: 'Reserva Web'
+                  // Cliente lo toma el backend del token
               };
 
               await turnosApi.crearTurno(payload);
-              
-              await showSuccess('¡Turno Reservado!', 'Te esperamos en nuestro centro.');
-              navigate('/dashboard'); // O a "Mis Turnos"
+              await showSuccess('¡Reservado!', 'Te esperamos.');
+              navigate('/dashboard');
 
           } catch (error) {
-              console.error(error);
-              const msg = error.response?.data?.detail || 'No se pudo reservar.';
+              const msg = error.response?.data?.detail || error.response?.data?.non_field_errors?.[0] || 'Error al reservar.';
               showError('Error', msg);
           } finally {
               setLoading(false);
@@ -144,13 +143,17 @@ export const useBooking = () => {
       }
   };
 
-  const backStep = () => setStep(prev => prev - 1);
+  const backStep = () => {
+      setStep(prev => prev - 1);
+      setDateError('');
+  };
 
   return {
       step,
       servicios,
       bookingData,
       horariosDisponibles,
+      dateError, // Exportamos el error para mostrarlo en UI
       loading,
       selectServicio,
       selectFecha,

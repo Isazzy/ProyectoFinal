@@ -1,0 +1,270 @@
+.pageContainer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.headerTitle h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+/* GRID LAYOUT */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* 2 columnas asimétricas */
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: sticky;
+    top: 20px; /* Sticky sidebar */
+}
+
+/* CARDS COMUNES */
+.sectionCard, .contextCard, .actionsCard {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    padding: 24px;
+}
+
+.cardHeader {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.cardTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+/* CLIENTE */
+.clientInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.clientAvatar {
+    width: 60px;
+    height: 60px;
+    background: #eff6ff;
+    color: #3b82f6;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clientData {
+    display: flex;
+    flex-direction: column;
+}
+
+.clientName {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1e293b;
+}
+
+.clientPhone {
+    color: #64748b;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+/* SERVICIOS */
+.servicesList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.serviceItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.serviceInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.serviceName {
+    font-weight: 600;
+    color: #334155;
+}
+
+.serviceDuration {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.servicePrice {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 10px 0;
+}
+
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.totalPrice {
+    font-weight: 800;
+    color: #9B8DC5;
+}
+
+/* OBSERVACIONES */
+.observacionesText {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+/* CONTEXTO (Derecha) */
+.contextRow {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.contextRow:last-child { margin-bottom: 0; }
+
+.contextIcon {
+    color: #9B8DC5;
+    background: #f3f0ff;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.contextLabel {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.contextValue {
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.endTime {
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+/* ACCIONES (Derecha) */
+.actionsTitle {
+    margin: 0 0 20px 0;
+    font-size: 1rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.actionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payButton {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.payButton:hover {
+    background: #15803d;
+}
+
+.cancelledText {
+    text-align: center;
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.loading, .error {
+    padding: 50px;
+    text-align: center;
+    color: #64748b;
+    font-size: 1.2rem;
+}

@@ -1,0 +1,267 @@
+/* LAYOUT */
+.pageContainer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.headerTitle h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+/* GRID */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.leftColumn, .rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.rightColumn {
+    position: sticky;
+    top: 20px;
+}
+
+/* CARDS COMUNES */
+.sectionCard, .summaryCard, .availabilityCard {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    padding: 24px;
+}
+
+.cardHeader {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.cardTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 4px 0;
+}
+
+.cardSubtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: block;
+    margin-left: 30px; /* Alineado con el texto del título */
+}
+
+.descriptionText {
+    color: #475569;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+/* RECIPE LIST */
+.recipeList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recipeItem {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.recipeItem:hover {
+    background: #f1f5f9;
+}
+
+.recipeIcon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9B8DC5;
+    border: 1px solid #e2e8f0;
+}
+
+.recipeInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipeName {
+    font-weight: 600;
+    color: #334155;
+}
+
+.recipeStock {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.recipeQuantity {
+    text-align: right;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    min-width: 80px;
+}
+
+.recipeQuantity strong {
+    display: block;
+    font-size: 1.1rem;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.unit {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* SUMMARY CARD (Right) */
+.summaryTitle {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 20px;
+}
+
+.summaryRow {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.iconBox {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.label {
+    display: block;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 2px;
+}
+
+.value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.priceValue {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #16a34a;
+    margin: 0;
+}
+
+.divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 15px 0;
+}
+
+.actions {
+    margin-top: 25px;
+}
+
+/* AVAILABILITY CARD */
+.availabilityCard h4 {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0 0 15px 0;
+}
+
+.daysTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dayTag {
+    background: #f0f9ff;
+    color: #0369a1;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid #bae6fd;
+}
+
+.noDays {
+    color: #ef4444;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* STATES */
+.loading, .error, .emptyState {
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}

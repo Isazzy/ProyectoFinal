@@ -1,23 +1,29 @@
+// ========================================
+// src/pages/Inventario/ProductosList.jsx
+// ========================================
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit, Trash2, ShoppingBag, RefreshCw, Eye, EyeOff, RotateCcw } from 'lucide-react';
+import { 
+    Plus, Search, Edit, Trash2, ShoppingBag, 
+    RefreshCw, Eye, EyeOff, RotateCcw, Tag, AlertTriangle 
+} from 'lucide-react';
 import { useProductos } from '../../hooks/useProductos';
 import { useSwal } from '../../hooks/useSwal';
-import { Card, Button, Input, Badge } from '../../components/ui/index';
+import { Button, Input, Badge, Modal } from '../../components/ui';
 import { ProductoForm } from './ProductoForm';
+import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Inventario.module.css';
 
 export const ProductosList = () => {
-  // Hook principal
+  // 1. Hook Principal
   const inventarioHook = useProductos();
   const { productos, loading, fetchProductos, eliminarProducto, toggleEstadoProducto } = inventarioHook;
-  const { confirm, showSuccess } = useSwal();
+  const { confirm } = useSwal();
 
-  // Estados
+  // 2. Estados Locales
   const [searchTerm, setSearchTerm] = useState("");
   const [showInactive, setShowInactive] = useState(false); 
   
-  // Estado del Modal
   const [modal, setModal] = useState({
       open: false,
       mode: 'crear', // 'crear' | 'editar' | 'ver'
@@ -28,14 +34,21 @@ export const ProductosList = () => {
     fetchProductos(); 
   }, [fetchProductos]);
 
-  // Filtrado
+  // 3. Filtrado
   const filtered = productos.filter(p => {
-    const matchesSearch = p.producto_nombre.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = 
+        p.producto_nombre.toLowerCase().includes(search) ||
+        (p.tipo_producto_nombre || '').toLowerCase().includes(search) ||
+        (p.marca_nombre || '').toLowerCase().includes(search);
+
+    // Lógica de estado: Si showInactive es true, mostramos los inactivos. Si es false, los activos.
     const matchesStatus = showInactive ? !p.activo : p.activo; 
+    
     return matchesSearch && matchesStatus;
   });
 
-  // -- MANEJADORES --
+  // -- HANDLERS --
 
   const handleOpenCreate = () => {
     setModal({ open: true, mode: 'crear', producto: null });
@@ -49,30 +62,29 @@ export const ProductosList = () => {
     setModal({ open: true, mode: 'ver', producto: prod });
   };
 
-  // Maneja tanto BORRAR como REACTIVAR
   const handleToggleStatus = async (prod) => {
     if (prod.activo) {
-        // Si está activo, lo borramos (soft delete)
+        // Soft Delete (Desactivar)
         if (await confirm({ 
             title: 'Desactivar Producto', 
             text: `¿Mover ${prod.producto_nombre} a inactivos?`, 
             icon: 'warning' 
         })) {
-            // Usamos la nueva función que usa PATCH
-            await toggleEstadoProducto(prod.id, false);
-            // Opcional: si quieres refrescar desde el server
-            // fetchProductos(); 
+            // Si tienes la función toggle en el hook, úsala. Si no, usa eliminar (si el backend hace soft delete en delete)
+            if (toggleEstadoProducto) await toggleEstadoProducto(prod.id, false);
+            else await eliminarProducto(prod.id);
+            
+            fetchProductos(); 
         }
     } else {
-        // Si está inactivo, preguntamos si reactivar
+        // Reactivar
         if (await confirm({ 
             title: 'Reactivar', 
             text: `¿Volver a activar ${prod.producto_nombre}?`, 
             icon: 'info' 
         })) {
-            // Usamos la nueva función que usa PATCH
-            await toggleEstadoProducto(prod.id, true);
-            // fetchProductos();
+            if (toggleEstadoProducto) await toggleEstadoProducto(prod.id, true);
+            fetchProductos();
         }
     }
   };
@@ -83,14 +95,14 @@ export const ProductosList = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className={styles.contentContainer} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       
       {/* HEADER */}
-      <header className={styles.header} style={{marginBottom: 20, display: 'flex', justifyContent:'space-between', alignItems:'center'}}>
+      <header className={styles.header}>
         <div>
-            <h1 className={styles.title}>Productos</h1>
-            <p style={{color: '#666', fontSize: '0.9rem'}}>
-                {showInactive ? 'Viendo productos desactivados' : 'Gestión del catálogo de venta'}
+            <h2 className={styles.sectionTitle}>Catálogo de Productos</h2>
+            <p className={styles.subtitle}>
+                {showInactive ? 'Viendo productos desactivados' : 'Gestión de productos para venta'}
             </p>
         </div>
         {!showInactive && (
@@ -98,31 +110,38 @@ export const ProductosList = () => {
         )}
       </header>
 
-      {/* FILTROS */}
-      <div className={styles.filters} style={{ marginBottom: 20, display: 'flex', gap: 10 }}>
-        <div style={{flex: 1}}>
-            <Input icon={Search} placeholder="Buscar producto..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      {/* BARRA DE FILTROS */}
+      <div className={styles.filters}>
+        <div className={styles.searchWrapper}>
+            <Input 
+                icon={Search} 
+                placeholder="Buscar por nombre, marca o tipo..." 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+            />
         </div>
         <Button 
             variant={showInactive ? "secondary" : "outline"} 
             onClick={() => setShowInactive(!showInactive)}
             icon={showInactive ? Eye : EyeOff}
         >
-            {showInactive ? 'Ver Activos' : 'Inactivos'}
+            {showInactive ? 'Ver Activos' : 'Papelera'}
         </Button>
       </div>
 
       {/* LOADING */}
       {loading && (
-        <div className={styles.loading} style={{ display: 'flex', justifyContent:'center', padding: 40 }}>
-           <RefreshCw className="animate-spin" size={30} color="#2563eb"/> 
+        <div className={styles.loading}>
+           <RefreshCw className="animate-spin" size={30} color="#9B8DC5"/> 
+           <p>Cargando catálogo...</p>
         </div>
       )}
 
-      {/* GRID DE CARDS */}
+      {/* GRID DE PRODUCTOS */}
       {!loading && filtered.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+        <div className={styles.grid}>
             {filtered.map(p => {
+                // Lógica de Stock
                 const stock = parseFloat(p.stock || 0);
                 const min = parseFloat(p.stock_minimo || 0);
                 const esCritico = stock <= min && stock > 0;
@@ -134,81 +153,63 @@ export const ProductosList = () => {
                         layout
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        style={{
-                            background: '#fff',
-                            borderRadius: 12,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                            overflow: 'hidden',
-                            border: '1px solid #f0f0f0',
-                            position: 'relative',
-                            opacity: p.activo ? 1 : 0.8 // Un poco más opaco si es inactivo
-                        }}
+                        className={`${styles.cardItem} ${!p.activo ? styles.inactiveCard : ''}`}
                     >
-                        {/* IMAGEN */}
-                        <div style={{ height: 160, background: '#f9fafb', position: 'relative', cursor: 'pointer' }} onClick={() => handleOpenView(p)}>
+                        {/* IMAGEN + PRECIO */}
+                        <div className={styles.cardImageWrapper} onClick={() => handleOpenView(p)}>
                             {p.producto_imagen_url ? (
-                                <img src={p.producto_imagen_url} alt={p.producto_nombre} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                                <img src={p.producto_imagen_url} alt={p.producto_nombre} className={styles.cardImage} />
                             ) : (
-                                <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'#cbd5e1'}}>
-                                    <ShoppingBag size={48} strokeWidth={1} />
+                                <div className={styles.imagePlaceholder}>
+                                    <ShoppingBag size={40} strokeWidth={1.5} />
                                 </div>
                             )}
-                            <div style={{
-                                position: 'absolute', top: 10, right: 10, 
-                                background: 'rgba(255,255,255,0.95)', padding: '4px 10px', 
-                                borderRadius: 20, fontWeight: 'bold', fontSize: '0.9rem',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}>
-                                ${parseFloat(p.producto_precio).toFixed(2)}
+                            
+                            {/* Badge de Precio */}
+                            <div className={styles.priceBadge}>
+                                {formatCurrency(p.producto_precio)}
                             </div>
                         </div>
 
                         {/* CONTENIDO */}
-                        <div style={{ padding: 15 }}>
-                            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 5}}>
-                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: '#1f2937' }}>{p.producto_nombre}</h3>
+                        <div className={styles.cardContent}>
+                            <div className={styles.cardHeaderInfo}>
+                                <h3 className={styles.productName} title={p.producto_nombre}>{p.producto_nombre}</h3>
+                                <div className={styles.tags}>
+                                    <Badge variant="outline" size="sm">{p.tipo_producto_nombre || 'General'}</Badge>
+                                    {p.marca_nombre && <span className={styles.brandTag}>{p.marca_nombre}</span>}
+                                </div>
                             </div>
                             
-                            <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
-                                <Badge variant="outline" size="sm">{p.tipo_producto_nombre || 'General'}</Badge>
-                                {p.marca_nombre && <Badge variant="secondary" size="sm">{p.marca_nombre}</Badge>}
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '8px 12px', borderRadius: 8, marginBottom: 15 }}>
-                                <div style={{fontSize: '0.85rem', color: '#64748b'}}>Stock: <strong>{stock}</strong></div>
-                                <div>
-                                    {agotado ? (
-                                        <span style={{color: '#ef4444', fontWeight: 600, fontSize: '0.8rem'}}>● Agotado</span>
-                                    ) : esCritico ? (
-                                        <span style={{color: '#f59e0b', fontWeight: 600, fontSize: '0.8rem'}}>● Bajo Stock</span>
-                                    ) : (
-                                        <span style={{color: '#10b981', fontWeight: 600, fontSize: '0.8rem'}}>● En Stock</span>
-                                    )}
+                            {/* STOCK STATUS */}
+                            <div className={`${styles.stockBar} ${agotado ? styles.stockNone : esCritico ? styles.stockLow : styles.stockOk}`}>
+                                <div className={styles.stockInfo}>
+                                    {agotado ? <AlertTriangle size={14}/> : <Tag size={14}/>}
+                                    <span>Stock: <strong>{stock}</strong></span>
                                 </div>
+                                <span className={styles.stockStatusLabel}>
+                                    {agotado ? 'Agotado' : esCritico ? 'Bajo' : 'Disponible'}
+                                </span>
                             </div>
 
                             {/* ACCIONES */}
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <Button variant="outline" size="sm" style={{flex: 1}} onClick={() => handleOpenView(p)}>
-                                    <Eye size={16} style={{marginRight:5}}/> Ver
+                            <div className={styles.cardActions}>
+                                <Button variant="ghost" size="sm" onClick={() => handleOpenView(p)} title="Ver Detalle">
+                                    <Eye size={18}/>
                                 </Button>
                                 
-                                {/* Solo permitimos editar si está activo (opcional, pero recomendado) */}
                                 {p.activo && (
-                                    <Button variant="primary" size="sm" style={{flex: 1}} onClick={() => handleOpenEdit(p)}>
-                                        <Edit size={16} style={{marginRight:5}}/> Editar
-                                    </Button>
+                                    <>
+                                        <div className={styles.dividerVertical}></div>
+                                        <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(p)} title="Editar">
+                                            <Edit size={18}/>
+                                        </Button>
+                                    </>
                                 )}
 
                                 <button 
+                                    className={`${styles.iconBtn} ${p.activo ? styles.btnDanger : styles.btnSuccess}`}
                                     onClick={() => handleToggleStatus(p)}
-                                    style={{
-                                        background: p.activo ? '#fee2e2' : '#dcfce7', 
-                                        color: p.activo ? '#ef4444' : '#16a34a', 
-                                        border: 'none', 
-                                        borderRadius: 6, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                        transition: 'background 0.2s'
-                                    }}
                                     title={p.activo ? "Desactivar" : "Reactivar"}
                                 >
                                     {p.activo ? <Trash2 size={18} /> : <RotateCcw size={18} />}
@@ -221,21 +222,29 @@ export const ProductosList = () => {
         </div>
       ) : (
         !loading && (
-            <div className={styles.emptyState} style={{textAlign:'center', padding: 40, color: '#94a3b8'}}>
-                <ShoppingBag size={48} style={{marginBottom: 10, opacity: 0.5}} />
-                <p>{showInactive ? 'No hay productos inactivos.' : 'No hay productos registrados.'}</p>
+            <div className={styles.emptyState}>
+                <ShoppingBag size={48} strokeWidth={1} />
+                <h3>No se encontraron productos</h3>
+                <p>Intenta ajustar los filtros o agrega un nuevo producto al inventario.</p>
             </div>
         )
       )}
 
       {/* MODAL FORM */}
       {modal.open && (
-        <ProductoForm 
-            productoToEdit={modal.producto} 
-            mode={modal.mode} // Pasamos el modo (ver, editar, crear)
-            onClose={handleFormClose} 
-            useProductosHook={inventarioHook} 
-        />
+        <Modal 
+            isOpen={true} 
+            onClose={handleFormClose}
+            title={modal.mode === 'crear' ? 'Nuevo Producto' : modal.mode === 'editar' ? 'Editar Producto' : 'Detalle del Producto'}
+        >
+            <ProductoForm 
+                productoToEdit={modal.producto} 
+                onClose={handleFormClose} 
+                // Pasamos la instancia existente, no la creamos de nuevo
+                useProductosHook={inventarioHook} 
+                mode={modal.mode}
+            />
+        </Modal>
       )}
     </motion.div>
   );

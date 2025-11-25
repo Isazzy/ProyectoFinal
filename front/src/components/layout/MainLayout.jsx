@@ -3,20 +3,27 @@
 // ========================================
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Navbar } from '../nav/Navbar';
 import { Sidebar } from '../nav/Sidebar';
+import { Navbar } from '../nav/Navbar';
+import { useUI } from '../../context/UIContext';
 import styles from '../../styles/MainLayout.module.css';
 
 export const MainLayout = () => {
+  const { sidebarOpen } = useUI();
+
   return (
-    <div className={styles.layout}>
+    <div className={styles.layoutWrapper}>
+      {/* Sidebar Fijo */}
       <Sidebar />
-      <div className={styles.mainContent}>
+
+      {/* Contenedor Principal que se desplaza */}
+      <div 
+        className={`${styles.mainContainer} ${sidebarOpen ? styles.shifted : ''}`}
+      >
         <Navbar />
-        <main className={styles.main}>
-          <div className={styles.container}>
-            <Outlet />
-          </div>
+        
+        <main className={styles.contentArea}>
+          <Outlet />
         </main>
       </div>
     </div>

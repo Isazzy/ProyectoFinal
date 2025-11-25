@@ -1,105 +1,116 @@
+// ========================================
+// src/pages/Turnos/CrearTurno.jsx
+// ========================================
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Calendar, User, Check, Clock, Search } from 'lucide-react';
+import { ChevronLeft, Calendar, User, Check, Clock, Search, X } from 'lucide-react';
 import { useTurnos } from '../../hooks/useTurnos';
 import { useServicios } from '../../hooks/useServicios';
-import { clientesApi } from '../../api/clientesApi'; // Necesario para buscar ID
+import { clientesApi } from '../../api/clientesApi';
 import { useSwal } from '../../hooks/useSwal';
-import { Card, Button, Input } from '../../components/ui';
+import { Card, Button, Input, Badge } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/CrearTurno.module.css';
 
-// ... (ServiceCard y TimeSlot se mantienen igual) ...
+// --- Sub-componentes ---
+
 const ServiceCard = ({ servicio, selected, onToggle }) => (
-  <motion.button
+  <motion.div
     className={`${styles.serviceCard} ${selected ? styles.selected : ''}`}
     onClick={onToggle}
-    type="button" // Importante para no submit form
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
   >
-    <div className={styles.serviceInfo}>
-      <p className={styles.serviceName}>{servicio.nombre}</p>
-      <p className={styles.serviceDuration}>{servicio.duracion} min</p>
+    <div className={styles.serviceHeader}>
+        <span className={styles.serviceName}>{servicio.nombre}</span>
+        {selected && <div className={styles.checkMark}><Check size={14} /></div>}
     </div>
-    <p className={styles.servicePrice}>{formatCurrency(servicio.precio)}</p>
-    {selected && <div className={styles.checkMark}><Check size={16} /></div>}
-  </motion.button>
+    <div className={styles.serviceFooter}>
+        <span className={styles.serviceDuration}><Clock size={12}/> {servicio.duracion} min</span>
+        <span className={styles.servicePrice}>{formatCurrency(servicio.precio)}</span>
+    </div>
+  </motion.div>
 );
 
 const TimeSlot = ({ time, available, selected, onClick }) => (
-  <motion.button
+  <button
     className={`${styles.timeSlot} ${selected ? styles.selected : ''} ${!available ? styles.disabled : ''}`}
     onClick={available ? onClick : undefined}
     disabled={!available}
     type="button"
   >
     {time}
-  </motion.button>
+  </button>
 );
+
+// --- Componente Principal ---
 
 export const CrearTurno = () => {
   const navigate = useNavigate();
   const { crearTurno, fetchHorariosDisponibles, horariosDisponibles } = useTurnos();
   const { servicios, fetchServicios, loading: serviciosLoading } = useServicios();
-  const { showWarning } = useSwal();
+  const { showWarning, showSuccess } = useSwal();
 
-  // Estados
+  // Estados del Formulario
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Búsqueda de Cliente
+  // Estados de Búsqueda de Cliente
   const [clienteSearch, setClienteSearch] = useState('');
   const [clientesFound, setClientesFound] = useState([]);
-  const [selectedCliente, setSelectedCliente] = useState(null); // { id, nombre }
+  const [selectedCliente, setSelectedCliente] = useState(null); 
+  const [searchingClient, setSearchingClient] = useState(false);
 
+  // 1. Cargar Servicios
   useEffect(() => {
     fetchServicios({ activo: true });
   }, [fetchServicios]);
 
+  // 2. Consultar Disponibilidad
   useEffect(() => {
     if (selectedDate && selectedServices.length > 0) {
+      // CORRECCIÓN: Pasamos el array directamente. La API (turnosApi.js) se encarga de hacer el .join si es necesario.
       fetchHorariosDisponibles(selectedDate, selectedServices);
+      
+      setSelectedSlot(''); // Resetear hora si cambian parámetros
     }
   }, [selectedDate, selectedServices, fetchHorariosDisponibles]);
 
-  // Lógica de búsqueda de clientes
+  // 3. Buscador de Clientes (Debounce)
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (clienteSearch.length > 2 && !selectedCliente) {
+        setSearchingClient(true);
         try {
-          // Asumiendo que clientesApi.getClientes acepta params 'search'
           const res = await clientesApi.getClientes({ search: clienteSearch });
           setClientesFound(res.results || res);
         } catch (error) {
-          console.error(error);
+          console.error("Error buscando clientes", error);
+        } finally {
+            setSearchingClient(false);
         }
       } else {
         setClientesFound([]);
       }
-    }, 300);
+    }, 400);
+
     return () => clearTimeout(delayDebounceFn);
   }, [clienteSearch, selectedCliente]);
 
-  const selectCliente = (c) => {
-    setSelectedCliente(c);
-    setClienteSearch(`${c.nombre} ${c.apellido}`);
+  const handleSelectCliente = (cliente) => {
+    setSelectedCliente(cliente);
+    setClienteSearch(`${cliente.nombre} ${cliente.apellido}`);
     setClientesFound([]);
   };
 
-  const { totalPrice, totalDuration } = useMemo(() => {
-    return selectedServices.reduce((acc, id) => {
-      // Ajuste: id puede venir como number o string
-      const service = servicios.find(s => s.id_serv === id || s.id === id); 
-      if (service) {
-        acc.totalPrice += Number(service.precio);
-        acc.totalDuration += service.duracion;
-      }
-      return acc;
-    }, { totalPrice: 0, totalDuration: 0 });
-  }, [selectedServices, servicios]);
+  const handleClearCliente = () => {
+      setSelectedCliente(null);
+      setClienteSearch('');
+  };
 
   const toggleService = (serviceId) => {
     setSelectedServices(prev => 
@@ -110,35 +121,49 @@ export const CrearTurno = () => {
     setSelectedSlot('');
   };
 
+  const { totalPrice, totalDuration } = useMemo(() => {
+    return selectedServices.reduce((acc, id) => {
+      const service = servicios.find(s => s.id_serv === id || s.id === id); 
+      if (service) {
+        acc.totalPrice += parseFloat(service.precio);
+        acc.totalDuration += service.duracion;
+      }
+      return acc;
+    }, { totalPrice: 0, totalDuration: 0 });
+  }, [selectedServices, servicios]);
+
+
   const handleSubmit = async () => {
-    if (selectedServices.length === 0) return showWarning('Faltan datos', 'Selecciona servicios');
-    if (!selectedDate) return showWarning('Faltan datos', 'Selecciona una fecha');
-    if (!selectedSlot) return showWarning('Faltan datos', 'Selecciona un horario');
-    if (!selectedCliente) return showWarning('Faltan datos', 'Selecciona un cliente de la lista');
+    if (!selectedCliente) return showWarning('Falta Cliente', 'Por favor seleccione un cliente.');
+    if (selectedServices.length === 0) return showWarning('Faltan Servicios', 'Seleccione al menos un servicio.');
+    if (!selectedDate) return showWarning('Falta Fecha', 'Seleccione una fecha para el turno.');
+    if (!selectedSlot) return showWarning('Falta Hora', 'Seleccione un horario disponible.');
 
     setSubmitting(true);
     try {
-      // CORRECCIÓN: Usamos .user_id obligatoriamente.
-      // El backend espera el ID de la tabla auth_user, no de la tabla cliente.
-      const idUsuario = selectedCliente.user_id; 
-
+      const fechaHoraInicio = `${selectedDate}T${selectedSlot}:00`;
+      
+      // Validamos que el cliente tenga usuario asociado (user_id)
+      const idUsuario = selectedCliente.user_id;
       if (!idUsuario) {
-        console.error("El cliente seleccionado no tiene user_id asociado:", selectedCliente);
-        showWarning("Error", "Cliente inválido (sin usuario asociado).");
-        setSubmitting(false);
-        return;
+          throw new Error("El cliente seleccionado no tiene un usuario válido asociado.");
       }
 
-      await crearTurno({
-        fecha: selectedDate,
-        hora: selectedSlot,
-        servicios_ids: selectedServices,
-        cliente_id: idUsuario, // <--- Aquí estaba el error
-        observaciones,
-      });
+      const payload = {
+        cliente: idUsuario, 
+        fecha_hora_inicio: fechaHoraInicio,
+        servicios: selectedServices,
+        observaciones: observaciones
+      };
+
+      await crearTurno(payload);
+      await showSuccess('¡Turno Creado!', `Agendado para el ${new Date(fechaHoraInicio).toLocaleDateString()}`);
       navigate('/turnos');
+
     } catch (error) {
       console.error(error);
+      // El hook useTurnos generalmente muestra el error, pero si no, descomenta:
+      // showWarning('Error', 'No se pudo crear el turno');
     } finally {
       setSubmitting(false);
     }
@@ -147,93 +172,175 @@ export const CrearTurno = () => {
   const minDate = new Date().toISOString().split('T')[0];
 
   return (
-    <motion.div className={styles.crearTurnoPage} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className={styles.pageContainer} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate('/turnos')}><ChevronLeft size={24} /></button>
-        <h1 className={styles.title}>Crear Nuevo Turno</h1>
+        <Button variant="ghost" icon={ChevronLeft} onClick={() => navigate('/turnos')}>
+            Volver
+        </Button>
+        <h1 className={styles.title}>Nuevo Turno</h1>
       </header>
 
-      <div className={styles.content}>
-        <div className={styles.formSection}>
-          
-          {/* SECCIÓN CLIENTE (Corregida) */}
-          <Card className={styles.card}>
-            <h2 className={styles.sectionTitle}>Cliente</h2>
-            <div style={{ position: 'relative' }}>
-              <Input
-                label="Buscar Cliente"
-                value={clienteSearch}
-                onChange={(e) => {
-                  setClienteSearch(e.target.value);
-                  setSelectedCliente(null); // Reset al escribir
-                }}
-                placeholder="Nombre o email..."
-                icon={Search}
-              />
-              {clientesFound.length > 0 && (
-                <ul className={styles.searchResults}>
-                  {clientesFound.map(c => (
-                    <li key={c.id} onClick={() => selectCliente(c)} className={styles.searchItem}>
-                      {c.nombre} {c.apellido} ({c.email})
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Card>
-
-          <Card className={styles.card}>
-            <h2 className={styles.sectionTitle}>Servicios</h2>
-            {serviciosLoading ? <p>Cargando...</p> : (
-              <div className={styles.servicesGrid}>
-                {servicios.filter(s => s.activo).map(servicio => (
-                  // Usamos id_serv o id según venga del backend
-                  <ServiceCard 
-                    key={servicio.id || servicio.id_serv} 
-                    servicio={servicio} 
-                    selected={selectedServices.includes(servicio.id || servicio.id_serv)} 
-                    onToggle={() => toggleService(servicio.id || servicio.id_serv)} 
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
-
-          <Card className={styles.card}>
-            <h2 className={styles.sectionTitle}>Fecha y Horario</h2>
-            <Input type="date" label="Fecha" value={selectedDate} onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(''); }} min={minDate} icon={Calendar} />
-            
-            {selectedDate && selectedServices.length > 0 && (
-              <div className={styles.slotsSection}>
-                 <p className={styles.slotsLabel}>Horarios:</p>
-                 <div className={styles.slotsGrid}>
-                   {(horariosDisponibles || []).map(slot => (
-                     <TimeSlot key={slot} time={slot} available={true} selected={selectedSlot === slot} onClick={() => setSelectedSlot(slot)} />
-                   ))}
-                 </div>
-              </div>
-            )}
-          </Card>
-          
-          {/* Observaciones ... */}
-           <Card className={styles.card}>
-             <h2 className={styles.sectionTitle}>Observaciones</h2>
-             <textarea className={styles.textarea} value={observaciones} onChange={e => setObservaciones(e.target.value)} rows={3} />
-           </Card>
-
-        </div>
+      <div className={styles.contentGrid}>
         
-        {/* Resumen Sidebar ... (Igual al anterior, solo asegurar que usa los estados) */}
-        <div className={styles.summarySection}>
-           <Card className={styles.summaryCard}>
-              <h2 className={styles.sectionTitle}>Resumen</h2>
-              <div className={styles.summaryTotal}>
-                 <span>Total</span>
-                 <span className={styles.totalPrice}>{formatCurrency(totalPrice)}</span>
-              </div>
-              <Button fullWidth icon={Check} loading={submitting} onClick={handleSubmit}>Reservar</Button>
-           </Card>
+        <div className={styles.leftColumn}>
+          
+          {/* 1. BUSCADOR DE CLIENTE */}
+          {/* IMPORTANTE: 'overflowVisible' permite que el dropdown salga de la tarjeta */}
+          <Card className={`${styles.sectionCard} ${styles.overflowVisible}`}>
+            <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}><User size={20}/> Cliente</h2>
+            </div>
+            <div className={styles.searchWrapper}>
+                <Input
+                    placeholder="Buscar por nombre, apellido o email..."
+                    value={clienteSearch}
+                    onChange={(e) => setClienteSearch(e.target.value)}
+                    icon={Search}
+                    disabled={!!selectedCliente} 
+                />
+                {selectedCliente && (
+                    <button className={styles.clearBtn} onClick={handleClearCliente}>
+                        <X size={18} />
+                    </button>
+                )}
+                
+                {!selectedCliente && clientesFound.length > 0 && (
+                    <ul className={styles.resultsDropdown}>
+                        {clientesFound.map(c => (
+                            <li key={c.id} onClick={() => handleSelectCliente(c)} className={styles.resultItem}>
+                                <div className={styles.clientName}>{c.nombre} {c.apellido}</div>
+                                <div className={styles.clientEmail}>{c.email}</div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                {!selectedCliente && clienteSearch.length > 2 && clientesFound.length === 0 && !searchingClient && (
+                     <div className={styles.noResults}>No se encontraron clientes.</div>
+                )}
+            </div>
+            {selectedCliente && (
+                <div className={styles.selectedInfo}>
+                    <span className={styles.label}>Teléfono:</span> {selectedCliente.telefono || '-'}
+                </div>
+            )}
+          </Card>
+
+          {/* 2. SELECCIÓN DE SERVICIOS */}
+          <Card className={styles.sectionCard}>
+            <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}><Check size={20}/> Servicios</h2>
+            </div>
+            {serviciosLoading ? <p>Cargando servicios...</p> : (
+                <div className={styles.servicesGrid}>
+                    {servicios.filter(s => s.activo).map(serv => (
+                        <ServiceCard 
+                            key={serv.id_serv} 
+                            servicio={serv} 
+                            selected={selectedServices.includes(serv.id_serv)}
+                            onToggle={() => toggleService(serv.id_serv)}
+                        />
+                    ))}
+                </div>
+            )}
+          </Card>
+
+          {/* 3. FECHA Y HORA */}
+          <Card className={styles.sectionCard}>
+             <div className={styles.cardHeader}>
+                <h2 className={styles.cardTitle}><Calendar size={20}/> Fecha y Hora</h2>
+            </div>
+            <div className={styles.dateRow}>
+                <div style={{flex:1}}>
+                    <Input 
+                        type="date" 
+                        label="Fecha del Turno" 
+                        value={selectedDate} 
+                        onChange={(e) => setSelectedDate(e.target.value)} 
+                        min={minDate}
+                    />
+                </div>
+            </div>
+
+            {selectedDate && selectedServices.length > 0 && (
+                <div className={styles.slotsContainer}>
+                    <p className={styles.subLabel}>Horarios Disponibles</p>
+                    <div className={styles.slotsGrid}>
+                        {horariosDisponibles.length > 0 ? horariosDisponibles.map(slot => (
+                            <TimeSlot 
+                                key={slot} 
+                                time={slot} 
+                                available={true} 
+                                selected={selectedSlot === slot} 
+                                onClick={() => setSelectedSlot(slot)} 
+                            />
+                        )) : (
+                            <p className={styles.emptyText}>No hay disponibilidad para esta combinación.</p>
+                        )}
+                    </div>
+                </div>
+            )}
+            
+            {(!selectedDate || selectedServices.length === 0) && (
+                <p className={styles.hintText}>Selecciona servicios y fecha para ver horarios.</p>
+            )}
+          </Card>
+          
+          {/* 4. OBSERVACIONES */}
+          <Card className={styles.sectionCard}>
+             <label className={styles.inputLabel}>Observaciones</label>
+             <textarea 
+                className={styles.textarea} 
+                value={observaciones} 
+                onChange={e => setObservaciones(e.target.value)}
+                rows={3}
+             />
+          </Card>
         </div>
+
+        <div className={styles.rightColumn}>
+            <Card className={styles.summaryCard}>
+                <h2 className={styles.summaryTitle}>Resumen</h2>
+                
+                <div className={styles.summaryRow}>
+                    <span>Cliente</span>
+                    <strong>{selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido}` : '-'}</strong>
+                </div>
+                
+                <div className={styles.summaryRow}>
+                    <span>Fecha</span>
+                    <strong>{selectedDate ? new Date(selectedDate + 'T00:00').toLocaleDateString() : '-'}</strong>
+                </div>
+
+                <div className={styles.summaryRow}>
+                    <span>Horario</span>
+                    <strong>{selectedSlot || '-'}</strong>
+                </div>
+
+                <div className={styles.divider}></div>
+
+                <div className={styles.summaryRow}>
+                    <span>Duración</span>
+                    <span>{totalDuration} min</span>
+                </div>
+
+                <div className={styles.totalRow}>
+                    <span>Total</span>
+                    <span className={styles.totalPrice}>{formatCurrency(totalPrice)}</span>
+                </div>
+
+                <Button 
+                    fullWidth 
+                    size="lg" 
+                    onClick={handleSubmit} 
+                    loading={submitting}
+                    disabled={!selectedCliente || !selectedDate || !selectedSlot || selectedServices.length === 0}
+                >
+                    Confirmar Turno
+                </Button>
+            </Card>
+        </div>
+
       </div>
     </motion.div>
   );

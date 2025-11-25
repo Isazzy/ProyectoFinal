@@ -3,10 +3,10 @@
 // ========================================
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-// CORRECCIÓN CLAVE: Renombrar History a HistoryIcon para evitar conflicto con window.History
 import { 
     Lock, Unlock, DollarSign, TrendingUp, TrendingDown, 
-    ShoppingCart, RefreshCw, Plus, Minus, History as HistoryIcon 
+    ShoppingCart, RefreshCw, Plus, Minus, History as HistoryIcon,
+    AlertCircle, Wallet
 } from 'lucide-react';
 import { useCaja } from '../../hooks/useCaja';
 import { Card, Button, Input, Badge, Modal } from '../../components/ui';
@@ -17,40 +17,45 @@ import styles from '../../styles/Caja.module.css';
 const MovimientoForm = ({ tipo, onSubmit, onClose }) => {
     const [monto, setMonto] = useState("");
     const [desc, setDesc] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!monto || !desc) return;
-        // Enviamos descripción y monto al hook
-        onSubmit(desc, monto);
+        setSubmitting(true);
+        await onSubmit(desc, monto);
+        setSubmitting(false);
         onClose();
     };
 
     return (
         <form onSubmit={handleSubmit} className={styles.modalForm}>
-            <Input 
-                label="Monto" 
-                type="number" 
-                value={monto} 
-                onChange={e => setMonto(e.target.value)} 
-                startIcon={DollarSign}
-                autoFocus
-                min="0.01" 
-                step="any"
-            />
-            <div style={{marginBottom: 15}}>
-                <label style={{display:'block', marginBottom:5, fontWeight:500}}>Descripción</label>
+            <div className={styles.amountInputWrapper}>
+                <label>Monto</label>
+                <Input 
+                    type="number" 
+                    value={monto} 
+                    onChange={e => setMonto(e.target.value)} 
+                    startIcon={DollarSign}
+                    autoFocus
+                    min="0.01" 
+                    step="0.01"
+                    className={styles.largeInput}
+                />
+            </div>
+            <div className={styles.formGroup}>
+                <label>Descripción / Motivo</label>
                 <textarea 
                     className={styles.textarea} 
                     value={desc} 
                     onChange={e => setDesc(e.target.value)}
-                    placeholder={tipo === 'ingreso' ? "Ej: Aporte de cambio" : "Ej: Compra artículos limpieza"}
+                    placeholder={tipo === 'ingreso' ? "Ej: Aporte de cambio chico" : "Ej: Compra insumos limpieza (Chino)"}
                     rows={3}
                 />
             </div>
             <div className={styles.formActions}>
                 <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-                <Button type="submit" variant={tipo === 'ingreso' ? 'primary' : 'danger'}>
+                <Button type="submit" variant={tipo === 'ingreso' ? 'primary' : 'danger'} loading={submitting}>
                     {tipo === 'ingreso' ? 'Registrar Ingreso' : 'Registrar Egreso'}
                 </Button>
             </div>
@@ -60,36 +65,42 @@ const MovimientoForm = ({ tipo, onSubmit, onClose }) => {
 
 // --- Sub-componente: Tabla de Historial ---
 const HistorialTable = ({ historial, loading }) => {
-    if (loading && (!historial || historial.length === 0)) return <p style={{padding:20}}>Cargando historial...</p>;
-    if (!historial || historial.length === 0) return <p style={{padding:20}}>No hay cierres de caja anteriores.</p>;
+    if (loading) return <div className={styles.loadingState}><RefreshCw className="animate-spin"/> Cargando historial...</div>;
+    if (!historial || historial.length === 0) return <div className={styles.emptyState}><p>No hay cierres de caja anteriores.</p></div>;
 
     return (
-        <div style={{maxHeight: '60vh', overflowY: 'auto'}}>
+        <div className={styles.tableContainer}>
             <table className={styles.table}>
                 <thead>
                     <tr>
                         <th>Apertura</th>
                         <th>Cierre</th>
-                        <th>Inicial</th>
-                        <th>Final</th>
+                        <th>Monto Inicial</th>
+                        <th>Saldo Final</th>
                         <th>Responsable</th>
                     </tr>
                 </thead>
                 <tbody>
                     {historial.map(c => (
                         <tr key={c.id}>
-                            <td>{formatDate(c.caja_fecha_hora_apertura)}</td>
+                            <td>
+                                <div className={styles.dateCell}>
+                                    <span>{formatDate(c.caja_fecha_hora_apertura)}</span>
+                                    <small>{new Date(c.caja_fecha_hora_apertura).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+                                </div>
+                            </td>
                             <td>
                                 {c.caja_fecha_hora_cierre 
-                                    ? formatDate(c.caja_fecha_hora_cierre) 
+                                    ? <span className={styles.dateCell}>
+                                        {formatDate(c.caja_fecha_hora_cierre)}
+                                        <small>{new Date(c.caja_fecha_hora_cierre).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+                                      </span>
                                     : <Badge variant="warning">Abierta</Badge>
                                 }
                             </td>
                             <td>{formatCurrency(c.caja_monto_inicial)}</td>
-                            <td style={{fontWeight:'bold'}}>
-                                {c.caja_saldo_final !== null ? formatCurrency(c.caja_saldo_final) : '-'}
-                            </td>
-                            <td>{c.empleado?.nombre || c.empleado?.user?.username || 'Usuario'}</td>
+                            <td><span className={styles.totalAmount}>{c.caja_saldo_final !== null ? formatCurrency(c.caja_saldo_final) : '-'}</span></td>
+                            <td>{c.empleado?.first_name || c.empleado?.user?.username || 'Usuario'}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -98,7 +109,7 @@ const HistorialTable = ({ historial, loading }) => {
     );
 };
 
-// --- Componente Principal: CajaPage ---
+// --- Componente Principal ---
 export const CajaPage = () => {
   const { 
       caja, movimientos, historial, loading, 
@@ -106,10 +117,9 @@ export const CajaPage = () => {
       registrarIngreso, registrarEgreso, fetchHistorial 
   } = useCaja();
   
-  // Estados locales
   const [montoInicial, setMontoInicial] = useState("");
   const [observacion, setObservacion] = useState("");
-  const [modalMovimiento, setModalMovimiento] = useState({ open: false, tipo: null }); // 'ingreso' | 'egreso'
+  const [modalMovimiento, setModalMovimiento] = useState({ open: false, tipo: null });
   const [showHistory, setShowHistory] = useState(false);
 
   const handleOpenHistory = () => {
@@ -117,46 +127,47 @@ export const CajaPage = () => {
       setShowHistory(true);
   };
 
-  // --- VISTA 1: CAJA CERRADA (APERTURA) ---
+  // --- VISTA 1: CAJA CERRADA ---
   if (!loading && !caja) {
     return (
-      <div style={{padding: 20}}>
-        {/* Botón Historial flotante */}
-        <div style={{display:'flex', justifyContent: 'flex-end', marginBottom: 20}}>
-           <Button variant="outline" onClick={handleOpenHistory} icon={HistoryIcon}>Historial</Button>
-        </div>
+      <div className={styles.pageContainer}>
+        <header className={styles.headerSimple}>
+           <h1>Gestión de Caja</h1>
+           <Button variant="outline" onClick={handleOpenHistory} icon={HistoryIcon}>Historial de Cierres</Button>
+        </header>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.centerContainer}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={styles.centerWrapper}>
             <Card className={styles.openCard}>
-                <div className={styles.iconWrapper}>
-                    <Lock size={48} color="#64748b" />
+                <div className={styles.iconCircle}>
+                    <Lock size={40} />
                 </div>
-                <h2 className={styles.title}>Caja Cerrada</h2>
-                <p className={styles.subtitle}>Ingrese el monto inicial en efectivo para comenzar.</p>
+                <h2 className={styles.cardTitle}>Caja Cerrada</h2>
+                <p className={styles.cardSubtitle}>Inicia el turno ingresando el dinero base en caja.</p>
                 
-                <div className={styles.formGroup}>
+                <div className={styles.openForm}>
                     <Input 
                         type="number" 
+                        label="Monto Inicial ($)"
                         value={montoInicial} 
                         onChange={(e) => setMontoInicial(e.target.value)} 
                         placeholder="0.00" 
                         startIcon={DollarSign}
-                        label="Monto Inicial"
+                        className={styles.largeInput}
+                        autoFocus
                     />
+                    <Button 
+                        fullWidth 
+                        size="lg" 
+                        onClick={() => abrirCaja(montoInicial || 0)}
+                        disabled={loading}
+                        style={{marginTop: 20}}
+                    >
+                        {loading ? 'Abriendo...' : 'Abrir Caja'}
+                    </Button>
                 </div>
-
-                <Button 
-                    fullWidth 
-                    size="lg" 
-                    onClick={() => abrirCaja(montoInicial || 0)}
-                    disabled={loading}
-                >
-                    {loading ? 'Abriendo...' : 'Abrir Caja'}
-                </Button>
             </Card>
         </motion.div>
 
-        {/* MODAL HISTORIAL (Disponible también aquí) */}
         <Modal isOpen={showHistory} onClose={() => setShowHistory(false)} title="Historial de Cajas">
             <HistorialTable historial={historial} loading={loading} />
         </Modal>
@@ -165,113 +176,171 @@ export const CajaPage = () => {
   }
 
   // --- VISTA 2: CAJA ABIERTA (DASHBOARD) ---
+  
+  // Cálculo seguro de totales para evitar NaN
+  const totalEgresos = parseFloat(caja?.total_egresos_manuales || 0) + parseFloat(caja?.total_compras_efectivo || 0);
+  const totalVentas = parseFloat(caja?.total_ventas_efectivo || 0);
+  
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.dashboard}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.pageContainer}>
       
+      {/* HEADER */}
       <header className={styles.header}>
-        <div>
+        <div className={styles.headerInfo}>
             <div className={styles.statusBadge}>
-                <span className={styles.dot}></span> Caja Abierta
+                <span className={styles.pulseDot}></span> Caja Abierta
             </div>
-            <h1 style={{margin:0}}>Control de Caja</h1>
-            <p style={{color:'#666', fontSize:'0.9rem'}}>Apertura: {caja ? formatDate(caja.caja_fecha_hora_apertura) : '-'}</p>
+            <h1 className={styles.title}>Control de Caja</h1>
+            <p className={styles.subtitle}>
+                Apertura: {caja ? `${formatDate(caja.caja_fecha_hora_apertura)} a las ${new Date(caja.caja_fecha_hora_apertura).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}` : '-'}
+            </p>
         </div>
-        <div style={{display:'flex', gap: 10}}>
-            <Button variant="outline" icon={Plus} onClick={() => setModalMovimiento({open: true, tipo: 'ingreso'})} style={{color: '#16a34a', borderColor: '#16a34a'}}>
-                Ingreso
-            </Button>
-            <Button variant="outline" icon={Minus} onClick={() => setModalMovimiento({open: true, tipo: 'egreso'})} style={{color: '#ef4444', borderColor: '#ef4444'}}>
-                Egreso
-            </Button>
-            
-            <div style={{width: 1, background: '#ddd', margin: '0 5px'}}></div>
-            
-            {/* CORRECCIÓN: Usamos HistoryIcon */}
+        <div className={styles.headerActions}>
             <Button variant="outline" onClick={handleOpenHistory} icon={HistoryIcon}>Historial</Button>
             <Button variant="secondary" onClick={refrescar} icon={RefreshCw}>Actualizar</Button>
-            <Button variant="danger" onClick={() => cerrarCaja(observacion)} icon={Lock}>Cerrar Caja</Button>
         </div>
       </header>
 
+      {/* KPI CARDS */}
       {caja && (
         <div className={styles.statsGrid}>
+            {/* 1. Monto Inicial */}
             <Card className={styles.statCard}>
-                <p>Monto Inicial</p>
-                <h3>{formatCurrency(caja.caja_monto_inicial)}</h3>
-                <Unlock className={styles.cardIcon} color="#64748b"/>
+                <div className={styles.statHeader}>
+                    <span className={styles.statLabel}>Monto Inicial</span>
+                    <div className={styles.iconBox}><Unlock size={18}/></div>
+                </div>
+                <div className={styles.statValue}>{formatCurrency(caja.caja_monto_inicial)}</div>
             </Card>
             
+            {/* 2. Ingresos (Ventas Efectivo) */}
             <Card className={styles.statCard}>
-                <p>Ventas Efectivo</p>
-                <h3 style={{color: '#16a34a'}}>+{formatCurrency(caja.total_ventas_efectivo)}</h3>
-                <ShoppingCart className={styles.cardIcon} color="#16a34a"/>
+                <div className={styles.statHeader}>
+                    <span className={styles.statLabel}>Ventas (Efectivo)</span>
+                    <div className={`${styles.iconBox} ${styles.successIcon}`}><TrendingUp size={18}/></div>
+                </div>
+                <div className={`${styles.statValue} ${styles.textSuccess}`}>+{formatCurrency(totalVentas)}</div>
+                {parseFloat(caja.total_ingresos_manuales) > 0 && (
+                     <small className={styles.statSubtext}>+ {formatCurrency(caja.total_ingresos_manuales)} otros ing.</small>
+                )}
             </Card>
 
+            {/* 3. Egresos Totales */}
             <Card className={styles.statCard}>
-                <p>Gastos/Retiros</p>
-                <h3 style={{color: '#ef4444'}}>-{formatCurrency(parseFloat(caja.total_egresos_manuales || 0) + parseFloat(caja.total_compras_efectivo || 0))}</h3>
-                <TrendingDown className={styles.cardIcon} color="#ef4444"/>
+                <div className={styles.statHeader}>
+                    <span className={styles.statLabel}>Total Salidas</span>
+                    <div className={`${styles.iconBox} ${styles.dangerIcon}`}><TrendingDown size={18}/></div>
+                </div>
+                <div className={`${styles.statValue} ${styles.textDanger}`}>-{formatCurrency(totalEgresos)}</div>
+                <small className={styles.statSubtext}>Compras y Retiros</small>
             </Card>
 
+            {/* 4. SALDO FINAL (Highlight) */}
             <Card className={`${styles.statCard} ${styles.balanceCard}`}>
-                <p>Saldo Físico (Efectivo)</p>
-                <h1>{formatCurrency(caja.saldo_calculado_efectivo)}</h1>
-                <DollarSign className={styles.cardIcon} color="#fff"/>
+                <div className={styles.statHeader}>
+                    <span className={styles.balanceLabel}>Saldo en Caja</span>
+                    <div className={styles.balanceIcon}><Wallet size={20}/></div>
+                </div>
+                <div className={styles.balanceValue}>{formatCurrency(caja.saldo_calculado_efectivo)}</div>
+                <small className={styles.balanceSubtext}>Dinero físico esperado</small>
             </Card>
         </div>
       )}
 
-      <Card className={styles.movimientosCard}>
-        <h3>Movimientos del Turno</h3>
-        {movimientos.length > 0 ? (
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Tipo</th>
-                        <th>Descripción</th>
-                        <th style={{textAlign:'right'}}>Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {movimientos.map((mov, idx) => {
-                        const isPositivo = mov.tipo === 'Venta' || mov.tipo === 'Ingreso';
-                        return (
-                            <tr key={idx}>
-                                <td>{new Date(mov.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-                                <td>
-                                    <Badge variant={isPositivo ? 'success' : 'danger'}>{mov.tipo}</Badge>
-                                </td>
-                                <td>{mov.descripcion}</td>
-                                <td style={{textAlign:'right', fontWeight:'bold', color: isPositivo ? '#16a34a' : '#ef4444'}}>
-                                    {isPositivo ? '+' : '-'}{formatCurrency(mov.monto)}
-                                </td>
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table>
-        ) : (
-            <p style={{textAlign:'center', padding: 20, color:'#999'}}>No hay movimientos registrados aún.</p>
-        )}
-      </Card>
+      <div className={styles.mainContentGrid}>
+        
+        {/* COLUMNA IZQUIERDA: MOVIMIENTOS */}
+        <div className={styles.leftCol}>
+            <div className={styles.sectionHeader}>
+                <h3>Movimientos del Turno</h3>
+                <div className={styles.quickActions}>
+                    <Button size="sm" variant="outline" icon={Plus} onClick={() => setModalMovimiento({open: true, tipo: 'ingreso'})} style={{color: '#16a34a', borderColor: '#16a34a'}}>
+                        Ingreso
+                    </Button>
+                    <Button size="sm" variant="outline" icon={Minus} onClick={() => setModalMovimiento({open: true, tipo: 'egreso'})} style={{color: '#ef4444', borderColor: '#ef4444'}}>
+                        Egreso
+                    </Button>
+                </div>
+            </div>
 
-      <div style={{marginTop: 20}}>
-          <p style={{marginBottom:5, fontWeight:500}}>Observación de Cierre (Opcional):</p>
-          <textarea 
-            className={styles.textarea}
-            placeholder="Ej: Faltaron $10, se retiró dinero para..."
-            value={observacion}
-            onChange={(e) => setObservacion(e.target.value)}
-          />
+            <Card className={styles.tableCard}>
+                {movimientos.length > 0 ? (
+                    <div className={styles.tableScroll}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Descripción</th>
+                                    <th style={{textAlign:'right'}}>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {movimientos.map((mov, idx) => {
+                                    const isPositivo = mov.tipo === 'Venta' || mov.tipo === 'Ingreso';
+                                    return (
+                                        <tr key={idx}>
+                                            <td className={styles.timeCell}>{new Date(mov.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                                            <td>
+                                                <Badge variant={isPositivo ? 'success' : 'danger'}>{mov.tipo}</Badge>
+                                            </td>
+                                            <td className={styles.descCell}>{mov.descripcion}</td>
+                                            <td style={{textAlign:'right', fontWeight:'bold', color: isPositivo ? '#16a34a' : '#ef4444'}}>
+                                                {isPositivo ? '+' : '-'}{formatCurrency(mov.monto)}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className={styles.emptyState}>
+                        <p>No hay movimientos registrados en este turno.</p>
+                    </div>
+                )}
+            </Card>
+        </div>
+
+        {/* COLUMNA DERECHA: CIERRE DE CAJA */}
+        <div className={styles.rightCol}>
+            <Card className={styles.closeCard}>
+                <div className={styles.closeHeader}>
+                    <h3><Lock size={20}/> Arqueo de Caja</h3>
+                    <p>Finalizar el turno actual.</p>
+                </div>
+                
+                <div className={styles.closeForm}>
+                    <label>Observaciones del Cierre</label>
+                    <textarea 
+                        className={styles.textarea}
+                        placeholder="Diferencias, billetes rotos, notas..."
+                        value={observacion}
+                        onChange={(e) => setObservacion(e.target.value)}
+                    />
+                    
+                    <div className={styles.closeAlert}>
+                        <AlertCircle size={18}/>
+                        <span>Verifique que el dinero físico coincida con el saldo esperado: <strong>{formatCurrency(caja?.saldo_calculado_efectivo)}</strong></span>
+                    </div>
+
+                    <Button 
+                        fullWidth 
+                        variant="danger" 
+                        onClick={() => cerrarCaja(observacion)} 
+                        icon={Lock}
+                        size="lg"
+                    >
+                        Cerrar Caja
+                    </Button>
+                </div>
+            </Card>
+        </div>
+
       </div>
 
       {/* MODALES */}
-      <Modal 
-        isOpen={modalMovimiento.open} 
-        onClose={() => setModalMovimiento({...modalMovimiento, open: false})}
-        title={modalMovimiento.tipo === 'ingreso' ? 'Registrar Ingreso Manual' : 'Registrar Egreso/Gasto'}
-      >
+      <Modal isOpen={modalMovimiento.open} onClose={() => setModalMovimiento({...modalMovimiento, open: false})} title={modalMovimiento.tipo === 'ingreso' ? 'Registrar Ingreso Extra' : 'Registrar Gasto/Retiro'}>
           <MovimientoForm 
             tipo={modalMovimiento.tipo}
             onSubmit={modalMovimiento.tipo === 'ingreso' ? registrarIngreso : registrarEgreso}
