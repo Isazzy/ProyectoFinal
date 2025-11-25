@@ -12,8 +12,11 @@ import peinado2 from "../imagenes/peinado2.jpg";
 import peinado3 from "../imagenes/peinado3.jpg";
 import peinado4 from "../imagenes/peinado4.jpg";
 import fondo from "../imagenes/fondo.png";
+<<<<<<< HEAD
 
 import SplitText from "../components/texto_anim/SplitText";
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
 export default function Nosotros() {
   const [index, setIndex] = useState(0);
@@ -38,6 +41,7 @@ export default function Nosotros() {
     }
   };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   const handleAnimationComplete = () => {
     console.log('All letters have animated!');
@@ -149,6 +153,8 @@ export default function Nosotros() {
     padding: "20px",
     zIndex: 2,
 =======
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   // Estilos organizados
   const styles = {
     seccion1: {
@@ -335,7 +341,10 @@ export default function Nosotros() {
       cursor: "pointer",
       transition: "color 0.3s ease",
     },
+<<<<<<< HEAD
 >>>>>>> fd4d382c (actualizacion de estilos de nosotros y servicios)
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   };
 
 
@@ -452,6 +461,7 @@ export default function Nosotros() {
           viewport={{ once: true }}
         >
 <<<<<<< HEAD
+<<<<<<< HEAD
           <h1 style={{ fontSize: "2.5rem", color: "white" }}>
             
               <SplitText
@@ -471,6 +481,8 @@ export default function Nosotros() {
           </h1>
           <button style={boton} onClick={() => navigate("/turnos")}>
 =======
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
           <h2 style={{ fontSize: "2.8rem", color: "white", marginBottom: "20px" }}>
             ¡Tu look soñado <br /> empieza con un turno!
           </h2>
@@ -484,7 +496,10 @@ export default function Nosotros() {
             whileTap={{ scale: 0.95 }}
           >
             <Calendar style={{ display: "inline", marginRight: "10px" }} size={20} />
+<<<<<<< HEAD
 >>>>>>> fd4d382c (actualizacion de estilos de nosotros y servicios)
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
             Reservá tu turno
           </motion.button>
         </motion.div>
@@ -532,6 +547,7 @@ export default function Nosotros() {
               }}
             >
 <<<<<<< HEAD
+<<<<<<< HEAD
               <SplitText
                   text="CONOCÉ TODOS NUESTROS SERVICIOS"
                   className="text-2xl font-semibold text-center"
@@ -556,6 +572,8 @@ export default function Nosotros() {
           <img src={peinado3} alt="Peinado 3" style={imagenChica} />
           <img src={peinado4} alt="Peinado 4" style={imagenChica} />
 =======
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
               <motion.div
                 style={{ color: "#f76c6c", marginBottom: "20px" }}
                 whileHover={{ scale: 1.2, rotate: 360 }}
@@ -567,7 +585,10 @@ export default function Nosotros() {
               <p style={{ opacity: 0.8 }}>{beneficio.desc}</p>
             </motion.div>
           ))}
+<<<<<<< HEAD
 >>>>>>> fd4d382c (actualizacion de estilos de nosotros y servicios)
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
         </div>
         <div style={styles.divisorSuave} />
       </div>
@@ -656,7 +677,11 @@ export default function Nosotros() {
             </p>
             <p style={{ marginBottom: "10px" }}>
               <MapPin size={16} style={{ display: "inline", marginRight: "10px" }} />
+<<<<<<< HEAD
               Buenos Aires, Argentina
+=======
+              Salta, Argentina
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
             </p>
           </motion.div>
 
@@ -667,7 +692,11 @@ export default function Nosotros() {
             viewport={{ once: true }}
           >
             <h3 style={{ color: "#f76c6c", marginBottom: "15px" }}>Horarios</h3>
+<<<<<<< HEAD
             <p>Lunes a Viernes: 9:00 - 20:00</p>
+=======
+            <p>Lunes a Viernes: 9:00 - 18:00</p>
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
             <p>Sábados: 9:00 - 18:00</p>
             <p>Domingos: Cerrado</p>
           </motion.div>

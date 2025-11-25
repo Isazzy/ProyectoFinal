@@ -1,0 +1,138 @@
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    min-height: 80vh;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.title {
+    font-family: 'Great Vibes', cursive;
+    font-size: 3rem;
+    color: #9B8DC5;
+    margin: 0;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+/* GRID SERVICIOS */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.serviceCard {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.serviceCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: #9B8DC5;
+}
+
+.serviceIcon {
+    background: #f3f0ff;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: #9B8DC5;
+}
+
+/* DATE & TIME */
+.dateContainer {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.slotsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.slotBtn {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.slotBtn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.noSlots {
+    grid-column: 1 / -1;
+    color: #ef4444;
+    padding: 20px;
+}
+
+/* CONFIRMATION */
+.summaryCard {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.summaryItem {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.priceTag {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #16a34a;
+    margin: 20px 0;
+    display: block;
+}
+
+.steps {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.stepDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    transition: background 0.3s;
+}
+
+.stepActive {
+    background: #9B8DC5;
+}

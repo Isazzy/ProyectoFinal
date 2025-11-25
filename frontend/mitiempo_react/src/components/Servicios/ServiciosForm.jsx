@@ -7,10 +7,17 @@ import {
   getServicioById,
 } from "../../api/servicios";
 
+<<<<<<< HEAD
 // 💡 1. Importamos el nuevo CSS
 import "../../CSS/ServiciosForm.css";
 
 // --- Constantes (sin cambios) ---
+=======
+//  1. Importamos el nuevo CSS
+import "../../CSS/ServiciosForm.css";
+
+// --- Constantes  ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 const DIAS_SEMANA = [
   "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"
 ];
@@ -33,7 +40,11 @@ export default function ServiciosForm() {
 
   const tiposServicio = ["Peluquería", "Uñas", "Maquillaje", "Varios"];
 
+<<<<<<< HEAD
   // --- Lógica (sin cambios) ---
+=======
+  // --- Lógica ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   useEffect(() => {
     const cargarServicio = async () => {
       if (id) {
@@ -109,13 +120,21 @@ export default function ServiciosForm() {
   // ---------------------------------
 
   return (
+<<<<<<< HEAD
     // 💡 Usa la clase global .form-container
+=======
+    //  Usa la clase global .form-container
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
     <div className="form-container">
       <h2>{id ? "Editar Servicio" : "Nuevo Servicio"}</h2>
 
       <form onSubmit={handleSubmit}>
         
+<<<<<<< HEAD
         {/* 💡 2. Usa la clase global .alert */}
+=======
+        {/*  2. Usa la clase global .alert */}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
         {error && <div className="alert alert-error">{error}</div>}
 
         {/* Los campos .form-group, .form-input, .form-select

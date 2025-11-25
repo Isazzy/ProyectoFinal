@@ -1,0 +1,76 @@
+/* ========================================
+   src/components/ui/Modal.module.css
+   ======================================== */
+
+.modalRoot {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  position: relative;
+  background: white;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.sm { max-width: 400px; }
+.md { max-width: 500px; }
+.lg { max-width: 700px; }
+.xl { max-width: 900px; }
+.full { max-width: 95%; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.closeButton {
+  padding: 0.5rem;
+  border-radius: var(--radius-full);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.closeButton:hover {
+  background: var(--border-light);
+  color: var(--text);
+}
+
+.body {
+  padding: 1.5rem;
+}
+
+.footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+}

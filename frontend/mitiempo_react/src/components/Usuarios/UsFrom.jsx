@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 // front/src/components/Usuarios/UsForm.jsx
+=======
+// front/src/components/Usuarios/UsFrom.jsx
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 import React, { useEffect, useState } from "react";
 import { createUsuario, getUsuarios, updateUsuario } from "../../api/Usuarios";
 import toast from "react-hot-toast";
 import Modal from "../Common/Modal";
+<<<<<<< HEAD
 
 // 💡 1. Importamos el nuevo archivo CSS
 import "../../CSS/UsForm.css";
@@ -11,30 +16,49 @@ const initialState = {
   username: "", first_name: "", last_name: "", email: "",
   password: "", role: "cliente", rol_profesional: "",
   dias_laborables: [],
+=======
+import "../../CSS/UsForm.css";
+
+const initialState = {
+  username: "",
+  first_name: "",
+  last_name: "",
+  email: "",
+  telefono: "", // ✅ nuevo campo
+  password: "",
+  groups: ["Cliente"],
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 };
 
 export default function UsForm({ userId, onClose }) {
   const [usuario, setUsuario] = useState(initialState);
+<<<<<<< HEAD
   
   const isEditing = !!userId; 
+=======
+  const isEditing = !!userId;
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
-  const profesiones = ["peluquera", "manicurista", "estilista", "multi"];
-  const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-  const roles = [
-    { value: "admin", label: "Administrador" },
-    { value: "empleado", label: "Empleado" },
-    { value: "cliente", label: "Cliente" },
+  const grupos = [
+    { value: "Administrador", label: "Administrador" },
+    { value: "Empleado", label: "Empleado" },
+    { value: "Cliente", label: "Cliente" },
   ];
 
   useEffect(() => {
     const loadUsuario = async () => {
       if (!isEditing) {
+<<<<<<< HEAD
         setUsuario(initialState); 
+=======
+        setUsuario(initialState);
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
         return;
       }
       try {
         const res = await getUsuarios(userId);
         const data = res.data;
+<<<<<<< HEAD
         
         const dias = Array.isArray(data.dias_laborables)
           ? data.dias_laborables.map((d) =>
@@ -45,6 +69,14 @@ export default function UsForm({ userId, onClose }) {
           : [];
 
         setUsuario({ ...data, dias_laborables: dias, password: "" });
+=======
+        setUsuario({
+          ...data,
+          telefono: data.telefono || "", // ✅ aseguramos valor
+          password: "",
+          groups: data.groups && data.groups.length > 0 ? data.groups : ["Cliente"],
+        });
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
       } catch (err) {
         toast.error("Error al cargar el usuario");
       }
@@ -52,12 +84,16 @@ export default function UsForm({ userId, onClose }) {
     loadUsuario();
   }, [userId, isEditing]);
 
+<<<<<<< HEAD
   // Manejadores (handleChange, handleDiaToggle, handleHorarioChange)
   // (Tu lógica aquí es perfecta, no necesita cambios)
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUsuario((prev) => ({ ...prev, [name]: value }));
   };
+<<<<<<< HEAD
   const handleDiaToggle = (dia) => {
     setUsuario((prev) => {
       const dias = [...prev.dias_laborables];
@@ -78,14 +114,24 @@ export default function UsForm({ userId, onClose }) {
     }));
   };
   // ----------------------------------------------------
+=======
+
+  const handleGroupChange = (e) => {
+    setUsuario((prev) => ({ ...prev, groups: [e.target.value] }));
+  };
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = { ...usuario };
+<<<<<<< HEAD
       if (isEditing && !payload.password) { 
         delete payload.password;
       }
+=======
+      if (isEditing && !payload.password) delete payload.password;
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
       if (isEditing) {
         await updateUsuario(userId, payload);
@@ -94,20 +140,32 @@ export default function UsForm({ userId, onClose }) {
         await createUsuario(payload);
         toast.success("Usuario creado correctamente");
       }
+<<<<<<< HEAD
       
       onClose(true); 
+=======
+
+      onClose(true);
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
     } catch (error) {
       console.error("Error al guardar el usuario:", error.response?.data || error);
       toast.error("Error al guardar el usuario");
     }
   };
 
+<<<<<<< HEAD
   const isEmpleado = usuario.role === "empleado" || usuario.role === "admin";
   
   return (
     <Modal
       isOpen={true} 
       onClose={() => onClose(false)} 
+=======
+  return (
+    <Modal
+      isOpen={true}
+      onClose={() => onClose(false)}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
       title={isEditing ? `Editar Usuario: ${usuario.first_name}` : "Crear Nuevo Usuario"}
       footer={
         <>
@@ -120,6 +178,7 @@ export default function UsForm({ userId, onClose }) {
         </>
       }
     >
+<<<<<<< HEAD
       {/* 💡 2. Clases globales y locales (de UsForm.css) en uso */}
       <form id="user-form-id" onSubmit={handleSubmit} className="form-container-modal">
         
@@ -131,11 +190,39 @@ export default function UsForm({ userId, onClose }) {
           <div className="form-group">
             <label htmlFor="last_name">Apellido</label>
             <input id="last_name" type="text" name="last_name" value={usuario.last_name} onChange={handleChange} placeholder="Apellido" className="form-input" />
+=======
+      <form id="user-form-id" onSubmit={handleSubmit} className="form-container-modal">
+        <div className="form-grid-2">
+          <div className="form-group">
+            <label htmlFor="first_name">Nombre</label>
+            <input
+              id="first_name"
+              type="text"
+              name="first_name"
+              value={usuario.first_name}
+              onChange={handleChange}
+              placeholder="Nombre"
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="last_name">Apellido</label>
+            <input
+              id="last_name"
+              type="text"
+              name="last_name"
+              value={usuario.last_name}
+              onChange={handleChange}
+              placeholder="Apellido"
+              className="form-input"
+            />
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
           </div>
         </div>
 
         <div className="form-group">
           <label htmlFor="email">Correo electrónico</label>
+<<<<<<< HEAD
           <input id="email" type="email" name="email" value={usuario.email} onChange={handleChange} required placeholder="email@ejemplo.com" className="form-input" />
         </div>
         
@@ -203,6 +290,83 @@ export default function UsForm({ userId, onClose }) {
       </form>
       
       {/* 💡 3. Bloque <style> eliminado */}
+=======
+          <input
+            id="email"
+            type="email"
+            name="email"
+            value={usuario.email}
+            onChange={handleChange}
+            required
+            placeholder="email@ejemplo.com"
+            className="form-input"
+          />
+        </div>
+
+        {/* ✅ NUEVO CAMPO TELÉFONO */}
+        <div className="form-group">
+          <label htmlFor="telefono">Teléfono</label>
+          <input
+            id="telefono"
+            type="text"
+            name="telefono"
+            value={usuario.telefono}
+            onChange={handleChange}
+            placeholder="Ej: +56 9 1234 5678"
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="username">Nombre de Usuario</label>
+          <input
+            id="username"
+            type="text"
+            name="username"
+            value={usuario.username}
+            onChange={handleChange}
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">
+            {isEditing ? "Nueva Contraseña (dejar en blanco para no cambiar)" : "Contraseña"}
+          </label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            value={usuario.password}
+            onChange={handleChange}
+            required={!isEditing}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-section">
+          <h4>Rol y Permisos</h4>
+          <div className="form-group">
+            <label htmlFor="groups">Grupo</label>
+            <select
+              id="groups"
+              name="groups"
+              value={usuario.groups?.[0] || "Cliente"}
+              onChange={handleGroupChange}
+              required
+              className="form-select"
+            >
+              {grupos.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </form>
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
     </Modal>
   );
 }

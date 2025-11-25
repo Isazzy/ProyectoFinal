@@ -1,4 +1,8 @@
 // front/src/components/Booking/BookingPage.jsx
+<<<<<<< HEAD
+=======
+// front/src/components/Booking/BookingPage.jsx
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Calendar from "react-calendar";
@@ -8,10 +12,17 @@ import { useAuth } from "../../Context/AuthContext";
 import { getServicios } from "../../api/servicios";
 import { getHorariosDisponibles, createTurno } from "../../api/turnos";
 
+<<<<<<< HEAD
 // 💡 1. Importamos el CSS rediseñado
 import "../../CSS/BookingPage.css";
 
 // --- Lógica de helpers (sin cambios) ---
+=======
+// 1. Importamos el CSS rediseñado
+import "../../CSS/BookingPage.css";
+
+// --- Lógica de helpers ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 const groupServicios = (servicios) => {
   return servicios.reduce((acc, srv) => {
     const tipo = srv.tipo_serv || "Varios";
@@ -27,7 +38,21 @@ const formatDuration = (minutos) => {
   if (h > 0) return m > 0 ? `~${h}h ${m}min` : `~${h}h`;
   return `~${m} min`;
 };
+<<<<<<< HEAD
 // ------------------------------------
+=======
+
+// Map días a números según JS Date
+const DIAS_MAP = {
+  domingo: 0,
+  lunes: 1,
+  martes: 2,
+  miercoles: 3,
+  jueves: 4,
+  viernes: 5,
+  sabado: 6,
+};
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
 export default function BookingPage() {
   const { user } = useAuth();
@@ -46,7 +71,11 @@ export default function BookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState("");
 
+<<<<<<< HEAD
   // --- Lógica de useEffect y Handlers (sin cambios) ---
+=======
+  // --- Fetch servicios ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   useEffect(() => {
     setLoading(true);
     getServicios()
@@ -58,6 +87,10 @@ export default function BookingPage() {
       .finally(() => setLoading(false));
   }, []);
 
+<<<<<<< HEAD
+=======
+  // --- Fetch horarios disponibles ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   useEffect(() => {
     if (selectedServicios.length === 0 || !selectedDate) {
       setMergedSlots([]);
@@ -67,13 +100,22 @@ export default function BookingPage() {
     const fechaISO = selectedDate.toISOString().split("T")[0];
     getHorariosDisponibles(fechaISO, selectedServicios)
       .then((res) => {
+<<<<<<< HEAD
          const slots = (res.data.disponibilidad || []).map(s => s.hora || s); 
          setMergedSlots(slots);
+=======
+        const slots = (res.data.disponibilidad || []).map((s) => s.hora || s);
+        setMergedSlots(slots);
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
       })
       .catch(() => setMergedSlots([]))
       .finally(() => setLoadingSlots(false));
   }, [selectedServicios, selectedDate]);
 
+<<<<<<< HEAD
+=======
+  // --- Manejo de selección ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   const handleServiceToggle = (id) => {
     setSelectedServicios((prev) =>
       prev.includes(id) ? prev.filter((s_id) => s_id !== id) : [...prev, id]
@@ -163,8 +205,29 @@ export default function BookingPage() {
       setLoading(false);
     }
   };
+<<<<<<< HEAD
   // ------------------------------------
 
+=======
+
+  // --- Días habilitados según servicios seleccionados ---
+  const getDiasHabilitados = () => {
+    if (selectedServicios.length === 0) return [];
+    const allServicios = Object.values(servicios).flat();
+    const seleccionados = allServicios.filter((s) =>
+      selectedServicios.includes(s.id_serv)
+    );
+    const diasArrays = seleccionados.map((s) => s.dias_disponibles || []);
+    if (diasArrays.length === 0) return [];
+    const diasComunes = diasArrays.reduce((a, b) =>
+      a.filter((dia) => b.includes(dia))
+    );
+    return diasComunes.map((dia) => DIAS_MAP[dia]);
+  };
+  const diasHabilitados = getDiasHabilitados();
+
+  // --- Render step ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -190,7 +253,10 @@ export default function BookingPage() {
                         </span>
                       </div>
                       <button
+<<<<<<< HEAD
                         // 💡 Clases globales de botón
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
                         className={`btn ${
                           selectedServicios.includes(s.id_serv)
                             ? "btn-primary"
@@ -222,7 +288,19 @@ export default function BookingPage() {
           <div className="step-datetime-container">
             <div className="calendar-wrapper">
               <h4>1. Selecciona la Fecha</h4>
+<<<<<<< HEAD
               <Calendar onChange={handleDateChange} value={selectedDate} minDate={new Date()} />
+=======
+              <Calendar
+                onChange={handleDateChange}
+                value={selectedDate}
+                minDate={new Date()}
+                tileDisabled={({ date }) => !diasHabilitados.includes(date.getDay())}
+              />
+              {diasHabilitados.length === 0 && (
+                <p>No hay días disponibles para los servicios seleccionados.</p>
+              )}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
             </div>
             <div className="slots-wrapper">
               <h4>2. Selecciona el Horario</h4>
@@ -235,8 +313,11 @@ export default function BookingPage() {
                   {mergedSlots.map((slot) => (
                     <button
                       key={slot}
+<<<<<<< HEAD
                       // 💡 2. CORREGIDO: Usamos la clase .selected (de App.css)
                       // en lugar de .btn-primary / .btn-secondary
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
                       className={`btn slot-btn ${
                         selectedSlot === slot ? "selected" : ""
                       }`}
@@ -292,10 +373,17 @@ export default function BookingPage() {
               <textarea
                 id="observaciones"
                 name="observaciones"
+<<<<<<< HEAD
                 className="form-textarea" // Clase global
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
                 placeholder="Alergias, preferencias, etc."
+=======
+                className="form-textarea"
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                placeholder=" preferencias, etc."
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
                 rows="3"
               />
             </div>
@@ -324,9 +412,13 @@ export default function BookingPage() {
   };
 
   return (
+<<<<<<< HEAD
     // 💡 Usa la clase global .app-container
     <div className="app-container"> 
       {/* 💡 Y la clase .card para el fondo blanco */}
+=======
+    <div className="app-container">
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
       <div className="reserva-container card">
         <div className="step-title">
           <h2 className="header-title">Reserva tu Turno</h2>
@@ -337,11 +429,18 @@ export default function BookingPage() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* 💡 3. CORREGIDO: Usa la clase de alerta global */}
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
         {error && <div className="alert alert-error">{error}</div>}
 
         {renderStep()}
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be

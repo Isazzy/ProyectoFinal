@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 // front/src/pages/Admin/Sidebar.jsx
 <<<<<<< HEAD
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -305,20 +306,39 @@ import "../../CSS/sidebar.css";
 import defaultUser from "../../imagenes/defaultUser.png";
 >>>>>>> 632fee59 (Cambios)
 import { useAuth } from "../../Context/AuthContext"; 
+=======
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  FaUserCog, FaBars, FaTimes, FaChartBar, FaCalendarAlt, FaUsers,
+  FaClipboardList, FaSignOutAlt
+} from "react-icons/fa";
+import "../../CSS/sidebar.css";
+import defaultUser from "../../imagenes/defaultUser.png";
+import { useAuth } from "../../Context/AuthContext";
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+<<<<<<< HEAD
   const { user, logout: contextLogout } = useAuth(); 
   const role = user?.role || "cliente"; 
 
   // --- Lógica de menús y handlers (sin cambios) ---
+=======
+  const { user, logout } = useAuth();
+  const role = user?.role?.toLowerCase() || "cliente";
+
+  // --- MENÚ ADMIN ---
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   const adminMenu = [
     { to: "reportes", label: "Reportes", icon: <FaChartBar /> },
     { to: "agenda", label: "Agenda", icon: <FaCalendarAlt /> },
     { to: "usuarios", label: "Usuarios", icon: <FaUsers /> },
     { to: "servicios", label: "Servicios", icon: <FaClipboardList /> },
+<<<<<<< HEAD
     { to: "productos", label: "Productos", icon: <FaBox /> },
     { to: "proveedores", label: "Proveedores", icon: <FaTruck /> },
     { to: "ventas", label: "Ventas", icon: <FaShoppingCart /> },
@@ -347,6 +367,54 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
   // --------------------------------------------------
+=======
+    { to: "productos", label: "Productos", icon: <FaClipboardList /> },
+    { to: "proveedores", label: "Proveedores", icon: <FaClipboardList /> },
+    { to: "ventas", label: "Ventas", icon: <FaClipboardList /> },
+    { to: "compras", label: "Compras", icon: <FaClipboardList /> },
+  ];
+
+  // --- MENÚ EMPLEADO ---
+  const employeeMenu = [
+    { to: "usuarios", label: "Clientes", icon: <FaUsers /> },
+    { to: "agenda", label: "Agenda", icon: <FaCalendarAlt /> },
+    { to: "servicios", label: "Servicios", icon: <FaClipboardList /> },
+  ];
+
+  // --- ROLE NORMALIZADO ---
+  const normalizedRole =
+    role === "administrador" ? "admin" : role === "empleado" ? "empleado" : "cliente";
+
+  // --- MENÚ SEGÚN ROL ---
+  const menuItems =
+    normalizedRole === "admin"
+      ? adminMenu
+      : normalizedRole === "empleado"
+      ? employeeMenu
+      : [];
+
+  // --- FUNCIONES ---
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const handleProfileNav = () => {
+    navigate("/admin/dashboard/perfil");
+    setShowProfileMenu(false);
+  };
+
+  // --- CERRAR MENÚ DE PERFIL CUANDO SE CLICKEA AFUERA ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileMenu && !event.target.closest(".profile-container")) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProfileMenu]);
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 
   return (
     <aside className={`sidebar ${isOpen ? "open" : "collapsed"}`}>
@@ -359,7 +427,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           {isOpen && (
             <>
               <p className="R">Romina Magallanez</p>
+<<<<<<< HEAD
               {/* 💡 CAMBIO: Texto actualizado según tu solicitud */}
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
               <p className="M">M I T I E M P O</p>
             </>
           )}
@@ -371,6 +442,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           {menuItems.map((item) => (
             <li
               key={item.to}
+<<<<<<< HEAD
               className={location.pathname.startsWith(`/admin/dashboard/${item.to}`) ? "active" : ""}
             >
               <NavLink
@@ -382,6 +454,18 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                   e.preventDefault();
                   navigate(`/admin/dashboard/${item.to}`);
                 }}>
+=======
+              className={
+                location.pathname.startsWith(`/admin/dashboard/${item.to}`)
+                  ? "active"
+                  : ""
+              }
+            >
+              <Link
+                to={`/admin/dashboard/${item.to}`}
+                title={!isOpen ? item.label : ""}
+              >
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
                 {item.icon}
                 {isOpen && <span>{item.label}</span>}
               </NavLink>
@@ -391,7 +475,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       </nav>
 
       <div className="sidebar-footer">
+<<<<<<< HEAD
         {/* ... (Contenido del footer sin cambios) ... */}
+=======
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
         <div className="profile-container">
           <img
             src={user?.avatar || defaultUser} 
@@ -413,12 +500,23 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               </button>
             </div>
           )}
+<<<<<<< HEAD
           
           {isOpen && (
              <div className="profile-info-open">
                 <p className="username-open">{user?.first_name || user?.username}</p>
                 <p className="role-open">{user?.role}</p>
              </div>
+=======
+
+          {isOpen && (
+            <div className="profile-info-open">
+              <p className="username-open">
+                {user?.first_name || user?.username}
+              </p>
+              <p className="role-open">{normalizedRole}</p>
+            </div>
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
           )}
         </div>
       </CSidebarNav>

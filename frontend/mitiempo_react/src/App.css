@@ -17,6 +17,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 html,body{
   font-size: 18px;
   background-color: #FF5B5B;
@@ -89,6 +90,54 @@ html,body{
 }
 
 
+=======
+/* Botón Secundario (Bordeado) */
+.btn-secondary {
+  background-color: var(--color-bg-card);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+.btn-secondary:hover {
+  background-color: var(--color-primary);
+  color: var(--color-bg-card);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Botón de Peligro (Borrar/Cancelar) */
+.btn-danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+.btn-danger:hover {
+  background-color: #c51a4a; /* Rojo más oscuro */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+}
+
+.btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+/* 💡 NUEVO: Botón Pequeño */
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  /* Mantenemos el borde redondeado de píldora */
+  border-radius: var(--border-radius-pill);
+}
+/* Si el botón pequeño está en una tabla, 
+   lo hacemos un poco más pequeño */
+.table-actions .btn-sm {
+  padding: 5px 10px;
+}
+
+
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 /* ================================================================== */
 /* 2. Formularios (Elegantes y Limpios)                             */
 /* ================================================================== */

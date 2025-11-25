@@ -2,7 +2,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axiosConfig";
+<<<<<<< HEAD
 // 💡 Importamos el CSS rediseñado
+=======
+//  Importamos el CSS rediseñado
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 import "../../CSS/register.css"; 
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Modal from "../Common/Modal"; // Para el mensaje de éxito

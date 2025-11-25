@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // src/api/axiosConfig.jsx
 import axios from "axios";
 
@@ -8,10 +9,16 @@ const BASE_API_URL =
   "http://127.0.0.1:8000/api";
 
 // ====== AXIOS CLIENT ======
+=======
+// src/api/axiosConfig.js
+import axios from "axios";
+
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 const api = axios.create({
-  baseURL: BASE_API_URL,
+  baseURL: "http://localhost:8000/api", // cambiar cuando tengas dominio
 });
 
+<<<<<<< HEAD
 // ====== REQUEST INTERCEPTOR ======
 api.interceptors.request.use(
   (config) => {
@@ -201,3 +208,13 @@ export const servicioService = {
 
 // ====== DEFAULT EXPORT (para import api from ...) ======
 export default api;
+=======
+// interceptor para agregar token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export default api;
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be

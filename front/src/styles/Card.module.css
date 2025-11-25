@@ -1,0 +1,22 @@
+/* ========================================
+   src/components/ui/Card.module.css
+   ======================================== */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.paddingSm { padding: 1rem; }
+.paddingMd { padding: 1.5rem; }
+.paddingLg { padding: 2rem; }
+
+.hoverable:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.clickable {
+  cursor: pointer;
+}

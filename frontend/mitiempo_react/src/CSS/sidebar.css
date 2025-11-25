@@ -229,6 +229,7 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /* sidebar.css (fragmento) */
 .sidebar .sidebar-menu a[data-tooltip],
 .sidebar .footer-link[data-tooltip] {
@@ -268,6 +269,16 @@
   background-color: var(--color-bg); 
   min-height: 100vh;
 }
+=======
+/* --- Responsividad del Contenido --- */
+/* (Sin cambios en esta sección) */
+.admin-content {
+  padding-left: 240px; 
+  transition: padding-left 0.3s ease;
+  background-color: var(--color-bg); 
+  min-height: 100vh;
+}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
 .admin-content.collapsed {
   padding-left: 70px; 
 }
@@ -292,5 +303,9 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+<<<<<<< HEAD
 }
 >>>>>>> 874e3164 (reestructuracion de archivos)
+=======
+}
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be

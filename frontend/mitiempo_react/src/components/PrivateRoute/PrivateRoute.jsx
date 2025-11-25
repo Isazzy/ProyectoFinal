@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 //src/components/PrivateRoute/PrivateRoute.jsx
 
 import React from 'react';
@@ -20,6 +21,35 @@ export default function PrivateRoute({ children, roles }) {
   if (loading) {
     // Puedes reemplazar esto con un componente <Spinner />
     return <div>Cargando...</div>; 
+=======
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
+
+export default function PrivateRoute({ children, roles }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <div className="loading-screen">Cargando...</div>;
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+
+  const userRole = user?.role?.toLowerCase?.() || "cliente";
+
+  // 🔹 Normalizamos equivalencias
+  const roleMap = {
+    administrador: "admin",
+    admin: "admin",
+    empleado: "empleado",
+    cliente: "cliente",
+  };
+  const normalizedRole = roleMap[userRole] || "cliente";
+
+  if (roles && !roles.includes(normalizedRole)) {
+    if (normalizedRole === "cliente") return <Navigate to="/perfil" replace />;
+    if (["admin", "empleado"].includes(normalizedRole))
+      return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/nosotros" replace />;
+>>>>>>> 516c6e32d07084ab8a27435fa8206757c1f490be
   }
 
   // 4. Si no hay usuario, redirigir a Login
