@@ -7,9 +7,24 @@ export const useInventario = () => {
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { showSuccess, showError } = useSwal();
+  const { showSuccess, showError, confirm } = useSwal();
 
-  // Cargar lista principal
+  // Helper para extraer mensaje de error
+  const getErrorMsg = (error, defaultMsg) => {
+      if (error.response && error.response.data) {
+          const data = error.response.data;
+          if (typeof data === 'string') return data;
+          if (Array.isArray(data)) return data[0];
+          if (typeof data === 'object') {
+              // Devuelve el primer error que encuentre (ej: "nombre: Este campo es requerido")
+              const key = Object.keys(data)[0];
+              const msg = Array.isArray(data[key]) ? data[key][0] : data[key];
+              return `${key}: ${msg}`;
+          }
+      }
+      return error.message || defaultMsg;
+  };
+
   const fetchInsumos = useCallback(async () => {
     setLoading(true);
     try {
@@ -17,11 +32,11 @@ export const useInventario = () => {
       setInsumos(data.results || data);
     } catch (error) {
       console.error(error);
-      showError('Error', 'No se pudieron cargar los insumos');
+      // showError('Error', 'No se pudieron cargar los insumos'); // Opcional silenciar en carga inicial
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, []);
 
   const fetchDependencias = useCallback(async () => {
     try {
@@ -41,11 +56,11 @@ export const useInventario = () => {
     try {
       await inventarioApi.crearInsumo(formData);
       showSuccess('Creado', 'Insumo agregado correctamente');
-      fetchInsumos();
+      fetchInsumos(); 
       return true;
     } catch (error) {
-      console.error(error);
-      showError('Error', 'No se pudo crear el insumo');
+      const msg = getErrorMsg(error, 'No se pudo crear el insumo');
+      showError('Error al crear', msg);
       return false;
     } finally {
       setLoading(false);
@@ -60,33 +75,24 @@ export const useInventario = () => {
       fetchInsumos();
       return true;
     } catch (error) {
-      console.error(error);
-      showError('Error', 'No se pudo actualizar el insumo');
+      const msg = getErrorMsg(error, 'No se pudo actualizar el insumo');
+      showError('Error al actualizar', msg);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // --- CORRECCIÓN AQUÍ ---
   const toggleEstadoInsumo = async (id, nuevoEstado) => {
     try {
-        // USAR patchInsumo EN LUGAR DE actualizarInsumo
-        // Esto envía una petición PATCH que permite campos parciales
         await inventarioApi.patchInsumo(id, { activo: nuevoEstado }); 
-        
-        // Actualización optimista del estado local
         setInsumos(prev => prev.map(i => 
             i.id === id ? { ...i, activo: nuevoEstado } : i
         ));
-        
         showSuccess('Listo', nuevoEstado ? 'Insumo reactivado' : 'Insumo desactivado');
         return true;
     } catch (error) {
-        console.error(error);
-        // Si falla, revertimos o mostramos error. 
-        // Es útil ver qué dice el backend
-        const msg = error.response?.data?.detail || 'No se pudo cambiar el estado';
+        const msg = getErrorMsg(error, 'No se pudo cambiar el estado');
         showError('Error', msg);
         return false;
     }
@@ -98,7 +104,8 @@ export const useInventario = () => {
         setInsumos(prev => prev.filter(i => i.id !== id));
         showSuccess('Eliminado', 'Insumo eliminado.');
     } catch (error) {
-        showError('Error', 'No se pudo eliminar.');
+        const msg = getErrorMsg(error, 'No se pudo eliminar');
+        showError('Error', msg);
     }
   };
 

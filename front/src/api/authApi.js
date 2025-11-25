@@ -3,13 +3,11 @@
 // ========================================
 import api, { setTokens, clearTokens } from './axiosConfig';
 
-// CORRECCIÓN: Basado en tu listado de URLs del backend, 
-// tus rutas de auth están dentro de 'empleado' y tienen un prefijo 'api'.
+// Nota: Ajustamos la base según tus rutas reales del backend
 const AUTH_BASE = '/empleado/api'; 
 
 export const authApi = {
   login: async (email, password) => {
-    // URL Final: /api/empleado/api/login/
     const response = await api.post(`${AUTH_BASE}/login/`, { email, password });
     const { access, refresh, user } = response.data;
     setTokens(access, refresh);
@@ -17,27 +15,27 @@ export const authApi = {
   },
 
   registerCliente: async (data) => {
-    // Este parece estar en otra app (Cliente), lo dejamos como estaba
-    // URL Final: /api/cliente/register/
+    // Asumiendo que esta ruta es correcta según tu backend
     const response = await api.post('/cliente/register/', data);
     return response.data;
   },
 
   logout: async () => {
     try {
-      // Intentamos llamar al logout si existe en el backend, si no, solo limpiamos local
-      // Ajustamos la ruta por si acaso existe en el backend bajo el mismo prefijo
+      // Intentamos notificar al backend (opcional)
+      // Usamos una ruta relativa por si acaso
       await api.post(`${AUTH_BASE}/logout/`);
     } catch (error) {
-      console.log("Logout en servidor no requerido o falló", error);
+      // Si da 404 o 500, lo ignoramos intencionalmente
+      // porque lo importante es borrar el token local.
+      console.warn("Logout en servidor no disponible o falló, limpiando sesión local.");
     } finally {
+      // SIEMPRE borramos los tokens locales
       clearTokens();
     }
   },
 
   getProfile: async () => {
-    // CORRECCIÓN DEL ERROR 404
-    // URL Final: /api/empleado/api/auth/profile/
     const response = await api.get(`${AUTH_BASE}/auth/profile/`);
     return response.data;
   },

@@ -13,8 +13,6 @@ export const useBooking = () => {
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  
-  // Mensaje de error específico para la fecha (ej: "Cerrado los martes")
   const [dateError, setDateError] = useState('');
 
   const [bookingData, setBookingData] = useState({
@@ -29,20 +27,15 @@ export const useBooking = () => {
     fetchServicios({ activo: true });
   }, [fetchServicios]);
 
-  // ------------------------------------------------------------
-  // VALIDACIÓN PREVIA DE DÍAS (Lógica de Frontend rápida)
-  // ------------------------------------------------------------
+  // 1. Validación Frontend rápida
   const validarDiaServicio = (fechaStr, servicio) => {
       if (!servicio || !servicio.dias_disponibles) return true;
       
-      // Creamos fecha asegurando la zona horaria local para obtener el día correcto
       const [year, month, day] = fechaStr.split('-').map(Number);
-      const dateObj = new Date(year, month - 1, day); // Mes es 0-indexado
-      
+      const dateObj = new Date(year, month - 1, day); 
       const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
       const diaSeleccionado = diasSemana[dateObj.getDay()];
 
-      // Normalizar array del backend (por si viene con mayúsculas o espacios)
       const diasPermitidos = servicio.dias_disponibles.map(d => d.toLowerCase().trim());
 
       if (!diasPermitidos.includes(diaSeleccionado)) {
@@ -51,13 +44,10 @@ export const useBooking = () => {
       return null;
   };
 
-  // ------------------------------------------------------------
-  // CALCULAR DISPONIBILIDAD (Consulta al Backend)
-  // ------------------------------------------------------------
+  // 2. Consulta al Backend
   const consultarBackend = useCallback(async (fechaStr) => {
     if (!fechaStr || !bookingData.servicio) return;
     
-    // 1. Validación rápida de día
     const errorDia = validarDiaServicio(fechaStr, bookingData.servicio);
     if (errorDia) {
         setDateError(errorDia);
@@ -66,17 +56,17 @@ export const useBooking = () => {
     }
 
     setLoading(true);
-    setDateError(''); // Limpiar errores previos
+    setDateError(''); 
 
     try {
-        // Llamamos a TU endpoint de backend que calcula todo
-        const data = await turnosApi.getDisponibilidad(fechaStr, bookingData.servicio.id_serv);
+        // LLAMADA CORREGIDA: usa getDisponibilidad
+        // Pasamos el ID como string o array, la API lo maneja
+        const data = await turnosApi.getHorariosDisponibles(fechaStr, [bookingData.servicio.id_serv || bookingData.servicio.id]);
         
         if (data.error) {
             setDateError(data.error);
             setHorariosDisponibles([]);
         } else if (data.mensaje) {
-            // El backend dice "Cerrado los martes" o similar
             setDateError(data.mensaje);
             setHorariosDisponibles([]);
         } else {
@@ -113,7 +103,6 @@ export const useBooking = () => {
 
   const confirmarReserva = async () => {
       if (!isAuthenticated) {
-        // Guardar intento para redirigir post-login (opcional)
         navigate('/login'); 
         return;
       }
@@ -125,17 +114,19 @@ export const useBooking = () => {
           try {
               const payload = {
                   fecha_hora_inicio: `${bookingData.fecha}T${bookingData.hora}:00`,
-                  servicios: [bookingData.servicio.id_serv],
+                  servicios: [bookingData.servicio.id_serv || bookingData.servicio.id],
                   observaciones: 'Reserva Web'
-                  // Cliente lo toma el backend del token
               };
 
               await turnosApi.crearTurno(payload);
               await showSuccess('¡Reservado!', 'Te esperamos.');
-              navigate('/dashboard');
+              
+              // Redirigir al dashboard o landing según rol
+              // Si es cliente, idealmente a "Mis Turnos" (si existe), si no, al home.
+              navigate('/'); 
 
           } catch (error) {
-              const msg = error.response?.data?.detail || error.response?.data?.non_field_errors?.[0] || 'Error al reservar.';
+              const msg = error.response?.data?.detail || 'Error al reservar.';
               showError('Error', msg);
           } finally {
               setLoading(false);
@@ -153,7 +144,7 @@ export const useBooking = () => {
       servicios,
       bookingData,
       horariosDisponibles,
-      dateError, // Exportamos el error para mostrarlo en UI
+      dateError,
       loading,
       selectServicio,
       selectFecha,
