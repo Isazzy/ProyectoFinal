@@ -12,13 +12,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { useUI } from '../../context/UIContext';
 import styles from '../../styles/Sidebar.module.css';
 
+// CORRECCIÓN: 'Dashboard' apunta a /dashboard para no chocar con la Landing
 const menuItems = [
-  { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/dashboard', label: 'Dashboard', icon: Home }, 
   { path: '/turnos', label: 'Turnos', icon: Calendar },
   { path: '/servicios', label: 'Servicios', icon: Scissors },
   { path: '/ventas', label: 'Ventas', icon: ShoppingBag },
   { path: '/compras', label: 'Compras', icon: Truck },
-  { path: '/caja', label: 'Caja', icon: DollarSign }, // <--- NUEVO ÍTEM
+  { path: '/caja', label: 'Caja', icon: DollarSign }, 
   { path: '/clientes', label: 'Clientes', icon: Users },
   { path: '/empleados', label: 'Empleados', icon: User, adminOnly: true },
   { path: '/inventario', label: 'Inventario', icon: Package },
@@ -27,13 +28,11 @@ const menuItems = [
 export const Sidebar = () => {
   const { isAdmin } = useAuth();
   const { sidebarOpen, closeSidebar } = useUI();
-  const location = useLocation();
 
   const filteredItems = menuItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <>
-      {/* Overlay for mobile */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -46,7 +45,6 @@ export const Sidebar = () => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <motion.aside
         className={styles.sidebar}
         initial={{ x: -280 }}

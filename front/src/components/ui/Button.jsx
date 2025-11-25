@@ -1,25 +1,5 @@
-// ========================================
-// src/components/ui/Button.jsx
-// ========================================
 import React from 'react';
 import { motion } from 'framer-motion';
-import classNames from 'classnames';
-import styles from '../../styles/Button.module.css';
-
-const variants = {
-  primary: 'btn-primary',
-  secondary: 'btn-secondary',
-  ghost: 'btn-ghost',
-  danger: 'btn-danger',
-  success: 'btn-success',
-  outline: 'btn-outline',
-};
-
-const sizes = {
-  sm: 'btn-sm',
-  md: 'btn-md',
-  lg: 'btn-lg',
-};
 
 export const Button = ({
   children,
@@ -33,46 +13,125 @@ export const Button = ({
   type = 'button',
   className = '',
   onClick,
+  style = {},
   ...props
 }) => {
-  const buttonClasses = classNames(
-    styles.btn,
-    styles[variants[variant]],
-    styles[sizes[size]],
-    {
-      [styles.fullWidth]: fullWidth,
-      [styles.loading]: loading,
-      [styles.iconOnly]: Icon && !children,
+  const baseStyles = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    fontWeight: 600,
+    borderRadius: '1rem',
+    transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: disabled || loading ? 'not-allowed' : 'pointer',
+    border: 'none',
+    outline: 'none',
+    fontFamily: 'inherit',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style, // Permite sobreescribir estilos inline si es necesario
+  };
+
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, #9B8DC5 0%, #C7BADC 100%)',
+      color: 'white',
+      boxShadow: '0 4px 8px rgba(155, 141, 197, 0.25)',
     },
-    className
-  );
+    secondary: {
+      background: '#F5F4F2',
+      color: '#2C3E50',
+      border: '1px solid #E8E6E3',
+    },
+    ghost: {
+      background: 'transparent',
+      color: '#2C3E50',
+    },
+    danger: {
+      background: '#D98B8B',
+      color: 'white',
+      boxShadow: '0 4px 8px rgba(217, 139, 139, 0.25)',
+    },
+    success: {
+      background: '#8FBC8F',
+      color: 'white',
+      boxShadow: '0 4px 8px rgba(143, 188, 143, 0.25)',
+    },
+    outline: {
+      background: 'transparent',
+      border: '2px solid #9B8DC5',
+      color: '#9B8DC5',
+    },
+  };
+
+  const sizes = {
+    sm: { padding: '0.375rem 0.875rem', fontSize: '0.875rem' },
+    md: { padding: '0.625rem 1.5rem', fontSize: '1rem' },
+    lg: { padding: '0.875rem 2rem', fontSize: '1.125rem' },
+  };
+
+  const buttonStyles = {
+    ...baseStyles,
+    ...variants[variant],
+    ...sizes[size],
+    ...(fullWidth && { width: '100%' }),
+    ...(disabled && { opacity: 0.6, boxShadow: 'none' }),
+  };
 
   return (
     <motion.button
       type={type}
-      className={buttonClasses}
-      onClick={onClick}
+      style={buttonStyles}
+      onClick={disabled || loading ? undefined : onClick}
       disabled={disabled || loading}
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={!disabled && !loading ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      className={className} // Permite pasar clases CSS externas si usas módulos o Tailwind
       {...props}
     >
       {loading && (
-        <span className={styles.spinner}>
-          <svg viewBox="0 0 24 24" fill="none" className={styles.spinnerIcon}>
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-          </svg>
-        </span>
+        <svg
+          style={{
+            width: '1.25em',
+            height: '1.25em',
+            animation: 'spin 1s linear infinite',
+            marginRight: children ? '0.5rem' : 0,
+          }}
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <style>
+            {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}
+          </style>
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="3"
+            opacity="0.25"
+          />
+          <path
+            d="M12 2a10 10 0 0 1 10 10"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
       )}
-      {Icon && iconPosition === 'left' && !loading && (
+      
+      {!loading && Icon && iconPosition === 'left' && (
         <Icon size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
       )}
+      
       {children && <span>{children}</span>}
-      {Icon && iconPosition === 'right' && !loading && (
+      
+      {!loading && Icon && iconPosition === 'right' && (
         <Icon size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
       )}
     </motion.button>
   );
 };
 
+export default Button;

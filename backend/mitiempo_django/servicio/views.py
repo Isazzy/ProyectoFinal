@@ -1,11 +1,10 @@
-# servicios/views.py
 from rest_framework import generics, permissions, status, views
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
-from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 
 from .models import Servicio, ServicioInsumo
 from .serializers import (
@@ -13,7 +12,7 @@ from .serializers import (
     ServicioInsumoSerializer
 )
 
-# Permiso compacto
+# Permiso personalizado para escritura
 class IsAdminOrEmpleado(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
@@ -30,19 +29,33 @@ class ServicioPagination(PageNumberPagination):
     max_page_size = 100
 
 
-# List & Create
+# ---------------------------------------------------------
+#   LISTAR Y CREAR SERVICIOS
+# ---------------------------------------------------------
 class ServicioListCreateView(generics.ListCreateAPIView):
     pagination_class = ServicioPagination
-    permission_classes = [permissions.IsAuthenticated]
+    
+    # No definimos permission_classes aquí estáticamente para poder variarlos
+
+    def get_permissions(self):
+        """
+        GET: Público (AllowAny) para que los clientes vean servicios.
+        POST: Solo Admin o Empleado puede crear.
+        """
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated(), IsAdminOrEmpleado()]
+        return [permissions.AllowAny()]
 
     def get_queryset(self):
         qs = Servicio.objects.all().order_by('nombre')
-        # filtros query params: tipo, min_price, max_price, activo, search
+        
+        # --- Filtros Query Params ---
         tipo = self.request.query_params.get('tipo')
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
         activo = self.request.query_params.get('activo')
         search = self.request.query_params.get('search')
+
         if tipo:
             qs = qs.filter(tipo__icontains=tipo)
         if min_price:
@@ -55,18 +68,28 @@ class ServicioListCreateView(generics.ListCreateAPIView):
                 qs = qs.filter(precio__lte=float(max_price))
             except ValueError:
                 pass
+        
+        # Filtro de activo manual (si se envía en url)
         if activo is not None:
             if str(activo).lower() in ['1','true','yes']:
                 qs = qs.filter(activo=True)
             elif str(activo).lower() in ['0','false','no']:
                 qs = qs.filter(activo=False)
+        
         if search:
             qs = qs.filter(Q(nombre__icontains=search) | Q(descripcion__icontains=search))
 
+        # --- Regla de Visibilidad de Activos ---
         user = self.request.user
-        # Clientes (no staff ni empleado) sólo ven activos
-        if not (user.is_staff or user.groups.filter(name__in=['Administrador','Empleado']).exists()):
+        
+        # Si es anónimo (público) o es un cliente (no staff/empleado), SOLO ve los activos
+        es_staff_o_empleado = False
+        if user and user.is_authenticated:
+             es_staff_o_empleado = user.is_staff or user.groups.filter(name__in=['Administrador','Empleado']).exists()
+        
+        if not es_staff_o_empleado:
             qs = qs.filter(activo=True)
+            
         return qs
 
     def get_serializer_class(self):
@@ -74,21 +97,24 @@ class ServicioListCreateView(generics.ListCreateAPIView):
             return ServicioCreateUpdateSerializer
         return ServicioListSerializer
 
-    def perform_create(self, serializer):
-        if not IsAdminOrEmpleado().has_permission(self.request, self):
-            self.permission_denied(self.request, message="No tienes permiso para crear servicios.")
-        serializer.save()
 
-
-# Retrieve, update
+# ---------------------------------------------------------
+#   DETALLE, ACTUALIZAR Y BORRAR
+# ---------------------------------------------------------
 class ServicioDetailView(generics.RetrieveUpdateAPIView):
     queryset = Servicio.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        GET: Público (AllowAny) para ver detalle.
+        PUT/PATCH: Solo Admin o Empleado.
+        """
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [permissions.IsAuthenticated(), IsAdminOrEmpleado()]
+        return [permissions.AllowAny()]
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
-            if not IsAdminOrEmpleado().has_permission(self.request, self):
-                self.permission_denied(self.request, message="No tienes permiso para editar servicios.")
             return ServicioCreateUpdateSerializer
         return ServicioDetailSerializer
 
@@ -107,7 +133,7 @@ def toggle_activo(request, pk):
 
 
 # ----------------------------
-# ServicioInsumo (CRUD)
+# ServicioInsumo (CRUD) - Solo uso interno
 # ----------------------------
 class ServicioInsumoListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminOrEmpleado]
@@ -130,16 +156,9 @@ class ServicioInsumoDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ----------------------------
 # Endpoints relacionados a Inventario/Stock
 # ----------------------------
-# Listar insumos disponibles (global)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def listar_insumos_disponibles(request):
-    """
-    Devuelve lista de insumos con stock > 0.
-    Query params:
-      - q: filtro por nombre
-      - page_size / page (paginación no implementada aquí; el frontend puede filtrar)
-    """
     try:
         from inventario.models import Insumo
     except Exception:
@@ -157,13 +176,6 @@ def listar_insumos_disponibles(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated, IsAdminOrEmpleado])
 def consumir_stock_manual(request):
-    """
-    Consumir stock manualmente (payload ejemplo):
-    {
-      "insumos": [{"insumo_id": 1, "cantidad": 10.5}, {"insumo_id": 2, "cantidad": 1}],
-      "nota": "Consumo por venta #123"
-    }
-    """
     payload = request.data
     insumos = payload.get('insumos', [])
     if not isinstance(insumos, list) or not insumos:

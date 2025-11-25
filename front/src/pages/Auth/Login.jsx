@@ -25,7 +25,6 @@ export const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error on change
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -53,9 +52,21 @@ export const Login = () => {
 
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
-      await showSuccess('¡Bienvenido!', 'Has iniciado sesión correctamente');
-      navigate('/');
+      // El login devuelve los datos del usuario
+      const userData = await login(formData.email, formData.password);
+      await showSuccess('¡Bienvenido!', `Hola ${userData.first_name || 'Usuario'}`);
+      
+      // --- LÓGICA DE REDIRECCIÓN POR ROL ---
+      const role = userData.role ? userData.role.toLowerCase() : '';
+      
+      if (role === 'administrador' || role === 'empleado') {
+          // Si es Staff, va al Panel de Control
+          navigate('/dashboard');
+      } else {
+          // Si es Cliente, va a la Landing Page (Home)
+          navigate('/');
+      }
+
     } catch (error) {
       showError('Error de acceso', error.message || 'Credenciales inválidas');
     } finally {
@@ -72,13 +83,11 @@ export const Login = () => {
         transition={{ duration: 0.4 }}
       >
         <Card className={styles.cardInner}>
-          {/* Header */}
           <div className={styles.header}>
             <h1 className={styles.logo}>Mi Tiempo</h1>
             <p className={styles.subtitle}>Gestión de turnos y servicios</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className={styles.form}>
             <Input
               label="Email"
@@ -116,7 +125,6 @@ export const Login = () => {
             </Button>
           </form>
 
-          {/* Footer links */}
           <div className={styles.footer}>
             <button type="button" className={styles.linkButton}>
               ¿Olvidaste tu contraseña?

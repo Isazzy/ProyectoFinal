@@ -61,4 +61,25 @@ export const turnosApi = {
     const response = await api.get('/turnos/horarios-disponibles/', { params });
     return response.data;
   },
+
+  // NUEVO: Crear turno público (el backend asigna el cliente logueado)
+  crearTurnoCliente: async (data) => {
+    // data: { servicios: [id], fecha_hora_inicio }
+    const response = await api.post(`turnos/nuevo/`, data); 
+    // Nota: Asegúrate que tu backend tenga una ruta '/nuevo/' o usa el POST estándar '/' 
+    // Si usas el ViewSet estándar, es el mismo POST de siempre.
+    return response.data;
+  },
+  
+  // Método estándar de creación
+  crearTurno: async (data) => {
+     const response = await api.post(`turnos/`, data);
+     return response.data;
+  },
+
+  // Para verificar disponibilidad
+  getTurnosPorFecha: async (fecha) => {
+      const response = await api.get(`turnos/`, { params: { fecha } });
+      return response.data; // Se asume que devuelve array o {results: []}
+  },
 };
