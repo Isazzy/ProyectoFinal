@@ -1,0 +1,63 @@
+.admin-turnos-container {
+  padding: 20px;
+}
+
+.tabla-turnos {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-turnos th,
+.tabla-turnos td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.titulo {
+  margin-bottom: 20px;
+}
+
+.badge {
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: white;
+  text-transform: capitalize;
+}
+
+.estado-pendiente { background: #f1c40f; }
+.estado-confirmado { background: #3498db; }
+.estado-completado { background: #2ecc71; }
+.estado-cancelado { background: #e74c3c; }
+
+.pago-no_pagado { background: #b30000; }
+.pago-seña { background: #8e44ad; }
+.pago-pagado { background: #27ae60; }
+
+.btn-ver, .btn-pago, .btn-detalle {
+  padding: 8px 12px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.btn-ver { background: #9b59b6; }
+.btn-pago { background: #27ae60; margin-right: 10px; }
+.btn-detalle { background: #2980b9; }
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 450px;
+}

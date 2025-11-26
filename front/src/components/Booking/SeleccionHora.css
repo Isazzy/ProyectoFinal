@@ -1,0 +1,24 @@
+.hora-btn {
+  padding: 10px;
+  border-radius: 8px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.hora-btn.ocupado {
+  background: #e5e5e5;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.hora-btn.pasado {
+  background: #f0f0f0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.hora-btn.seleccionado {
+  background: #0095ff !important;
+  color: white !important;
+  font-weight: bold;
+}

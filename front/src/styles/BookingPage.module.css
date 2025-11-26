@@ -136,3 +136,32 @@
 .stepActive {
     background: #9B8DC5;
 }
+
+.slotBtn {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.slotBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+.slotSelected {
+  border-color: #9B8DC5;
+  background: #f4f0ff;
+  box-shadow: 0 0 0 1px rgba(155,141,197,0.5);
+}
+
+.slotOcupado {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

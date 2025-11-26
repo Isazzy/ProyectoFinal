@@ -77,24 +77,78 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.formGrid}>
-        {/* Sección Principal */}
-        <div className={styles.formSection}>
-            <div className={styles.row2}>
-                <Input label="Nombre del Servicio *" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} />
-                <Input label="Categoría *" name="tipo_serv" value={form.tipo_serv} onChange={handleChange} error={errors.tipo_serv} placeholder="Ej: Peluquería" />
-            </div>
-            
-            <div className={styles.row2}>
-                <Input label="Duración (min) *" type="number" name="duracion" value={form.duracion} onChange={handleChange} error={errors.duracion} startIcon={Clock} />
-                <Input label="Precio *" type="number" name="precio" value={form.precio} onChange={handleChange} error={errors.precio} startIcon={DollarSign} />
-            </div>
+   <form onSubmit={handleSubmit} className={styles.formGrid}>
+  {/* Sección Principal */}
+  <div className={styles.formSection}>
 
-            <div className={styles.inputGroup}>
-                <label>Descripción</label>
-                <textarea className={styles.textarea} name="descripcion" value={form.descripcion} onChange={handleChange} rows={2} />
-            </div>
-        </div>
+    {/* FILA 1 */}
+    <div className={styles.row2}>
+      <Input 
+        label="Nombre del Servicio *"
+        name="nombre"
+        value={form.nombre}
+        onChange={handleChange}
+        error={errors.nombre}
+      />
+
+      {/* SELECT DE CATEGORÍA */}
+      <div className={styles.inputGroup}>
+        <label>Categoría *</label>
+
+        <select
+          name="tipo_serv"
+          value={form.tipo_serv}
+          onChange={handleChange}
+          className={styles.selectInput}
+        >
+          <option value="">Seleccionar categoría...</option>
+          <option value="Peluquería">Peluquería</option>
+          <option value="Uñas">Uñas</option>
+          <option value="Maquillaje">Maquillaje</option>
+        </select>
+
+        {errors.tipo_serv && (
+          <span className={styles.errorText}>{errors.tipo_serv}</span>
+        )}
+      </div>
+    </div>
+
+    {/* FILA 2 */}
+    <div className={styles.row2}>
+      <Input
+        label="Duración (min) *"
+        type="number"
+        name="duracion"
+        value={form.duracion}
+        onChange={handleChange}
+        error={errors.duracion}
+        startIcon={Clock}
+      />
+
+      <Input
+        label="Precio *"
+        type="number"
+        name="precio"
+        value={form.precio}
+        onChange={handleChange}
+        error={errors.precio}
+        startIcon={DollarSign}
+      />
+    </div>
+
+    {/* DESCRIPCIÓN */}
+    <div className={styles.inputGroup}>
+      <label>Descripción</label>
+      <textarea
+        className={styles.textarea}
+        name="descripcion"
+        value={form.descripcion}
+        onChange={handleChange}
+        rows={2}
+      />
+    </div>
+
+  </div>
 
         {/* Sección Disponibilidad */}
         <div className={styles.formSection}>
