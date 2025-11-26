@@ -1,5 +1,6 @@
 // ========================================
 // src/pages/Dashboard/Dashboard.jsx
+// Dashboard Mejorado con Reportes de Ingresos vs Egresos
 // ========================================
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +8,8 @@ import { motion } from 'framer-motion';
 import { 
   Calendar, CreditCard, Users, Package, Plus, 
   TrendingUp, Clock, ChevronRight, AlertTriangle, 
-  Tag, BarChart3, CheckCircle
+  Tag, BarChart3, CheckCircle, DollarSign, 
+  TrendingDown, Filter
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Card, Button, Badge } from '../../components/ui';
@@ -20,10 +22,11 @@ import { dashboardApi } from '../../api/dashboardApi';
 
 // Componentes de Gráficos
 import { PagosChart } from '../../components/Charts/PagosChart';
+import { IngresosEgresosChart } from '../../components/Charts/IngresosEgresosChart';
 
 // --- COMPONENTES UI INTERNOS ---
 
-const StatCard = ({ icon: Icon, label, value, subtext, color, type = 'default' }) => (
+const StatCard = ({ icon: Icon, label, value, subtext, color, type = 'default', trend }) => (
   <motion.div 
     className={`${styles.statCard} ${type === 'alert' ? styles.alert : ''}`}
     initial={{ y: 10, opacity: 0 }} 
@@ -37,6 +40,11 @@ const StatCard = ({ icon: Icon, label, value, subtext, color, type = 'default' }
       <h3 className={styles.statValue} style={{ color: type === 'alert' ? color : 'inherit' }}>{value}</h3>
       <p className={styles.statLabel}>{label}</p>
       {subtext && <span className={styles.statSubtext}>{subtext}</span>}
+      {trend && (
+        <span className={styles.statTrend} style={{ color: trend > 0 ? '#10b981' : '#ef4444' }}>
+          {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+        </span>
+      )}
     </div>
   </motion.div>
 );
@@ -89,7 +97,7 @@ const TurnoTimelineItem = ({ turno, onClick }) => {
   );
 };
 
-const AlertasList = ({ alertas }) => {
+const AlertasList = ({ alertas, onViewStock }) => {
     if (!alertas || alertas.length === 0) return (
         <div className={styles.emptyState} style={{color: '#10b981'}}>
             <CheckCircle size={32} style={{margin:'0 auto 10px', opacity: 0.8}}/>
@@ -98,7 +106,7 @@ const AlertasList = ({ alertas }) => {
     );
 
     return (
-        <div className={styles.alertList} style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+        <div className={styles.alertList} style={{display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 300, overflowY: 'auto'}}>
             {alertas.map((item, idx) => (
                 <div key={idx} className={styles.alertItem} style={{display: 'flex', alignItems:'center', gap: 10, padding: 10, background: '#fef2f2', borderRadius: 8, border: '1px solid #fee2e2'}}>
                     <div className={styles.alertIcon} style={{color:'#ef4444', background: 'white', padding: 6, borderRadius: 6}}>
@@ -128,6 +136,7 @@ export const Dashboard = () => {
   const [kpis, setKpis] = useState(null);
   const [alertas, setAlertas] = useState([]);
   const [turnosHoy, setTurnosHoy] = useState([]);
+  const [finanzasPeriodo, setFinanzasPeriodo] = useState('mes'); // 'semana' | 'mes' | 'trimestre'
 
   useEffect(() => {
     const loadData = async () => {
@@ -173,6 +182,17 @@ export const Dashboard = () => {
 
   const todayDate = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
+  // Calcular balance (simulado - deberías traer esto del backend)
+  const calcularBalance = () => {
+    const ingresos = kpis?.finanzas?.ingresos_mes || 0;
+    // Simulamos egresos como 40% de ingresos
+    const egresos = ingresos * 0.4;
+    const balance = ingresos - egresos;
+    return { ingresos, egresos, balance };
+  };
+
+  const { ingresos, egresos, balance } = kpis ? calcularBalance() : { ingresos: 0, egresos: 0, balance: 0 };
+
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       
@@ -189,7 +209,7 @@ export const Dashboard = () => {
 
       {/* KPI CARDS ROW */}
       <div className={styles.statsGrid}>
-
+       
         <StatCard 
             icon={AlertTriangle} 
             label="Alertas de Stock" 
@@ -203,10 +223,34 @@ export const Dashboard = () => {
       {/* MAIN GRID */}
       <div className={styles.contentGrid}>
         
-        {/* COLUMNA 1: AGENDA Y PAGOS */}
+        {/* COLUMNA 1: AGENDA Y FLUJO DE CAJA */}
         <div className={styles.sectionCard} style={{gap: 25, background: 'transparent', boxShadow: 'none', border: 'none', padding: 0}}>
             
-            {/* 1. Turnos de Hoy (Compacto) */}
+            {/* 1. Gráfico Ingresos vs Egresos */}
+            <Card className={styles.sectionCard}>
+                <div className={styles.cardHeader}>
+                    <h3><BarChart3 size={20}/> Flujo de Caja</h3>
+                    <div style={{display: 'flex', gap: 8}}>
+                        <Button 
+                            variant={finanzasPeriodo === 'semana' ? 'primary' : 'ghost'} 
+                            size="sm"
+                            onClick={() => setFinanzasPeriodo('semana')}
+                        >
+                            Semana
+                        </Button>
+                        <Button 
+                            variant={finanzasPeriodo === 'mes' ? 'primary' : 'ghost'} 
+                            size="sm"
+                            onClick={() => setFinanzasPeriodo('mes')}
+                        >
+                            Mes
+                        </Button>
+                    </div>
+                </div>
+                <IngresosEgresosChart periodo={finanzasPeriodo} />
+            </Card>
+
+            {/* 2. Turnos de Hoy (Compacto) */}
             <Card className={styles.sectionCard} style={{minHeight: 'auto'}}>
                 <div className={styles.cardHeader}>
                     <h3><Clock size={20}/> Agenda de Hoy</h3>
@@ -214,7 +258,7 @@ export const Dashboard = () => {
                         Ver Completa <ChevronRight size={16}/>
                     </Button>
                 </div>
-                <div className={styles.timelineContainer}>
+                <div className={styles.timelineContainer} style={{maxHeight: 300, overflowY: 'auto'}}>
                     {loading ? <p style={{padding:20, textAlign:'center', color:'#888'}}>Cargando agenda...</p> : (
                         turnosHoy.length > 0 ? (
                             turnosHoy.map(t => (
@@ -230,19 +274,10 @@ export const Dashboard = () => {
                     )}
                 </div>
             </Card>
-
-            {/* 2. Gráfico de Pagos */}
-            <Card className={styles.sectionCard} style={{minHeight: 'auto'}}>
-                <div className={styles.cardHeader}>
-                    <h3><CreditCard size={20}/> Medios de Pago</h3>
-                    <span className={styles.headerTag}>Mensual</span>
-                </div>
-                <PagosChart data={kpis?.finanzas?.desglose_pagos} />
-            </Card>
         </div>
       
 
-        {/* COLUMNA 2: ALERTAS Y RANKINGS */}
+        {/* COLUMNA 2: ALERTAS Y MEDIOS DE PAGO */}
         <div className={styles.sectionCard} style={{gap: 25, background: 'transparent', boxShadow: 'none', border: 'none', padding: 0}}>
              
              {/* 1. Alertas de Stock */}
@@ -263,6 +298,9 @@ export const Dashboard = () => {
                   )}
              </Card>
 
+             
+
+            
         </div>
 
       </div>

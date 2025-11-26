@@ -249,3 +249,12 @@ class MovimientoConsolidadoListView(views.APIView):
 
         serializer = MovimientoConsolidadoSerializer(movimientos_ordenados, many=True)
         return Response(serializer.data)
+    
+
+    ##########
+    # --- REPORTE SIMPLE: Ingresos vs Egresos ---
+from rest_framework.views import APIView
+from django.db.models import Sum
+from datetime import date, timedelta
+
+

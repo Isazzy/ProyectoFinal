@@ -1,14 +1,21 @@
+# ========================================
+# backend/mitiempo_django/ventas/views.py
+# Vistas actualizadas con endpoint de Ingresos/Egresos
+# ========================================
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from datetime import datetime, time, timedelta
+from decimal import Decimal
 
 # Modelos
 from .models import Venta, Estado_Venta, Detalle_Venta, Detalle_Venta_Servicio
+from compras.models import Compra
+from movimiento_caja.models import Ingreso, Egreso
 
 # Serializers
 from .serializers import (
@@ -42,12 +49,10 @@ class VentaListCreateView(generics.ListCreateAPIView):
             
             if fecha:
                 # 2. Creamos el rango de inicio (00:00) y fin (23:59:59.999)
-                # Usamos la fecha combinada con la hora mínima y máxima
                 inicio_dia = datetime.combine(fecha, time.min)
                 fin_dia = datetime.combine(fecha, time.max)
 
-                # 3. Hacemos que las fechas sean "conscientes" (Aware) de la zona horaria de Argentina
-                # Django convertirá esto a UTC automáticamente al consultar la BD
+                # 3. Hacemos que las fechas sean "conscientes" (Aware) de la zona horaria
                 start_aware = timezone.make_aware(inicio_dia, timezone.get_current_timezone())
                 end_aware = timezone.make_aware(fin_dia, timezone.get_current_timezone())
 
@@ -85,14 +90,9 @@ class EstadoVentaListView(generics.ListAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def resumen_ventas(request):
-    # Usamos localtime para asegurar que 'hoy' sea hoy en Argentina, no en Londres (UTC)
     hoy = timezone.localtime(timezone.now()).date()
     mes_actual = hoy.month
     anio_actual = hoy.year
-    
-    # Para filtrar correctamente por __date en estadísticas, también es mejor usar rangos
-    # pero __date suele funcionar si la DB tiene las timezones cargadas. 
-    # Por seguridad usamos la misma lógica de rangos.
     
     inicio_hoy = timezone.make_aware(datetime.combine(hoy, time.min))
     fin_hoy = timezone.make_aware(datetime.combine(hoy, time.max))
@@ -115,10 +115,11 @@ def resumen_ventas(request):
         "mes": total_mes
     })
 
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def stats_ingresos(request):
-    # Rango: Últimos 90 días
+    """Estadísticas de ingresos por servicios vs productos"""
     dias_param = request.query_params.get('dias', 90)
     try:
         dias = int(dias_param)
@@ -127,8 +128,6 @@ def stats_ingresos(request):
 
     fecha_limite = timezone.now() - timedelta(days=dias)
 
-    # Nota: TruncDate usa la timezone configurada en settings si USE_TZ=True
-    
     servicios = Detalle_Venta_Servicio.objects.filter(
         venta__venta_fecha_hora__gte=fecha_limite,
         venta__estado_venta__estado_venta_nombre='Pagado'
@@ -151,12 +150,14 @@ def stats_ingresos(request):
     
     for s in servicios:
         f = s['fecha'].strftime("%Y-%m-%d")
-        if f not in data_map: data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
+        if f not in data_map: 
+            data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
         data_map[f]['servicios'] = s['total']
 
     for p in productos:
         f = p['fecha'].strftime("%Y-%m-%d")
-        if f not in data_map: data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
+        if f not in data_map: 
+            data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
         data_map[f]['productos'] = p['total']
 
     chart_data = sorted(data_map.values(), key=lambda x: x['date'])
@@ -164,7 +165,83 @@ def stats_ingresos(request):
     return Response(chart_data)
 
 
-#################################
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def stats_ingresos_egresos(request):
+    """
+    NUEVO ENDPOINT: Ingresos vs Egresos por día
+    Retorna: [{ date, ingresos, egresos }, ...]
+    """
+    dias_param = request.query_params.get('dias', 30)
+    try:
+        dias = int(dias_param)
+    except ValueError:
+        dias = 30
+
+    fecha_limite = timezone.now() - timedelta(days=dias)
+
+    # 1. INGRESOS: Ventas Pagadas + Ingresos Manuales
+    ventas_diarias = Venta.objects.filter(
+        venta_fecha_hora__gte=fecha_limite,
+        estado_venta__estado_venta_nombre='Pagado'
+    ).annotate(
+        fecha=TruncDate('venta_fecha_hora')
+    ).values('fecha').annotate(
+        total=Sum('venta_total')
+    )
+
+    ingresos_manuales = Ingreso.objects.filter(
+        ingreso_fecha__gte=fecha_limite.date()
+    ).values('ingreso_fecha').annotate(
+        total=Sum('ingreso_monto')
+    )
+
+    # 2. EGRESOS: Compras + Egresos Manuales
+    compras_diarias = Compra.objects.filter(
+        compra_fecha__gte=fecha_limite.date()
+    ).values('compra_fecha').annotate(
+        total=Sum('compra_total')
+    )
+
+    egresos_manuales = Egreso.objects.filter(
+        egreso_fecha__gte=fecha_limite.date()
+    ).values('egreso_fecha').annotate(
+        total=Sum('egreso_monto')
+    )
+
+    # 3. Consolidar en un diccionario
+    data_map = {}
+
+    for v in ventas_diarias:
+        f = v['fecha'].strftime("%Y-%m-%d")
+        if f not in data_map:
+            data_map[f] = {'date': f, 'ingresos': Decimal(0), 'egresos': Decimal(0)}
+        data_map[f]['ingresos'] += v['total'] or Decimal(0)
+
+    for i in ingresos_manuales:
+        f = i['ingreso_fecha'].strftime("%Y-%m-%d")
+        if f not in data_map:
+            data_map[f] = {'date': f, 'ingresos': Decimal(0), 'egresos': Decimal(0)}
+        data_map[f]['ingresos'] += i['total'] or Decimal(0)
+
+    for c in compras_diarias:
+        f = c['compra_fecha'].strftime("%Y-%m-%d")
+        if f not in data_map:
+            data_map[f] = {'date': f, 'ingresos': Decimal(0), 'egresos': Decimal(0)}
+        data_map[f]['egresos'] += c['total'] or Decimal(0)
+
+    for e in egresos_manuales:
+        f = e['egreso_fecha'].strftime("%Y-%m-%d")
+        if f not in data_map:
+            data_map[f] = {'date': f, 'ingresos': Decimal(0), 'egresos': Decimal(0)}
+        data_map[f]['egresos'] += e['total'] or Decimal(0)
+
+    # 4. Ordenar y retornar
+    chart_data = sorted(data_map.values(), key=lambda x: x['date'])
+    
+    return Response(chart_data)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def dashboard_kpis(request):
@@ -186,14 +263,16 @@ def dashboard_kpis(request):
         total=Sum('venta_total')
     )
 
-    # Transformado al formato que tu frontend necesita
-    desglose_lista = [
-        {
-            "metodoPago": p["venta_medio_pago"],
-            "total": p["total"]
-        }
-        for p in pagos_desglose
-    ]
+    # Transformar a dict para facilitar acceso
+    desglose_dict = {
+        'efectivo': Decimal(0),
+        'transferencia': Decimal(0)
+    }
+    
+    for p in pagos_desglose:
+        metodo = p['venta_medio_pago']
+        if metodo in desglose_dict:
+            desglose_dict[metodo] = p['total']
 
     # 3. RANKINGS
     top_servicios = Detalle_Venta_Servicio.objects.filter(
@@ -213,7 +292,7 @@ def dashboard_kpis(request):
             "ingresos_mes": total_ingresos_mes,
             "ventas_cantidad": cantidad_ventas_mes,
             "ticket_promedio": ticket_promedio,
-            "desglose_pagos": desglose_lista  # ✔️ corregido
+            "desglose_pagos": desglose_dict
         },
         "ranking": {
             "servicios": list(top_servicios),

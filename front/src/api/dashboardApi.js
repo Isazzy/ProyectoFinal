@@ -1,3 +1,7 @@
+// ========================================
+// src/api/dashboardApi.js
+// API para Dashboard con Ingresos/Egresos
+// ========================================
 import api from './axiosConfig';
 
 export const dashboardApi = {
@@ -8,10 +12,19 @@ export const dashboardApi = {
     return response.data;
   },
 
-  // Obtener KPIs financieros y rankings (Ventas hoy, mes, ticket promedio, top servicios/productos)
+  // Obtener KPIs financieros y rankings
   // Endpoint: /api/ventas/dashboard/kpis/
   getKPIs: async () => {
     const response = await api.get('/ventas/dashboard/kpis/');
+    return response.data;
+  },
+
+  // NUEVO: Obtener datos de Ingresos vs Egresos
+  // Endpoint: /api/ventas/stats/ingresos-egresos/
+  getIngresosEgresos: async (dias = 30) => {
+    const response = await api.get('/ventas/stats/ingresos-egresos/', {
+      params: { dias }
+    });
     return response.data;
   }
 };
