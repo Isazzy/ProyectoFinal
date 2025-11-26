@@ -10,7 +10,8 @@ import { MainLayout } from '../components/layout/MainLayout';
 import { AuthLayout } from '../components/layout/AuthLayout';
 
 // Auth Pages
-import { Login, Register } from '../pages/Auth';
+import { Login, Register, ForgotPassword, ResetPassword } from '../pages/Auth';
+
 
 // Main Pages
 import { Dashboard } from '../pages/Dashboard/Dashboard';
@@ -85,6 +86,8 @@ export const AppRouter = () => {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+          <Route path="/reset-password/:uidb64/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
         </Route>
 
         {/* === PANEL DE GESTIÓN (Solo Staff) === */}

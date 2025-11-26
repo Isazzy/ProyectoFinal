@@ -10,10 +10,12 @@ import { useSwal } from '../../hooks/useSwal';
 import { Button, Input } from '../../components/ui';
 import styles from '../../styles/Auth.module.css';
 
+
 export const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { showSuccess, showError } = useSwal();
+
   
   const [formData, setFormData] = useState({
     email: '',
@@ -151,7 +153,7 @@ export const Login = () => {
                   disabled={loading}
                   autoComplete="current-password"
                 />
-                <div className={styles.forgotPassword}>
+                #<div className={styles.forgotPassword}>
                     <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
                 </div>
             </div>
