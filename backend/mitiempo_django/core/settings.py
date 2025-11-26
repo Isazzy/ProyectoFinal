@@ -13,7 +13,7 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 REST_FRAMEWORK = {
@@ -198,3 +198,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
+
+
+# ============================================
+# CONFIGURACIÓN DE EMAIL
+# ============================================
+
+# Para DESARROLLO - Los emails se imprimen en la consola
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+from decouple import config
+
+# Para PRODUCCIÓN - Descomentar y configurar
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')   # Lee desde .env
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Lee desde .env
+
+DEFAULT_FROM_EMAIL = config('EMAIL_FROM', default=config('EMAIL_HOST_USER'))  # Lee desde .env
+
+# URL del frontend (ajusta según tu configuración)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
