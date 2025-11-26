@@ -29,6 +29,7 @@ import { VentaDetail } from '../pages/Ventas/VentaDetail';
 import { ComprasPage } from '../pages/Compras/ComprasPage';
 import { LandingPage } from '../pages/Public/LandingPage';
 import { BookingPage } from '../pages/Public/BookingPage';
+import { CompraDetail } from '../pages/Compras/CompraDetail';
 
 const LoadingScreen = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FAF9F7' }}>
@@ -109,6 +110,7 @@ export const AppRouter = () => {
           {/* Clientes y Compras */}
           <Route path="/clientes" element={<ClientesList />} />
           <Route path="/compras" element={<ComprasPage />} />
+          <Route path="/compras/:id" element={<CompraDetail />} />
           <Route path="/caja" element={<CajaPage />} />
           <Route path="/inventario" element={<InventarioPage />} />
 

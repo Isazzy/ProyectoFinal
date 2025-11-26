@@ -3,8 +3,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Empleado
 from django.db import transaction
+from .models import Empleado
 
 # --- Token serializer personalizado ---
 class MyTokenObtainPairSerializer(serializers.Serializer):
@@ -30,14 +30,19 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user_auth)
 
-        role = "Cliente" # Default
+        # Detectar rol
+        role = "SinRol"
         if user_auth.is_superuser:
             role = "Administrador"
         elif user_auth.groups.filter(name="Administrador").exists():
             role = "Administrador"
-        elif user_auth.groups.filter(name="Empleado").exists():
-            role = "Empleado"
-        
+        elif hasattr(user_auth, "empleado"):
+            role = "Empleado" # Fallback
+            if user_auth.empleado.rol:
+                role = user_auth.empleado.rol.name
+        elif hasattr(user_auth, "cliente"):
+            role = "Cliente"
+
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -53,19 +58,14 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
 # --- Serializers para Empleado ---
 
 class EmpleadoNestedSerializer(serializers.ModelSerializer):
+    rol = serializers.StringRelatedField() # Para lectura mostramos el nombre
     class Meta:
         model = Empleado
         fields = ("id", "dni", "telefono", "especialidad", "rol")
 
 class EmpleadoUserSerializer(serializers.ModelSerializer):
-    """
-    Serializer principal para LISTAR empleados.
-    Combina datos del User (nombre, email, activo) con datos del Empleado (dni, tel).
-    """
     empleado = EmpleadoNestedSerializer(read_only=True)
     rol = serializers.SerializerMethodField()
-    
-    # CORRECCIÓN: Agregamos is_active para el frontend
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -84,33 +84,51 @@ class EmpleadoCreateByAdminSerializer(serializers.Serializer):
     dni = serializers.CharField(required=False, allow_blank=True)
     telefono = serializers.CharField(required=False, allow_blank=True)
     especialidad = serializers.ChoiceField(choices=Empleado.ESPECIALIDADES, required=False)
+    # Recibimos el ID del grupo (rol)
     rol = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
     def create(self, validated_data):
-        rol = validated_data.pop('rol')
+        rol_group = validated_data.pop('rol')
         username = validated_data.pop('username')
         password = validated_data.pop('password')
         email = validated_data.get('email', '')
 
+        # CORRECCIÓN DE ERROR 500: Transacción Atómica y Creación Explícita
         with transaction.atomic():
             # 1. Crear Usuario
             user = User.objects.create_user(
-                username=validated_data['email'], # Usar email como username
-                email=validated_data['email'],
-                password=validated_data['password'],
+                username=username,
+                email=email,
+                password=password,
                 first_name=validated_data.get('first_name', ''),
                 last_name=validated_data.get('last_name', '')
             )
-            
-            # 2. Asignar Grupo (Dispara la señal m2m_changed definida en models)
-            user.groups.add(rol)
-            
-            # La señal ya creó el Empleado, aquí solo actualizamos datos extra
-            empleado = Empleado.objects.get(user=user)
-            empleado.dni = validated_data.get('dni')
-            empleado.telefono = validated_data.get('telefono', '')
-            empleado.especialidad = validated_data.get('especialidad', 'otro')
-            empleado.save()
+            user.is_active = True
+            user.groups.add(rol_group)
+
+            # Permisos de Staff si es admin
+            if rol_group.name.lower() == "administrador":
+                user.is_staff = True
+            user.save()
+
+            # 2. Crear Empleado (No confiamos solo en la señal, usamos get_or_create para seguridad)
+            empleado, created = Empleado.objects.get_or_create(
+                user=user,
+                defaults={
+                    'dni': validated_data.get('dni') or None,
+                    'telefono': validated_data.get('telefono', ''),
+                    'especialidad': validated_data.get('especialidad', 'otro'),
+                    'rol': rol_group
+                }
+            )
+
+            # Si ya existía (por la señal), actualizamos para asegurar que los datos sean los del form
+            if not created:
+                empleado.dni = validated_data.get('dni') or empleado.dni
+                empleado.telefono = validated_data.get('telefono', empleado.telefono)
+                empleado.especialidad = validated_data.get('especialidad', empleado.especialidad)
+                empleado.rol = rol_group
+                empleado.save()
 
             return empleado
 
@@ -125,26 +143,31 @@ class EmpleadoUpdateSerializer(serializers.ModelSerializer):
         fields = ("dni", "telefono", "especialidad", "rol", "first_name", "last_name", "email")
 
     def update(self, instance, validated_data):
+        # Actualizar campos directos de Empleado
         instance.dni = validated_data.get("dni", instance.dni)
         instance.telefono = validated_data.get("telefono", instance.telefono)
         instance.especialidad = validated_data.get("especialidad", instance.especialidad)
-        new_rol = validated_data.get("rol", instance.rol)
-        instance.rol = new_rol
+        
+        # Actualizar Rol
+        new_rol = validated_data.get("rol")
+        if new_rol:
+            instance.rol = new_rol
+            # Sincronizar con User Groups
+            user = instance.user
+            user.groups.clear()
+            user.groups.add(new_rol)
+            user.is_staff = (new_rol.name.lower() == "administrador")
+            user.save()
+        
         instance.save()
 
+        # Actualizar datos de User
         user = instance.user
         user.first_name = validated_data.get("first_name", user.first_name)
         user.last_name = validated_data.get("last_name", user.last_name)
         user.email = validated_data.get("email", user.email)
-
-        if new_rol:
-            user.groups.set([new_rol])
-            user.is_staff = (new_rol.name.lower() == "administrador")
-        else:
-            user.groups.clear()
-            user.is_staff = False
-
         user.save()
+
         return instance
 
 class RolSerializer(serializers.ModelSerializer):

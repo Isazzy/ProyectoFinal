@@ -2,6 +2,7 @@
 // src/pages/Compras/ComprasPage.jsx
 // ========================================
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <--- 1. IMPORTAR useNavigate
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Plus, Truck, Package, ShoppingCart, Eye, 
@@ -15,8 +16,9 @@ import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Compras.module.css';
 
 export const ComprasPage = () => {
+    const navigate = useNavigate(); // <--- 2. INICIALIZAR HOOK
     const { compras, loading, fetchCompras, fetchProveedores } = useCompras();
-    const [activeTab, setActiveTab] = useState('compras'); // 'compras' | 'proveedores'
+    const [activeTab, setActiveTab] = useState('compras');
     const [modalOpen, setModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -25,7 +27,6 @@ export const ComprasPage = () => {
         fetchProveedores();
     }, [fetchCompras, fetchProveedores]);
 
-    // Filtrado local para la tabla de compras
     const filteredCompras = compras.filter(c => 
         c.proveedor.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -63,10 +64,11 @@ export const ComprasPage = () => {
                         <thead>
                             <tr>
                                 <th>Fecha</th>
+                                <th>Hora</th>
                                 <th>Proveedor</th>
-                                <th>Método Pago</th>
-                                <th>Registrado Por</th>
                                 <th>Total</th>
+                                <th>Método</th>
+                                <th>Registró</th>
                                 <th style={{textAlign: 'right'}}>Acciones</th>
                             </tr>
                         </thead>
@@ -77,8 +79,10 @@ export const ComprasPage = () => {
                                         <div className={styles.dateCell}>
                                             <Calendar size={14} className={styles.cellIcon}/>
                                             <span>{c.compra_fecha}</span>
-                                            <span className={styles.timeLabel}>{c.compra_hora?.slice(0, 5)}</span>
                                         </div>
+                                    </td>
+                                    <td style={{color:'#64748b', fontSize:'0.9rem'}}>
+                                        {c.compra_hora?.slice(0, 5)}
                                     </td>
                                     <td>
                                         <div className={styles.providerCell}>
@@ -86,12 +90,9 @@ export const ComprasPage = () => {
                                             {c.proveedor}
                                         </div>
                                     </td>
+                                    <td><span style={{fontWeight: 600}}>{formatCurrency(c.compra_total)}</span></td>
                                     <td>
-                                        <Badge 
-                                            variant={c.compra_metodo_pago === 'efectivo' ? 'success' : 'info'} 
-                                            icon={CreditCard}
-                                            size="sm"
-                                        >
+                                        <Badge variant={c.compra_metodo_pago === 'efectivo' ? 'success' : 'info'} size="sm">
                                             {c.compra_metodo_pago}
                                         </Badge>
                                     </td>
@@ -101,13 +102,13 @@ export const ComprasPage = () => {
                                             {c.empleado?.first_name || c.empleado?.username || '-'}
                                         </div>
                                     </td>
-                                    <td>
-                                        <span className={styles.totalAmount}>
-                                            {formatCurrency(c.compra_total)}
-                                        </span>
-                                    </td>
                                     <td style={{textAlign: 'right'}}>
-                                        <button className={styles.actionBtn} title="Ver Detalle">
+                                        {/* 3. AGREGAR NAVEGACIÓN AL CLICK */}
+                                        <button 
+                                            className={styles.actionBtn} 
+                                            title="Ver Detalle"
+                                            onClick={() => navigate(`/compras/${c.id}`)}
+                                        >
                                             <Eye size={18}/>
                                         </button>
                                     </td>
@@ -182,7 +183,7 @@ export const ComprasPage = () => {
             >
                 <CompraForm onClose={() => {
                     setModalOpen(false);
-                    fetchCompras(); // Refrescar al cerrar si hubo éxito
+                    fetchCompras(); 
                 }} />
             </Modal>
 

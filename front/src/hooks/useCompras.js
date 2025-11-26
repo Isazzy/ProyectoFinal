@@ -1,6 +1,3 @@
-// ========================================
-// src/hooks/useCompras.js (CORREGIDO)
-// ========================================
 import { useState, useCallback } from 'react';
 import { comprasApi } from '../api/comprasApi';
 import { inventarioApi } from '../api/inventarioApi'; 
@@ -9,9 +6,37 @@ import { useSwal } from './useSwal';
 export const useCompras = () => {
     const [compras, setCompras] = useState([]);
     const [proveedores, setProveedores] = useState([]);
-    const [insumosDisponibles, setInsumosDisponibles] = useState([]); 
+    const [insumosDisponibles, setInsumosDisponibles] = useState([]);
     const [loading, setLoading] = useState(false);
     const { showSuccess, showError, confirm } = useSwal();
+
+    // Helper para extraer mensajes de error de Django (DRF)
+    const getErrorMsg = (error) => {
+        if (!error.response || !error.response.data) {
+            return error.message || 'Error de conexión';
+        }
+        const data = error.response.data;
+        
+        // Caso 1: Error simple { detail: "..." }
+        if (data.detail) return data.detail;
+        
+        // Caso 2: Lista de errores ["Error 1"]
+        if (Array.isArray(data)) return data[0];
+        
+        // Caso 3: Objeto de errores de campo { proveedor: ["Requerido"], non_field_errors: ["..."] }
+        if (typeof data === 'object') {
+            const keys = Object.keys(data);
+            if (keys.length > 0) {
+                const firstKey = keys[0];
+                const firstError = data[firstKey];
+                const errorTxt = Array.isArray(firstError) ? firstError[0] : firstError;
+                // Si es un error general (non_field_errors), solo mostramos el texto
+                return firstKey === 'non_field_errors' ? errorTxt : `${firstKey}: ${errorTxt}`;
+            }
+        }
+        
+        return 'Error desconocido al procesar la solicitud.';
+    };
 
     // --- CRUD PROVEEDORES ---
     const fetchProveedores = useCallback(async () => {
@@ -24,7 +49,6 @@ export const useCompras = () => {
     }, []);
 
     const guardarProveedor = async (data, id = null) => {
-        // ... (Lógica de guardar proveedor se mantiene igual) ...
         try {
             if (id) await comprasApi.actualizarProveedor(id, data);
             else await comprasApi.crearProveedor(data);
@@ -32,45 +56,50 @@ export const useCompras = () => {
             fetchProveedores();
             return true;
         } catch (error) {
-            showError('Error', 'No se pudo guardar el proveedor');
+            const msg = getErrorMsg(error);
+            showError('Error', msg);
             return false;
         }
     };
 
-    // --- CARGA DE CATÁLOGOS (INSUMOS) ---
-    // Nueva función para cargar solo insumos, usada en el formulario
-    const fetchInsumosDisponibles = useCallback(async () => {
-        try {
-            const insumos = await inventarioApi.getInsumosParaSelect(); 
-            setInsumosDisponibles(insumos.results || insumos);
-        } catch (error) {
-             showError('Error', 'No se pudieron cargar los insumos de inventario.');
-        }
-    }, [showError]);
-
-    // --- GESTIÓN DE COMPRAS (LISTA PRINCIPAL) ---
+    // --- GESTIÓN DE COMPRAS ---
     const fetchCompras = useCallback(async (params = {}) => {
         setLoading(true);
         try {
             const data = await comprasApi.getCompras(params);
             setCompras(data.results || data);
+            
+            // Cargar Insumos y Productos para la orden de compra
+            const [insumosData, productosData] = await Promise.all([
+                inventarioApi.getInsumosParaSelect(),
+                inventarioApi.getProductos()
+            ]);
+            
+            // Unificamos para tener disponible en el estado si se necesita
+            // (Aunque el formulario hace su propia carga, es bueno tenerlo aquí)
+            const insumos = insumosData.results || insumosData || [];
+            const productos = productosData.results || productosData || [];
+            setInsumosDisponibles([...insumos, ...productos]);
+
         } catch (error) {
-            showError('Error', 'No se pudieron cargar las compras');
+            console.error(error);
+            // Opcional: showError('Error', 'No se pudieron cargar las compras');
         } finally {
             setLoading(false);
         }
-    }, [showError]);
+    }, []);
 
     const crearCompra = async (payload) => {
         setLoading(true);
         try {
             await comprasApi.crearCompra(payload);
-            showSuccess('Compra Registrada', 'El stock de insumos ha sido actualizado.');
-            fetchCompras(); // Solo refrescamos la lista de compras
+            showSuccess('Compra Registrada', 'El stock ha sido actualizado.');
+            fetchCompras(); 
             return true;
         } catch (error) {
-            const msg = error.response?.data?.detail || 'Verifique caja y detalles de insumos.';
-            showError('Error', msg);
+            console.error("Error creando compra:", error.response?.data);
+            const msg = getErrorMsg(error);
+            showError('Error al registrar compra', msg);
             return false;
         } finally {
             setLoading(false);
@@ -78,14 +107,13 @@ export const useCompras = () => {
     };
     
     const eliminarProveedor = async (id) => {
-        // ... (Lógica de eliminar proveedor se mantiene igual) ...
         if (await confirm({title: 'Eliminar Proveedor', text: 'Esto no se puede revertir.'})) {
             try {
                 await comprasApi.eliminarProveedor(id);
                 fetchProveedores();
                 showSuccess('Eliminado', 'Proveedor removido.');
             } catch (error) {
-                showError('Error', 'No se pudo eliminar.');
+                showError('Error', getErrorMsg(error));
             }
         }
     };
@@ -97,7 +125,6 @@ export const useCompras = () => {
         loading,
         fetchCompras,
         fetchProveedores,
-        fetchInsumosDisponibles, // Nueva función exportada
         crearCompra,
         guardarProveedor,
         eliminarProveedor
