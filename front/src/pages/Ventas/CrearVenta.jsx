@@ -1,18 +1,97 @@
 // ========================================
-// src/pages/Ventas/CrearVenta.jsx (POS Final)
+// src/pages/Ventas/CrearVenta.jsx
 // ========================================
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Check, DollarSign, Package, Scissors, Plus, X, Search, CreditCard } from 'lucide-react';
+import { 
+  ChevronLeft, Check, DollarSign, Package, Scissors, 
+  Plus, X, Search, CreditCard, User, Trash2, ShoppingCart, AlertCircle 
+} from 'lucide-react';
 import { turnosApi } from '../../api/turnosApi';
 import { ventasApi } from '../../api/ventasApi';
-import { inventarioApi } from '../../api/inventarioApi'; // Para Productos
-import { serviciosApi } from '../../api/serviciosApi'; // Para Servicios
+import { inventarioApi } from '../../api/inventarioApi';
+import { serviciosApi } from '../../api/serviciosApi';
+import { clientesApi } from '../../api/clientesApi';
 import { useSwal } from '../../hooks/useSwal';
 import { Card, Button, Input, Badge } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
-import styles from '../../styles/CrearVenta.module.css'; // Asumiendo que existe
+import styles from '../../styles/CrearVenta.module.css';
+
+// --- Componente de Fila del Carrito ---
+const CompraItemRow = ({ item, index, updateItem, removeItem }) => {
+    const isService = item.tipo === 'servicio';
+
+    const handleChangeQuantity = (e) => {
+        // REGLA: Servicios siempre cantidad 1
+        if (isService) return;
+        
+        let val = parseFloat(e.target.value);
+        if (val <= 0) val = 1; // Evitar 0 o negativos
+        updateItem(index, 'cantidad', val);
+    };
+
+    const handleChangePrice = (e) => {
+        let val = parseFloat(e.target.value);
+        // Permitir escribir decimales, la validación estricta se hace al salir o enviar
+        // Aquí solo actualizamos el estado
+        updateItem(index, 'precio', e.target.value);
+    };
+
+    // Al perder foco, si quedó vacío o 0, corregir
+    const handleBlurPrice = (e) => {
+        let val = parseFloat(e.target.value);
+        if (!val || val <= 0) {
+            updateItem(index, 'precio', 1); // O el precio original del producto si lo tuviéramos a mano
+        }
+    };
+
+    return (
+        <div className={styles.cartItem}>
+            <div className={styles.cartItemInfo}>
+                <span className={styles.cartItemName}>{item.nombre}</span>
+                <div className={styles.cartItemMeta}>
+                    {item.tipo === 'producto' 
+                        ? <Badge variant="info" size="sm">Producto</Badge> 
+                        : <Badge variant="success" size="sm">Servicio</Badge>
+                    }
+                </div>
+            </div>
+            
+            <div className={styles.cartInputs}>
+                <Input 
+                    type="number"
+                    value={item.cantidad}
+                    onChange={handleChangeQuantity}
+                    style={{width: 80}}
+                    min="1" 
+                    step="1"
+                    title="Cantidad"
+                    disabled={isService} // REGLA: Bloqueado para servicios
+                />
+                <div className={styles.multiply}>x</div>
+                <Input 
+                    type="number"
+                    value={item.precio}
+                    onChange={handleChangePrice}
+                    onBlur={handleBlurPrice}
+                    style={{width: 100}}
+                    startIcon={DollarSign}
+                    min="0.01" step="0.01"
+                    title="Precio Unit."
+                />
+            </div>
+
+            <div className={styles.cartItemTotal}>
+                {formatCurrency(item.cantidad * item.precio)}
+            </div>
+
+            <button type="button" onClick={() => removeItem(index)} className={styles.removeBtn} title="Quitar">
+                <X size={16}/>
+            </button>
+        </div>
+    );
+};
 
 export const CrearVenta = () => {
   const navigate = useNavigate();
@@ -20,336 +99,412 @@ export const CrearVenta = () => {
   const turnoId = searchParams.get('turno_id');
   const { showSuccess, showError, confirm } = useSwal();
 
-  // Estados principales de la venta
+  // --- ESTADOS DE DATOS ---
   const [turno, setTurno] = useState(null);
   const [clienteId, setClienteId] = useState(null);
-  const [items, setItems] = useState([]); // Array principal del carrito (mezcla servicios/productos)
+  const [items, setItems] = useState([]); // Carrito
   const [metodoPago, setMetodoPago] = useState('efectivo');
   const [loading, setLoading] = useState(false);
 
-  // Estados para el Selector Dinámico
-  const [availableItems, setAvailableItems] = useState({ services: [], products: [] });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedQty, setSelectedQty] = useState(1);
-  const [loadingItems, setLoadingItems] = useState(false);
+  // --- ESTADOS BUSCADOR CLIENTE ---
+  const [clienteSearch, setClienteSearch] = useState('');
+  const [clientesFound, setClientesFound] = useState([]);
+  const [selectedCliente, setSelectedCliente] = useState(null);
+  const [isClientLocked, setIsClientLocked] = useState(false);
 
-  // --- HOOK DE CARGA INICIAL (Turno y Catálogos) ---
+  // --- ESTADOS BUSCADOR ITEMS ---
+  const [availableItems, setAvailableItems] = useState([]); 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+  
+  // Inputs del panel de configuración de ítem
+  const [qtyInput, setQtyInput] = useState(1);
+  const [priceInput, setPriceInput] = useState(0);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+
+  // 1. Cargar Datos Iniciales
   useEffect(() => {
-    // 1. Cargar Turno (Si existe)
-    if (turnoId) {
-      const fetchTurno = async () => {
-        try {
-          const data = await turnosApi.getTurno(turnoId);
-          setTurno(data);
-          setClienteId(data.cliente_id || null);
+    const initData = async () => {
+      setLoadingCatalog(true);
+      try {
+        // A. Cargar Turno (si existe)
+        if (turnoId) {
+          const turnoData = await turnosApi.getTurno(turnoId);
+          setTurno(turnoData);
           
-          // Pre-carga los servicios del turno al carrito
-          const serviciosIniciales = (data.servicios || []).map(s => ({
+          if (turnoData.cliente_id) {
+              setClienteId(turnoData.cliente_id);
+              setClienteSearch(turnoData.cliente); 
+              setIsClientLocked(true);
+          }
+          
+          // Precargar servicios del turno
+          const serviciosTurno = (turnoData.servicios || []).map(s => ({
+            list_id: `service-${s.id}`,
             tipo: 'servicio',
             id: s.id, 
             nombre: s.nombre || 'Servicio',
             precio: parseFloat(s.precio || 0),
             cantidad: 1,
           }));
-          setItems(serviciosIniciales);
-        } catch (error) {
-          showError('Error', 'No se pudo cargar la información del turno.');
-          navigate('/turnos');
+          setItems(serviciosTurno);
         }
-      };
-      fetchTurno();
-    }
-    
-    // 2. Cargar Inventario (Servicios y Productos)
-    const fetchInventory = async () => {
-        setLoadingItems(true);
+
+        // B. Cargar Catálogo (SOLO Servicios y Productos)
+        const [serviciosData, productosData] = await Promise.all([
+            serviciosApi.getServicios({ activo: true }),
+            inventarioApi.getProductos({ activo: true })
+        ]);
+
+        const serviciosNorm = (serviciosData.results || serviciosData).map(s => ({
+            id: s.id_serv || s.id,
+            nombre: s.nombre,
+            precio: parseFloat(s.precio),
+            tipo: 'servicio',
+            unidad: 'u'
+        }));
+
+        const productosNorm = (productosData.results || productosData).map(p => ({
+            id: p.id,
+            nombre: p.producto_nombre,
+            precio: parseFloat(p.producto_precio),
+            tipo: 'producto',
+            stock_actual: p.stock,
+            unidad: 'u'
+        }));
+
+        setAvailableItems([...serviciosNorm, ...productosNorm]);
+
+      } catch (error) {
+        console.error("Error init venta:", error);
+        showError('Error', 'No se pudieron cargar los datos necesarios.');
+      } finally {
+        setLoadingCatalog(false);
+      }
+    };
+
+    initData();
+  }, [turnoId]);
+
+  // 2. Buscador de Clientes (Debounce)
+  useEffect(() => {
+    if (isClientLocked) return;
+
+    const delayDebounceFn = setTimeout(async () => {
+      if (clienteSearch.length > 2 && !selectedCliente) {
         try {
-            const [servicesData, productsData] = await Promise.all([
-                serviciosApi.getServicios(), // API correcta para Servicios
-                inventarioApi.getProductos(),
-            ]);
-
-            setAvailableItems({ 
-                services: servicesData.results || servicesData,
-                products: productsData.results || productsData
-            });
+          const res = await clientesApi.getClientes({ search: clienteSearch });
+          setClientesFound(res.results || res);
         } catch (error) {
-            console.error("Error cargando inventario para venta:", error);
-        } finally {
-            setLoadingItems(false);
+          console.error(error);
         }
-    };
-    fetchInventory();
-  }, [turnoId, navigate, showError]);
+      } else {
+        setClientesFound([]);
+      }
+    }, 400);
+    return () => clearTimeout(delayDebounceFn);
+  }, [clienteSearch, selectedCliente, isClientLocked]);
 
-  // --- LÓGICA DE CARRITO ---
-
-  // Filtra y unifica los catálogos disponibles para el buscador
-  const allAvailable = [
-    // Servicios
-    ...availableItems.services.map(s => ({
-        ...s, 
-        list_id: `service-${s.id_serv}`,
-        type: 'servicio', 
-        name: s.nombre,
-        price: parseFloat(s.precio || 0),
-    })),
-    // Productos
-    ...availableItems.products.map(p => ({
-        ...p, 
-        list_id: `product-${p.id}`,
-        type: 'producto', 
-        name: p.producto_nombre,
-        price: p.producto_precio 
-    })),
-  ].filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  // Añade un ítem seleccionado al carrito
-  const handleAddItem = (item) => {
-    if (selectedQty < 1) return;
-    
-    const newItem = {
-        tipo: item.type,
-        id: item.id,
-        nombre: item.name,
-        precio: parseFloat(item.price),
-        cantidad: selectedQty,
-    };
-
-    setItems(prev => [...prev, newItem]);
-    setSearchTerm('');
-    setSelectedQty(1);
+  const handleSelectCliente = (c) => {
+      setSelectedCliente(c);
+      setClienteId(c.id);
+      setClienteSearch(`${c.nombre} ${c.apellido}`);
+      setClientesFound([]);
   };
-  
-  // Actualiza precio o cantidad de un ítem existente en el carrito
+
+  const handleClearCliente = () => {
+      if (isClientLocked) return;
+      setSelectedCliente(null);
+      setClienteId(null);
+      setClienteSearch('');
+  };
+
+  // 3. Filtrado de Ítems
+  const searchResults = useMemo(() => {
+      if (!searchTerm) return [];
+      return availableItems.filter(i => 
+          i.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 6); // Limitar a 6 resultados para no saturar
+  }, [searchTerm, availableItems]);
+
+  // --- HANDLERS CARRITO ---
+
+  const handleSelectItem = (item) => {
+      setSelectedItem(item);
+      setSearchTerm(item.nombre);
+      setQtyInput(1); // Reset cantidad a 1
+      setPriceInput(item.precio);
+  };
+
+  const handleAddItem = () => {
+      // Validaciones antes de agregar al carrito
+      if (!selectedItem) return;
+      if (qtyInput <= 0) {
+          return showError("Error", "La cantidad debe ser mayor a 0");
+      }
+      if (priceInput <= 0) {
+           return showError("Error", "El precio debe ser mayor a 0");
+      }
+
+      const newItem = {
+          ...selectedItem,
+          list_id: `${selectedItem.tipo}-${selectedItem.id}-${Date.now()}`,
+          cantidad: parseFloat(qtyInput),
+          precio: parseFloat(priceInput)
+      };
+
+      setItems(prev => [...prev, newItem]);
+      
+      // Resetear buscador
+      setSearchTerm('');
+      setSelectedItem(null);
+      setQtyInput(1);
+      setPriceInput(0);
+  };
+
   const updateItem = (index, field, value) => {
-    // Permite string vacío para que el usuario pueda borrar antes de escribir
-    const numericValue = value === '' ? 0 : parseFloat(value) || 0;
-    
-    setItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: numericValue } : item
-    ));
+      setItems(prev => prev.map((item, i) => 
+          i === index ? { ...item, [field]: value } : item
+      ));
   };
-  
-  // Eliminar ítem
-  const removeItem = (index) => {
-      setItems(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  // Calcula el total acumulado
+
+  const removeItem = (index) => setItems(prev => prev.filter((_, i) => i !== index));
+
+  // --- SUBMIT ---
   const total = items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
-
-  // --- HANDLER DE SUBMIT ---
   const handleSubmit = async () => {
-    // 1. Validaciones
-    if (items.length === 0) {
-        showError('Carrito Vacío', 'Debe agregar al menos un ítem.');
-        return;
-    }
-    const isConfirmed = await confirm('Confirmar Venta', `¿Desea cobrar ${formatCurrency(total)} con método de pago ${metodoPago}?`);
-    if (!isConfirmed) return;
-
-    setLoading(true);
-    try {
-      // --- PASO CLAVE: SANITIZAR Y FILTRAR ÍTEMS SIN ID ---
-      const validServices = items.filter(i => i.tipo === 'servicio' && !!i.id);
-      const validProducts = items.filter(i => i.tipo === 'producto' && !!i.id);
-
-      // Si después de filtrar no hay nada válido
-      if (validServices.length === 0 && validProducts.length === 0) {
-          throw new Error('El carrito no contiene ítems válidos para registrar (IDs faltantes).');
-      }
-
-      // 1. Payload de Servicios (usa 'precio')
-      const serviciosPayload = validServices.map(i => ({
-          servicio_id: parseInt(i.id), // Aseguramos que sea INT
-          cantidad: parseInt(i.cantidad),
-          precio: parseFloat(i.precio), 
-          descuento: 0
-      }));
-
-      // 2. Payload de Productos (usa 'precio_unitario')
-      const productosPayload = validProducts.map(i => ({
-          producto_id: parseInt(i.id), // Aseguramos que sea INT
-          cantidad: parseInt(i.cantidad),
-          precio_unitario: parseFloat(i.precio),
-          descuento: 0
-      }));
-
-      // 3. Envío
-      await ventasApi.crearVenta({
-        turno_id: turnoId ? parseInt(turnoId) : null,
-        cliente_id: clienteId || null,
-        servicios: serviciosPayload,
-        productos: productosPayload,
-        metodo_pago: metodoPago,
-        descuento: 0,
-      });
-
-      await showSuccess('¡Venta registrada!', 'La caja y el stock han sido actualizados.');
-      navigate('/ventas');
-
-    } catch (error) {
-      console.error('Error al crear la venta:', error);
+      if (items.length === 0) return showError("Carrito Vacío", "Agrega ítems para cobrar.");
       
-      let mensajeError = "No se pudo registrar la venta.";
-
-      if (error.response && error.response.data) {
-          const data = error.response.data;
-          
-          if (data.detail) {
-              mensajeError = data.detail;
-          } else if (typeof data === 'object' && Object.keys(data).length > 0) {
-              const primerCampo = Object.keys(data)[0];
-              const errorCampo = data[primerCampo];
-              mensajeError = `${primerCampo.toUpperCase()}: ${Array.isArray(errorCampo) ? errorCampo[0] : errorCampo}`;
-          }
+      if (!clienteId) {
+          showError("Falta Cliente", "Debe seleccionar un cliente para registrar la venta.");
+          document.getElementById('client-search')?.focus();
+          return;
       }
 
-      showError('Error al Vender', mensajeError);
-    } finally {
-      setLoading(false);
-    }
+      if (!await confirm({
+          title: 'Confirmar Venta',
+          text: `Total: ${formatCurrency(total)}\nPago: ${metodoPago.toUpperCase()}`
+      })) return;
+
+      setLoading(true);
+      try {
+          const validServices = items.filter(i => i.tipo === 'servicio' && i.id);
+          const validProducts = items.filter(i => i.tipo === 'producto' && i.id);
+
+          const payload = {
+              turno_id: turnoId ? parseInt(turnoId) : null,
+              cliente_id: clienteId,
+              metodo_pago: metodoPago,
+              descuento: 0,
+              servicios: validServices.map(i => ({
+                  servicio_id: parseInt(i.id),
+                  cantidad: 1, // REGLA: Siempre 1 para servicios
+                  precio: parseFloat(i.precio),
+                  descuento: 0
+              })),
+              productos: validProducts.map(i => ({
+                  producto_id: parseInt(i.id),
+                  cantidad: parseFloat(i.cantidad),
+                  precio_unitario: parseFloat(i.precio),
+                  descuento: 0
+              }))
+          };
+
+          await ventasApi.crearVenta(payload);
+          await showSuccess('Venta Exitosa', 'Operación registrada correctamente.');
+          navigate('/ventas');
+
+      } catch (error) {
+          console.error(error);
+          const msg = error.response?.data?.detail || "Error al procesar venta: Verifique la apertura de Caja.";
+          showError("Error", msg);
+      } finally {
+          setLoading(false);
+      }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className={styles.pageContainer} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      
       <header className={styles.header}>
-        <Button 
-          variant="secondary" 
-          icon={ChevronLeft} 
-          onClick={() => navigate(-1)}
-        >
-          Volver
-        </Button>
-        <h1>{turno ? `Venta del Turno #${turnoId}` : 'Nueva Venta'}</h1>
-        <div style={{width: 80}}></div>
+        <Button variant="ghost" icon={ChevronLeft} onClick={() => navigate(-1)}>Volver</Button>
+        <h1 className={styles.title}>{turno ? `Cobrar Turno #${turnoId}` : 'Nueva Venta Manual'}</h1>
       </header>
 
-      <div className={styles.content}>
-        <Card>
-            {/* --- SECCIÓN 1: AGREGAR ÍTEMS DINÁMICOS --- */}
-            <h2 style={{fontSize: '1.2rem', marginBottom: 15}}>Agregar al Carrito</h2>
-            <div className={styles.addItemBar}>
-                <Input
-                    type="text"
-                    placeholder="Buscar producto o servicio..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    icon={Search}
-                />
-                <Input
-                    type="number"
-                    value={selectedQty}
-                    onChange={(e) => setSelectedQty(parseInt(e.target.value) || 1)}
-                    style={{width: 80, minWidth: 80}}
-                    min="1"
-                    title="Cantidad"
-                />
-            </div>
+      <div className={styles.contentGrid}>
+        
+        <div className={styles.leftColumn}>
             
-            {/* Resultados de la Búsqueda / Selector */}
-            <div className={styles.selectorResults}>
-                {loadingItems ? (
-                    <p>Cargando catálogos...</p>
-                ) : allAvailable.length > 0 && searchTerm ? (
-                    allAvailable.slice(0, 10).map((item) => (
-                        <div 
-                            key={item.list_id} 
-                            className={styles.selectorItem}
-                            onClick={() => handleAddItem(item)}
-                        >
-                            <Badge variant={item.type === 'servicio' ? 'info' : 'primary'} size="sm" style={{marginRight: 8}}>
-                                {item.type === 'servicio' ? <Scissors size={14} /> : <Package size={14} />}
-                            </Badge>
-                            {item.name} ({formatCurrency(item.price)})
-                            <Plus size={16} style={{marginLeft:'auto'}}/>
-                        </div>
-                    ))
-                ) : searchTerm && <p className={styles.noResults}>No se encontraron resultados.</p>}
-            </div>
-            
-            <hr style={{margin: '20px 0'}}/>
-            
-            {/* --- SECCIÓN 2: CARRITO DE ÍTEMS (RESUMEN) --- */}
-            <h2 style={{fontSize: '1.2rem', marginBottom: 20}}>Cargado ({items.length})</h2>
-            
-            <div className={styles.itemsList}>
-                {items.length === 0 && <p style={{textAlign:'center', color:'#6b7280'}}>El carrito está vacío.</p>}
-                {items.map((item, index) => (
-                  <div key={index} className={styles.item} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #eee'}}>
-                    <div style={{flex: 1}}>
-                        <span className={styles.itemName} style={{fontWeight:500}}>{item.nombre}</span>
-                        <div style={{fontSize:'0.8rem', color:'#64748b'}}>
-                            <span style={{marginRight: 5}}>
-                                {item.tipo === 'servicio' ? 'Servicio' : 'Producto'}
-                            </span>
-                            <Input
-                              type="number"
-                              value={item.cantidad}
-                              onChange={(e) => updateItem(index, 'cantidad', e.target.value)}
-                              style={{width: 50, display: 'inline-block', padding: '5px 8px'}}
-                              min="1"
-                            />
-                        </div>
+            {/* 1. SELECCIÓN DE CLIENTE */}
+            <Card className={`${styles.searchCard} ${styles.overflowVisible}`}>
+                <div className={styles.searchHeader}>
+                    <User className={styles.searchIcon} size={20}/>
+                    <input 
+                        id="client-search"
+                        type="text" 
+                        className={styles.mainSearchInput}
+                        placeholder={isClientLocked ? "Cliente vinculado al turno" : "Buscar cliente (Nombre o Email)..."}
+                        value={clienteSearch}
+                        onChange={e => { setClienteSearch(e.target.value); setSelectedCliente(null); setClienteId(null); }}
+                        disabled={isClientLocked}
+                        autoComplete="off"
+                    />
+                    {!isClientLocked && (selectedCliente || clienteSearch) && (
+                        <button className={styles.clearSearchBtn} onClick={handleClearCliente}>
+                            <X size={18}/>
+                        </button>
+                    )}
+                </div>
+
+                {!isClientLocked && !selectedCliente && clientesFound.length > 0 && (
+                    <div className={styles.resultsDropdown}>
+                        {clientesFound.map(c => (
+                            <div key={c.id} className={styles.resultItem} onClick={() => handleSelectCliente(c)}>
+                                <User size={14} className={styles.iconGray}/>
+                                <div className={styles.resultInfo}>
+                                    <span className={styles.resultName}>{c.nombre} {c.apellido}</span>
+                                    <span className={styles.stockLabel}>{c.email}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <div style={{width: 150, display: 'flex', gap: 10, alignItems: 'center'}}>
-                        <Input
-                          type="number"
-                          value={item.precio}
-                          onChange={(e) => updateItem(index, 'precio', e.target.value)}
-                          style={{width: 80}}
-                          title="Precio Unitario"
-                        />
-                        <button type="button" onClick={() => removeItem(index)} className={styles.removeBtn}>
-                            <X size={16} />
+                )}
+            </Card>
+
+            {/* 2. AGREGAR ÍTEMS */}
+            <Card className={`${styles.searchCard} ${styles.overflowVisible}`}>
+                <div className={styles.searchHeader}>
+                    <Search className={styles.searchIcon} size={20}/>
+                    <input 
+                        type="text" 
+                        className={styles.mainSearchInput}
+                        placeholder="Buscar productos o servicios..."
+                        value={searchTerm}
+                        onChange={e => { setSearchTerm(e.target.value); setSelectedItem(null); }}
+                        disabled={!!selectedItem} 
+                    />
+                    {selectedItem && (
+                        <button className={styles.clearSearchBtn} onClick={() => {setSelectedItem(null); setSearchTerm('');}}>
+                            <X size={18}/>
+                        </button>
+                    )}
+                </div>
+
+                {/* Dropdown Ítems (Solo Selección, SIN creación) */}
+                {!selectedItem && searchTerm && searchResults.length > 0 && (
+                    <div className={styles.resultsDropdown}>
+                        {searchResults.map(item => (
+                            <div key={`${item.tipo}-${item.id}`} className={styles.resultItem} onClick={() => handleSelectItem(item)}>
+                                {item.tipo === 'servicio' ? <Scissors size={14} className={styles.iconBlue}/> : <Package size={14} className={styles.iconGray}/>}
+                                <div className={styles.resultInfo}>
+                                    <span className={styles.resultName}>{item.nombre}</span>
+                                    <div className={styles.resultMeta}>
+                                        <span className={styles.stockLabel}>{item.tipo}</span>
+                                        {item.stock_actual !== undefined && <span className={styles.stockLabel}>Stock: {parseFloat(item.stock_actual)}</span>}
+                                    </div>
+                                </div>
+                                <span className={styles.resultPrice}>{formatCurrency(item.precio)}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                
+                {!selectedItem && searchTerm && searchResults.length === 0 && !loadingCatalog && (
+                    <div className={styles.noResults}>
+                        No se encontraron productos o servicios activos con ese nombre.
+                    </div>
+                )}
+
+                {/* Panel Configuración de Ítem */}
+                {selectedItem && (
+                    <div className={styles.itemConfigPanel}>
+                        <div className={styles.configRow}>
+                            <Input 
+                                label="Cantidad" 
+                                type="number" 
+                                value={qtyInput} 
+                                onChange={e => setQtyInput(parseFloat(e.target.value))} // ParseFloat inmediato
+                                style={{width: 100}} 
+                                autoFocus
+                                min="1"
+                                // REGLA: Deshabilitar si es servicio
+                                disabled={selectedItem.tipo === 'servicio'}
+                            />
+                            <Input 
+                                label="Precio Unit." 
+                                type="number" 
+                                value={priceInput} 
+                                onChange={e => setPriceInput(parseFloat(e.target.value))} 
+                                style={{width: 120}} 
+                                startIcon={DollarSign}
+                                min="0.01"
+                                step="0.01"
+                            />
+                            <Button icon={Plus} onClick={handleAddItem} disabled={qtyInput <= 0 || priceInput <= 0}>
+                                Agregar
+                            </Button>
+                        </div>
+                        {selectedItem.tipo === 'servicio' && (
+                            <div style={{marginTop: 8, fontSize: '0.8rem', color: '#64748b'}}>
+                                * Los servicios se registran por unidad.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Card>
+
+            {/* 3. LISTA CARRITO */}
+            <div className={styles.cartContainer}>
+                <h3 className={styles.sectionTitle}>Ítems ({items.length})</h3>
+                {items.length === 0 ? (
+                    <div className={styles.emptyCart}><ShoppingCart size={40} color="#cbd5e1"/><p>Carrito vacío.</p></div>
+                ) : (
+                    <div className={styles.cartList}>
+                        {items.map((item, index) => (
+                            <CompraItemRow key={item.list_id || index} item={item} index={index} updateItem={updateItem} removeItem={removeItem} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* --- DERECHA: RESUMEN --- */}
+        <div className={styles.rightColumn}>
+            <Card className={styles.summaryCard}>
+                <h2 className={styles.summaryTitle}>Resumen de Venta</h2>
+                
+                <div className={styles.clientBadge} style={!clienteId ? {border: '1px solid #ef4444', background: '#fef2f2', color: '#b91c1c'} : {}}>
+                    <User size={16} />
+                    <span>
+                        {clienteId 
+                            ? (selectedCliente ? `${selectedCliente.nombre} ${selectedCliente.apellido}` : (turno?.cliente || 'Cliente Seleccionado')) 
+                            : 'Seleccione Cliente *'}
+                    </span>
+                </div>
+
+                <div className={styles.totalRow}>
+                    <span>Total</span>
+                    <span className={styles.totalValue}>{formatCurrency(total)}</span>
+                </div>
+
+                <div className={styles.paymentSection}>
+                    <label className={styles.paymentLabel}>Método de Pago</label>
+                    <div className={styles.paymentOptions}>
+                        <button type="button" className={`${styles.paymentBtn} ${metodoPago === 'efectivo' ? styles.active : ''}`} onClick={() => setMetodoPago('efectivo')}>
+                            <DollarSign size={20}/> Efectivo
+                        </button>
+                        <button type="button" className={`${styles.paymentBtn} ${metodoPago === 'transferencia' ? styles.active : ''}`} onClick={() => setMetodoPago('transferencia')}>
+                            <CreditCard size={20}/> Transf.
                         </button>
                     </div>
-                  </div>
-                ))}
-            </div>
+                </div>
 
-            <hr style={{margin: '20px 0'}}/>
-            
-            {/* --- SECCIÓN 3: PAGO Y TOTAL --- */}
-            <h2 style={{fontSize: '1.2rem', marginBottom: 15}}>Método de Pago</h2>
-            <div style={{display:'flex', gap: 10, marginBottom: 20}}>
-                <Button 
-                    variant={metodoPago === 'efectivo' ? 'primary' : 'outline'} 
-                    onClick={() => setMetodoPago('efectivo')}
-                    icon={DollarSign}
-                >
-                    Efectivo
+                <Button fullWidth size="lg" icon={Check} onClick={handleSubmit} loading={loading} disabled={items.length === 0} className={styles.confirmBtn}>
+                    Cobrar
                 </Button>
-                <Button 
-                    variant={metodoPago === 'transferencia' ? 'primary' : 'outline'} 
-                    onClick={() => setMetodoPago('transferencia')}
-                    icon={CreditCard}
-                >
-                    Transferencia
-                </Button>
-            </div>
-
-            {/* Total */}
-            <div className={styles.totalSection} style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 25, marginBottom: 25, padding: 15, background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0'}}>
-                <span style={{fontSize:'1.1rem', fontWeight:600, color: '#166534'}}>Total a Cobrar</span>
-                <span className={styles.totalAmount} style={{fontSize:'1.5rem', fontWeight:'bold', color: '#166534'}}>
-                    {formatCurrency(total)}
-                </span>
-            </div>
-            
-            <Button
-                fullWidth
-                icon={Check}
-                loading={loading}
-                onClick={handleSubmit}
-                size="lg"
-                disabled={items.length === 0}
-            >
-                Confirmar y Cobrar
-            </Button>
-        </Card>
+            </Card>
+        </div>
       </div>
     </motion.div>
   );

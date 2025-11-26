@@ -194,13 +194,6 @@ class VentaCreateSerializer(serializers.ModelSerializer):
                 if total_final < 0: total_final = 0
                 venta.venta_total = total_final
                 venta.save()
-
-                # Ingreso en Movimientos
-                Ingreso.objects.create(
-                    caja=caja_abierta,
-                    ingreso_descripcion=f"Venta #{venta.id} - {venta.venta_medio_pago}",
-                    ingreso_monto=total_final
-                )
                 
                 # Actualizar saldo físico solo si es efectivo
                 if venta.venta_medio_pago == 'efectivo':

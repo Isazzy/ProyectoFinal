@@ -10,7 +10,8 @@ from .views import (
     CategoriaInsumoDetailView,
     movimiento_stock,
     MarcaListCreateView,
-    MarcaDetailView
+    MarcaDetailView,
+    alertas_stock
 )
 
 urlpatterns = [
@@ -29,5 +30,6 @@ urlpatterns = [
     path('categorias-insumo/<int:pk>/', CategoriaInsumoDetailView.as_view(), name='categoriainsumo-detail'),
     path('marcas/', MarcaListCreateView.as_view(), name='marca-list-create'),
     path('marcas/<int:pk>/', MarcaDetailView.as_view(), name='marca-detail'),
+    path('alertas/', alertas_stock, name='alertas-stock'),
 ]
 

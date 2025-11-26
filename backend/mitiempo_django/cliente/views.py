@@ -35,8 +35,32 @@ class ClienteDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ClienteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-# Registro público (frontend) -> crea User + Cliente, permite anonymous
+    def destroy(self, request, *args, **kwargs):
+        cliente = self.get_object()
+        
+        # 1. VERIFICACIÓN DE TURNOS (Regla de Negocio)
+        # El turno apunta al User, así que verificamos a través del user asociado.
+        if cliente.user and cliente.user.turnos_como_cliente.exists():
+            return Response(
+                {"detail": f"No se puede eliminar a {cliente.nombre}: Tiene turnos registrados en el historial."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # 2. VERIFICACIÓN DE VENTAS (Integridad de Base de Datos)
+        # Esto atrapa el error si la BD tiene restricciones (PROTECT)
+        try:
+            # Intentamos borrar.
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"detail": "No se puede eliminar: El cliente tiene ventas/compras registradas."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"detail": "Error al eliminar el cliente. Verifique dependencias."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 

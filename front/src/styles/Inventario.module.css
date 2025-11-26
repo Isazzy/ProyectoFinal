@@ -494,3 +494,200 @@
 
 .emptyState svg { opacity: 0.3; margin-bottom: 10px; }
 .emptyState h3 { margin: 0; color: #334155; }
+
+
+/* ... (MANTÉN TUS ESTILOS ANTERIORES DE PRODUCTOS/INSUMOS AQUÍ) ... */
+
+/* =========================================
+   SECCIÓN DE CATÁLOGOS (CONFIGURACIÓN)
+   ========================================= */
+
+/* Grid Responsivo para las dos tablas */
+.catalogsGrid {
+    display: grid;
+    /* Auto-fit: si hay espacio pone 2 columnas, si no, una debajo de otra */
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .catalogsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.catalogCard {
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.catalogHeader {
+    padding: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.headerTitle h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+.iconBox {
+    width: 36px;
+    height: 36px;
+    background: #f3e8ff;
+    color: #9B8DC5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tabla Interna */
+.tableContainer {
+    flex: 1;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 10;
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover { background-color: #fcfaff; }
+
+/* Estilos de Celda */
+.nameCell {
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+}
+
+.descSmall {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+/* Estado Inactivo */
+.rowInactive td {
+    color: #cbd5e1;
+}
+.rowInactive .nameCell {
+    text-decoration: line-through;
+}
+
+/* Botones de Acción */
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.actionBtn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.actionBtn:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.btnDelete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Empty State */
+.emptyCatalog {
+    padding: 40px;
+    text-align: center;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Formularios */
+.formStack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #9B8DC5;
+    box-shadow: 0 0 0 3px rgba(155, 141, 197, 0.1);
+}

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
     Plus, Eye, ShoppingBag, Calendar, RefreshCw, 
-    Search, X, DollarSign, TrendingUp, Ban 
+    Search, X, DollarSign, TrendingUp 
 } from 'lucide-react';
 import { ventasApi } from '../../api/ventasApi';
 import { Card, Button, Badge, Input } from '../../components/ui';
@@ -68,8 +68,9 @@ export const VentasList = () => {
   // 2. Filtrado Local (Por nombre de cliente)
   const filteredVentas = useMemo(() => {
       return ventas.filter(v => {
+          // CORRECCIÓN: Usar las propiedades correctas 'nombre' y 'apellido'
           const cliente = v.cliente 
-            ? `${v.cliente.cliente_nombre} ${v.cliente.cliente_apellido}` 
+            ? `${v.cliente.nombre} ${v.cliente.apellido}` 
             : 'Consumidor Final';
           
           return cliente.toLowerCase().includes(searchQuery.toLowerCase());
@@ -104,21 +105,7 @@ export const VentasList = () => {
       </div>
 
       {/* STATS ROW */}
-      <div className={styles.statsGrid}>
-        <StatCard 
-            label="Ventas Hoy" 
-            value={formatCurrency(stats.hoy || 0)} 
-            icon={DollarSign} 
-            color="#10b981" // Verde Esmeralda
-        />
-        <StatCard 
-            label="Acumulado Mes" 
-            value={formatCurrency(stats.mes || 0)} 
-            icon={TrendingUp} 
-            color="#6366f1" // Índigo
-        />
-        {/* Puedes agregar más stats aquí si el backend los provee */}
-      </div>
+      
 
       {/* FILTROS */}
       <div className={styles.controlsContainer}>
@@ -126,7 +113,7 @@ export const VentasList = () => {
             <Input 
                 placeholder="Buscar por cliente..." 
                 value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)} 
                 icon={Search}
             />
           </div>
@@ -171,8 +158,9 @@ export const VentasList = () => {
             </thead>
             <tbody>
               {filteredVentas.map(venta => {
+                // CORRECCIÓN: Renderizado del nombre del cliente
                 const clienteNombre = venta.cliente 
-                    ? `${venta.cliente.cliente_nombre || ''} ${venta.cliente.cliente_apellido || ''}`.trim()
+                    ? `${venta.cliente.nombre} ${venta.cliente.apellido}`.trim()
                     : <span className={styles.consumerTag}>Consumidor Final</span>;
                 
                 const estadoNombre = venta.estado_venta?.estado_venta_nombre || 'Desconocido';

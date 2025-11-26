@@ -10,18 +10,17 @@ export const useProductos = () => {
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useSwal();
 
-  const fetchProductos = useCallback(async () => {
+  const fetchProductos = useCallback(async (params = {}) => {
     setLoading(true);
     try {
-      const data = await inventarioApi.getProductos();
+      const data = await inventarioApi.getProductos(params);
       setProductos(data.results || data);
     } catch (error) {
       console.error(error);
-      showError('Error', 'No se pudieron cargar los productos');
     } finally {
       setLoading(false);
     }
-  }, [showError]); 
+  }, []); 
 
   const fetchDependencias = useCallback(async () => {
     try {
@@ -68,17 +67,12 @@ export const useProductos = () => {
     }
   };
 
-  // --- NUEVA FUNCIÓN PARA CAMBIAR ESTADO ---
   const toggleEstadoProducto = async (id, nuevoEstado) => {
     try {
-        // Usamos PATCH para no tener que enviar todo el objeto
         await inventarioApi.patchProducto(id, { activo: nuevoEstado });
-        
-        // Actualizamos estado local para reflejar cambio inmediato en la UI
         setProductos(prev => prev.map(p => 
             p.id === id ? { ...p, activo: nuevoEstado } : p
         ));
-        
         showSuccess('Listo', nuevoEstado ? 'Producto reactivado' : 'Producto desactivado');
         return true;
     } catch (error) {
@@ -99,6 +93,30 @@ export const useProductos = () => {
     }
   };
 
+  // --- CREACIÓN RÁPIDA DE DEPENDENCIAS ---
+  const crearTipoRapido = async (nombre) => {
+      try {
+          // El backend espera 'tipo_producto_nombre'
+          await inventarioApi.crearTipoProducto({ tipo_producto_nombre: nombre }); 
+          await fetchDependencias(); // Recargar listas
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear el tipo de producto");
+          return false;
+      }
+  };
+
+  const crearMarcaRapida = async (nombre) => {
+      try {
+          await inventarioApi.crearMarca({ nombre: nombre });
+          await fetchDependencias();
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear la marca");
+          return false;
+      }
+  };
+
   return {
     productos,
     tipos,
@@ -108,7 +126,9 @@ export const useProductos = () => {
     fetchDependencias,
     crearProducto,
     actualizarProducto,
-    toggleEstadoProducto, // <--- EXPORTAR ESTA NUEVA FUNCIÓN
-    eliminarProducto
+    toggleEstadoProducto,
+    eliminarProducto,
+    crearTipoRapido,   // <--- Nuevo export
+    crearMarcaRapida   // <--- Nuevo export
   };
 };

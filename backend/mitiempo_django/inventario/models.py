@@ -102,7 +102,7 @@ class Producto(models.Model):
 
 
 class Insumo(models.Model):
-    categoria_insumo = models.ForeignKey(Categoria_Insumo, on_delete=models.CASCADE)
+    categoria_insumo = models.ForeignKey(Categoria_Insumo, on_delete=models.PROTECT)
     marca = models.ForeignKey(Marca, on_delete=models.SET_NULL, null=True, blank=True)
     insumo_nombre = models.CharField(max_length=200)
     insumo_unidad = models.CharField(max_length=50, help_text="ej: 'g', 'ml', 'unidad'")

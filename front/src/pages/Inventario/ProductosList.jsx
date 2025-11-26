@@ -1,6 +1,3 @@
-// ========================================
-// src/pages/Inventario/ProductosList.jsx
-// ========================================
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -30,20 +27,26 @@ export const ProductosList = () => {
       producto: null
   });
 
+  // --- CORRECCIÓN 1: Dependencia de showInactive ---
+  // Cada vez que cambiamos entre "Ver Activos" y "Papelera", recargamos la data correcta desde la API.
   useEffect(() => {
-    fetchProductos(); 
-  }, [fetchProductos]);
+    // Si showInactive es true, pedimos is_active=false. Si no, is_active=true.
+    fetchProductos({ is_active: !showInactive });
+  }, [fetchProductos, showInactive]);
 
-  // 3. Filtrado
+  // 3. Filtrado (Búsqueda local sobre lo que trajo la API)
   const filtered = productos.filter(p => {
     const search = searchTerm.toLowerCase();
+    
+    // Filtro por texto
     const matchesSearch = 
         p.producto_nombre.toLowerCase().includes(search) ||
         (p.tipo_producto_nombre || '').toLowerCase().includes(search) ||
         (p.marca_nombre || '').toLowerCase().includes(search);
 
-    // Lógica de estado: Si showInactive es true, mostramos los inactivos. Si es false, los activos.
-    const matchesStatus = showInactive ? !p.activo : p.activo; 
+    // NOTA: Ya no necesitamos filtrar por estado aquí estrictamente porque la API
+    // ya nos trajo lo correcto, pero lo dejamos como seguridad visual.
+    const matchesStatus = showInactive ? !p.activo : p.activo;
     
     return matchesSearch && matchesStatus;
   });
@@ -62,36 +65,40 @@ export const ProductosList = () => {
     setModal({ open: true, mode: 'ver', producto: prod });
   };
 
+  // --- CORRECCIÓN 2: Uso de Smart Delete ---
   const handleToggleStatus = async (prod) => {
     if (prod.activo) {
-        // Soft Delete (Desactivar)
+        // CASO: El producto está activo y queremos borrarlo/desactivarlo
         if (await confirm({ 
-            title: 'Desactivar Producto', 
-            text: `¿Mover ${prod.producto_nombre} a inactivos?`, 
-            icon: 'warning' 
+            title: 'Eliminar Producto', 
+            text: `¿Estás seguro de eliminar ${prod.producto_nombre}? Si tiene historial, se archivará automáticamente.`, 
+            icon: 'warning',
+            confirmButtonText: 'Sí, eliminar'
         })) {
-            // Si tienes la función toggle en el hook, úsala. Si no, usa eliminar (si el backend hace soft delete en delete)
-            if (toggleEstadoProducto) await toggleEstadoProducto(prod.id, false);
-            else await eliminarProducto(prod.id);
+            // Usamos eliminarProducto. El hook decidirá si es 204 (borrar) o 200 (soft delete)
+            // y actualizará la lista automáticamente.
+            await eliminarProducto(prod.id);
             
-            fetchProductos(); 
+            // NO llamamos a fetchProductos() aquí, el hook ya actualizó el estado local.
         }
     } else {
-        // Reactivar
+        // CASO: Reactivar desde la papelera
         if (await confirm({ 
             title: 'Reactivar', 
-            text: `¿Volver a activar ${prod.producto_nombre}?`, 
+            text: `¿Volver a activar ${prod.producto_nombre} para la venta?`, 
             icon: 'info' 
         })) {
-            if (toggleEstadoProducto) await toggleEstadoProducto(prod.id, true);
-            fetchProductos();
+            await toggleEstadoProducto(prod.id, true);
+            // El hook actualiza el estado local a activo=true.
+            // Como estamos viendo la lista de inactivos, el ítem desaparecerá visualmente (correcto).
         }
     }
   };
 
   const handleFormClose = () => {
       setModal({ ...modal, open: false });
-      fetchProductos();
+      // Aquí sí recargamos para asegurar consistencia tras edición/creación
+      fetchProductos({ is_active: !showInactive });
   };
 
   return (
@@ -102,7 +109,7 @@ export const ProductosList = () => {
         <div>
             <h2 className={styles.sectionTitle}>Catálogo de Productos</h2>
             <p className={styles.subtitle}>
-                {showInactive ? 'Viendo productos desactivados' : 'Gestión de productos para venta'}
+                {showInactive ? 'Papelera de Reciclaje (Productos Inactivos)' : 'Gestión de productos para venta'}
             </p>
         </div>
         {!showInactive && (
@@ -124,8 +131,10 @@ export const ProductosList = () => {
             variant={showInactive ? "secondary" : "outline"} 
             onClick={() => setShowInactive(!showInactive)}
             icon={showInactive ? Eye : EyeOff}
+            // Añadimos un color distintivo cuando está en modo papelera
+            style={showInactive ? { borderColor: 'var(--color-warning)', color: 'var(--color-warning)' } : {}}
         >
-            {showInactive ? 'Ver Activos' : 'Papelera'}
+            {showInactive ? 'Volver a Activos' : 'Ver Papelera'}
         </Button>
       </div>
 
@@ -153,6 +162,7 @@ export const ProductosList = () => {
                         layout
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
                         className={`${styles.cardItem} ${!p.activo ? styles.inactiveCard : ''}`}
                     >
                         {/* IMAGEN + PRECIO */}
@@ -181,7 +191,7 @@ export const ProductosList = () => {
                                 </div>
                             </div>
                             
-                            {/* STOCK STATUS */}
+                            {/* STOCK STATUS (Solo mostrar si está activo o si queremos verlo en papelera) */}
                             <div className={`${styles.stockBar} ${agotado ? styles.stockNone : esCritico ? styles.stockLow : styles.stockOk}`}>
                                 <div className={styles.stockInfo}>
                                     {agotado ? <AlertTriangle size={14}/> : <Tag size={14}/>}
@@ -210,7 +220,7 @@ export const ProductosList = () => {
                                 <button 
                                     className={`${styles.iconBtn} ${p.activo ? styles.btnDanger : styles.btnSuccess}`}
                                     onClick={() => handleToggleStatus(p)}
-                                    title={p.activo ? "Desactivar" : "Reactivar"}
+                                    title={p.activo ? "Eliminar" : "Restaurar"}
                                 >
                                     {p.activo ? <Trash2 size={18} /> : <RotateCcw size={18} />}
                                 </button>
@@ -224,8 +234,8 @@ export const ProductosList = () => {
         !loading && (
             <div className={styles.emptyState}>
                 <ShoppingBag size={48} strokeWidth={1} />
-                <h3>No se encontraron productos</h3>
-                <p>Intenta ajustar los filtros o agrega un nuevo producto al inventario.</p>
+                <h3>{showInactive ? 'La papelera está vacía' : 'No se encontraron productos'}</h3>
+                <p>{showInactive ? 'Los productos eliminados aparecerán aquí.' : 'Intenta ajustar los filtros o agrega un nuevo producto.'}</p>
             </div>
         )
       )}
@@ -240,7 +250,6 @@ export const ProductosList = () => {
             <ProductoForm 
                 productoToEdit={modal.producto} 
                 onClose={handleFormClose} 
-                // Pasamos la instancia existente, no la creamos de nuevo
                 useProductosHook={inventarioHook} 
                 mode={modal.mode}
             />

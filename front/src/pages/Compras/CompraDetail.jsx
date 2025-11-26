@@ -42,7 +42,6 @@ export const CompraDetail = () => {
   return (
     <motion.div className={styles.pageContainer} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       
-      {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
             <Button variant="ghost" icon={ChevronLeft} onClick={() => navigate('/compras')}>
@@ -50,17 +49,12 @@ export const CompraDetail = () => {
             </Button>
             <h1>Orden de Compra #{compra.id}</h1>
         </div>
-        <Button variant="outline" icon={Printer} onClick={() => window.print()}>
-            Imprimir
-        </Button>
       </header>
 
       <div className={styles.contentGrid}>
         
-        {/* --- COLUMNA IZQUIERDA: DATOS DE CABECERA --- */}
+        {/* --- COLUMNA IZQUIERDA --- */}
         <div className={styles.leftCol}>
-            
-            {/* Tarjeta de Proveedor */}
             <Card className={styles.infoCard}>
                 <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>Proveedor</h3>
@@ -76,13 +70,11 @@ export const CompraDetail = () => {
                 </div>
             </Card>
 
-            {/* Detalles de la Transacción */}
             <Card className={styles.infoCard}>
                 <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>Detalles de Emisión</h3>
                 </div>
                 <div className={styles.detailsList}>
-                    
                     <div className={styles.detailRow}>
                         <div className={styles.detailIcon}><Calendar size={16}/></div>
                         <div className={styles.detailContent}>
@@ -90,7 +82,6 @@ export const CompraDetail = () => {
                             <span className={styles.value}>{compra.compra_fecha}</span>
                         </div>
                     </div>
-
                     <div className={styles.detailRow}>
                         <div className={styles.detailIcon}><Clock size={16}/></div>
                         <div className={styles.detailContent}>
@@ -98,17 +89,15 @@ export const CompraDetail = () => {
                             <span className={styles.value}>{compra.compra_hora}</span>
                         </div>
                     </div>
-
                     <div className={styles.divider}></div>
-
                     <div className={styles.detailRow}>
                         <div className={styles.detailIcon}><User size={16}/></div>
                         <div className={styles.detailContent}>
                             <span className={styles.label}>Recibido por</span>
-                            <span className={styles.value}>{compra.empleado?.first_name || compra.empleado?.username || '-'}</span>
+                            {/* CORRECCIÓN: Usar empleado_nombre */}
+                            <span className={styles.value}>{compra.empleado_nombre || 'Desconocido'}</span>
                         </div>
                     </div>
-
                     <div className={styles.detailRow}>
                         <div className={styles.detailIcon}><Box size={16}/></div>
                         <div className={styles.detailContent}>
@@ -116,7 +105,6 @@ export const CompraDetail = () => {
                             <span className={styles.value}>{compra.caja}</span>
                         </div>
                     </div>
-
                     <div className={styles.detailRow}>
                         <div className={styles.detailIcon}><CreditCard size={16}/></div>
                         <div className={styles.detailContent}>
@@ -130,14 +118,13 @@ export const CompraDetail = () => {
             </Card>
         </div>
 
-        {/* --- COLUMNA DERECHA: DETALLE DE ÍTEMS --- */}
+        {/* --- COLUMNA DERECHA --- */}
         <div className={styles.rightCol}>
             <Card className={styles.itemsCard}>
                 <div className={styles.itemsHeader}>
                     <h2>Ítems Adquiridos</h2>
                     <span className={styles.itemsCount}>{compra.detalles.length} ítems</span>
                 </div>
-
                 <table className={styles.table}>
                     <thead>
                         <tr>
@@ -152,8 +139,8 @@ export const CompraDetail = () => {
                         {compra.detalles.map((item, index) => (
                             <tr key={index}>
                                 <td>
-                                    <span className={styles.itemName}>{item.item_nombre || item.insumo_nombre}</span>
-                                    <span className={styles.itemUnit}>({item.unidad || item.insumo_unidad})</span>
+                                    <span className={styles.itemName}>{item.item_nombre}</span>
+                                    <span className={styles.itemUnit}>({item.unidad})</span>
                                 </td>
                                 <td style={{textAlign: 'center'}}>
                                     {item.item_tipo === 'Insumo' ? (
@@ -175,7 +162,6 @@ export const CompraDetail = () => {
                         ))}
                     </tbody>
                 </table>
-
                 <div className={styles.footerTotal}>
                     <div className={styles.totalLabel}>Total Compra</div>
                     <div className={styles.totalAmount}>{formatCurrency(compra.compra_total)}</div>

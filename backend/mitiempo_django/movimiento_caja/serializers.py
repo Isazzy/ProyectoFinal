@@ -5,27 +5,24 @@ from .models import Ingreso, Egreso
 class IngresoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingreso
+        # Incluimos los campos nuevos de fecha y hora
         fields = ['id', 'caja', 'ingreso_descripcion', 'ingreso_monto', 'ingreso_fecha', 'ingreso_hora']
-        # CORRECCIÓN: 'caja' debe ser read_only para que no falle la validación
+        # CORRECCIÓN CRÍTICA: 'caja' debe ser read_only
         read_only_fields = ['id', 'caja', 'ingreso_fecha', 'ingreso_hora']
 
 class EgresoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Egreso
+        # Incluimos los campos nuevos de fecha y hora
         fields = ['id', 'caja', 'egreso_descripcion', 'egreso_monto', 'egreso_fecha', 'egreso_hora']
-        # CORRECCIÓN: 'caja' debe ser read_only
+        # CORRECCIÓN CRÍTICA: 'caja' debe ser read_only
         read_only_fields = ['id', 'caja', 'egreso_fecha', 'egreso_hora']
-        # 'caja' se asignará en la vista
 
 # --- Serializer Consolidado (Lectura) ---
 class MovimientoConsolidadoSerializer(serializers.Serializer):
-    """
-    Formatea una lista combinada de movimientos.
-    La vista se encarga de combinar fecha y hora en un objeto datetime.
-    """
     id = serializers.SerializerMethodField()
     tipo = serializers.CharField() 
-    fecha = serializers.DateTimeField()# La vista debe entregar un datetime completo
+    fecha = serializers.DateTimeField() # La vista combinará fecha+hora
     descripcion = serializers.CharField()
     monto = serializers.DecimalField(max_digits=10, decimal_places=2)
 

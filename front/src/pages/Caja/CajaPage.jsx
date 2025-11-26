@@ -49,7 +49,7 @@ const MovimientoForm = ({ tipo, onSubmit, onClose }) => {
                     className={styles.textarea} 
                     value={desc} 
                     onChange={e => setDesc(e.target.value)}
-                    placeholder={tipo === 'ingreso' ? "Ej: Aporte de cambio chico" : "Ej: Compra insumos limpieza (Chino)"}
+                    placeholder={tipo === 'ingreso' ? "Ej: Aporte de cambio chico" : "Ej: Compra insumos limpieza"}
                     rows={3}
                 />
             </div>
@@ -65,46 +65,48 @@ const MovimientoForm = ({ tipo, onSubmit, onClose }) => {
 
 // --- Sub-componente: Tabla de Historial ---
 const HistorialTable = ({ historial, loading }) => {
-    if (loading) return <div className={styles.loadingState}><RefreshCw className="animate-spin"/> Cargando historial...</div>;
+    if (loading && (!historial || historial.length === 0)) return <div className={styles.loadingState}><RefreshCw className="animate-spin"/> Cargando historial...</div>;
     if (!historial || historial.length === 0) return <div className={styles.emptyState}><p>No hay cierres de caja anteriores.</p></div>;
 
     return (
         <div className={styles.tableContainer}>
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Apertura</th>
-                        <th>Cierre</th>
-                        <th>Monto Inicial</th>
-                        <th>Saldo Final</th>
-                        <th>Responsable</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {historial.map(c => (
-                        <tr key={c.id}>
-                            <td>
-                                <div className={styles.dateCell}>
-                                    <span>{formatDate(c.caja_fecha_hora_apertura)}</span>
-                                    <small>{new Date(c.caja_fecha_hora_apertura).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
-                                </div>
-                            </td>
-                            <td>
-                                {c.caja_fecha_hora_cierre 
-                                    ? <span className={styles.dateCell}>
-                                        {formatDate(c.caja_fecha_hora_cierre)}
-                                        <small>{new Date(c.caja_fecha_hora_cierre).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
-                                      </span>
-                                    : <Badge variant="warning">Abierta</Badge>
-                                }
-                            </td>
-                            <td>{formatCurrency(c.caja_monto_inicial)}</td>
-                            <td><span className={styles.totalAmount}>{c.caja_saldo_final !== null ? formatCurrency(c.caja_saldo_final) : '-'}</span></td>
-                            <td>{c.empleado?.first_name || c.empleado?.user?.username || 'Usuario'}</td>
+            <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>Apertura</th>
+                            <th>Cierre</th>
+                            <th>Monto Inicial</th>
+                            <th>Saldo Final</th>
+                            <th>Responsable</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {historial.map(c => (
+                            <tr key={c.id}>
+                                <td>
+                                    <div className={styles.dateCell}>
+                                        <span>{formatDate(c.caja_fecha_hora_apertura)}</span>
+                                        <small>{new Date(c.caja_fecha_hora_apertura).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {c.caja_fecha_hora_cierre 
+                                        ? <span className={styles.dateCell}>
+                                            {formatDate(c.caja_fecha_hora_cierre)}
+                                            <small>{new Date(c.caja_fecha_hora_cierre).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+                                        </span>
+                                        : <Badge variant="warning">Abierta</Badge>
+                                    }
+                                </td>
+                                <td>{formatCurrency(c.caja_monto_inicial)}</td>
+                                <td><span className={styles.totalAmount}>{c.caja_saldo_final !== null ? formatCurrency(c.caja_saldo_final) : '-'}</span></td>
+                                <td>{c.empleado?.first_name || c.empleado?.user?.username || 'Usuario'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
@@ -177,9 +179,22 @@ export const CajaPage = () => {
 
   // --- VISTA 2: CAJA ABIERTA (DASHBOARD) ---
   
-  // Cálculo seguro de totales para evitar NaN
+  // Cálculo seguro de totales
   const totalEgresos = parseFloat(caja?.total_egresos_manuales || 0) + parseFloat(caja?.total_compras_efectivo || 0);
   const totalVentas = parseFloat(caja?.total_ventas_efectivo || 0);
+
+  // Combinar movimientos API con el registro de apertura para visualización
+  const movimientosDisplay = [
+      ...movimientos,
+      // Agregamos la apertura al final (ya que la lista suele venir ordenada por fecha desc)
+      {
+          id: 'apertura-inicial',
+          tipo: 'Apertura',
+          descripcion: 'Saldo inicial de apertura de caja',
+          monto: caja?.caja_monto_inicial || 0,
+          fecha: caja?.caja_fecha_hora_apertura
+      }
+  ];
   
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.pageContainer}>
@@ -264,7 +279,7 @@ export const CajaPage = () => {
             </div>
 
             <Card className={styles.tableCard}>
-                {movimientos.length > 0 ? (
+                {movimientosDisplay.length > 0 ? (
                     <div className={styles.tableScroll}>
                         <table className={styles.table}>
                             <thead>
@@ -276,13 +291,23 @@ export const CajaPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {movimientos.map((mov, idx) => {
-                                    const isPositivo = mov.tipo === 'Venta' || mov.tipo === 'Ingreso';
+                                {movimientosDisplay.map((mov, idx) => {
+                                    const isApertura = mov.tipo === 'Apertura';
+                                    const isPositivo = mov.tipo === 'Venta' || mov.tipo === 'Ingreso' || isApertura;
+                                    
+                                    // Badge Variant
+                                    let badgeVar = 'default';
+                                    if (isApertura) badgeVar = 'info';
+                                    else if (isPositivo) badgeVar = 'success';
+                                    else badgeVar = 'danger';
+
                                     return (
-                                        <tr key={idx}>
-                                            <td className={styles.timeCell}>{new Date(mov.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                                        <tr key={idx} style={isApertura ? {backgroundColor: '#f8fafc'} : {}}>
+                                            <td className={styles.timeCell}>
+                                                {mov.fecha ? new Date(mov.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '-'}
+                                            </td>
                                             <td>
-                                                <Badge variant={isPositivo ? 'success' : 'danger'}>{mov.tipo}</Badge>
+                                                <Badge variant={badgeVar}>{mov.tipo}</Badge>
                                             </td>
                                             <td className={styles.descCell}>{mov.descripcion}</td>
                                             <td style={{textAlign:'right', fontWeight:'bold', color: isPositivo ? '#16a34a' : '#ef4444'}}>

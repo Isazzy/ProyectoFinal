@@ -1,17 +1,21 @@
+// ========================================
+// src/api/cajaApi.js
+// ========================================
 import api from './axiosConfig';
 
 const MODULE_URL = '/caja'; 
+const MOVIMIENTOS_URL = '/movimiento-caja'; // Nueva base para movimientos
 
 export const cajaApi = {
+  // --- GESTIÓN DE CAJA ---
+  
   // Verificar si hay caja abierta
-  // URL: /api/caja/estado/
   getStatus: async () => {
     const response = await api.get(`${MODULE_URL}/estado/`);
     return response.data;
   },
 
   // Abrir una nueva caja
-  // URL: /api/caja/abrir/
   abrirCaja: async (montoInicial) => {
     const response = await api.post(`${MODULE_URL}/abrir/`, { 
         caja_monto_inicial: montoInicial 
@@ -20,9 +24,6 @@ export const cajaApi = {
   },
 
   // Cerrar la caja actual
-  // URL: /api/caja/cerrar/
-  // Nota: No enviamos ID en la URL porque tu vista 'CerrarCajaView' 
-  // usa get_object() para encontrar la caja activa automáticamente.
   cerrarCaja: async (id, observacion) => {
     const response = await api.put(`${MODULE_URL}/cerrar/`, { 
         caja_observacion: observacion 
@@ -30,20 +31,33 @@ export const cajaApi = {
     return response.data;
   },
 
-  // Obtener movimientos
-  // URL: /api/movimiento-caja/?caja_id=...
+  // Historial de cajas cerradas
+  getHistorial: async () => {
+    const response = await api.get(`${MODULE_URL}/historial/`);
+    return response.data;
+  },
+
+  // --- MOVIMIENTOS (Ingresos / Egresos) ---
+
+  // Obtener lista consolidada
   getMovimientos: async (cajaId) => {
-    // Ajustado a la URL raíz que proveíste
-    const response = await api.get(`/movimiento-caja/`, { 
+    const response = await api.get(`${MOVIMIENTOS_URL}/`, { 
         params: { caja_id: cajaId } 
     });
     return response.data; 
   },
-  
-  // Historial de cajas cerradas
-  // URL: /api/caja/historial/
-  getHistorial: async () => {
-    const response = await api.get(`${MODULE_URL}/historial/`);
-    return response.data;
+
+  // Crear Ingreso Manual (FALTABA ESTO)
+  crearIngreso: async (data) => {
+      // data: { ingreso_descripcion, ingreso_monto }
+      const response = await api.post(`${MOVIMIENTOS_URL}/ingresos/`, data);
+      return response.data;
+  },
+
+  // Crear Egreso Manual (FALTABA ESTO)
+  crearEgreso: async (data) => {
+      // data: { egreso_descripcion, egreso_monto }
+      const response = await api.post(`${MOVIMIENTOS_URL}/egresos/`, data);
+      return response.data;
   }
 };
