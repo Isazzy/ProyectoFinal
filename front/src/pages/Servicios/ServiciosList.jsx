@@ -4,17 +4,27 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Eye, Scissors, Search, Clock, DollarSign, RefreshCw, EyeOff } from 'lucide-react';
+import { 
+    Plus, Edit, Trash2, Eye, Scissors, Search, Clock, 
+    DollarSign, RefreshCw, EyeOff, Brush, Sparkles 
+} from 'lucide-react';
 import { useServicios } from '../../hooks/useServicios';
 import { Card, Button, Badge, Input, Modal } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Servicios.module.css';
-import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager'; // Ajusta la ruta si es necesario
+import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager';
+
+// --- CONFIGURACIÓN DE CATEGORÍAS ---
+const CATEGORIAS = [
+    { id: 'Peluquería', label: 'Peluquería', icon: Scissors },
+    { id: 'Uñas', label: 'Uñas', icon: Sparkles },
+    { id: 'Maquillaje', label: 'Maquillaje', icon: Brush },
+];
 
 // --- SUB-COMPONENTE: FORMULARIO ---
 const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   const [form, setForm] = useState({
-    tipo_serv: servicio?.tipo_serv || "",
+    tipo_serv: servicio?.tipo_serv || "Peluquería", // Default
     nombre: servicio?.nombre || "",
     duracion: servicio?.duracion?.toString() || "",
     precio: servicio?.precio?.toString() || "",
@@ -48,9 +58,14 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     }));
   };
 
+  // Handler exclusivo para categorías
+  const handleCategorySelect = (catId) => {
+      setForm(prev => ({ ...prev, tipo_serv: catId }));
+  };
+
   const validate = () => {
     const e = {};
-    if (!form.tipo_serv.trim()) e.tipo_serv = "Requerido";
+    if (!form.tipo_serv) e.tipo_serv = "Requerido";
     if (!form.nombre.trim()) e.nombre = "Requerido";
     if (!form.duracion || parseInt(form.duracion) <= 0) e.duracion = "Inválido";
     if (!form.precio || parseFloat(form.precio) <= 0) e.precio = "Inválido";
@@ -64,7 +79,7 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     if (!validate()) return;
 
     const recetaPayload = receta.map(item => ({
-      insumo_id: item.insumo || item.id, // Aseguramos compatibilidad de ID
+      insumo_id: item.insumo || item.id, 
       cantidad_usada: parseFloat(item.cantidad_usada || item.cantidad)
     }));
 
@@ -80,10 +95,27 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     <form onSubmit={handleSubmit} className={styles.formGrid}>
         {/* Sección Principal */}
         <div className={styles.formSection}>
-            <div className={styles.row2}>
-                <Input label="Nombre del Servicio *" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} />
-                <Input label="Categoría *" name="tipo_serv" value={form.tipo_serv} onChange={handleChange} error={errors.tipo_serv} placeholder="Ej: Peluquería" />
+            
+            {/* SELECCIÓN DE CATEGORÍA POR SLOTS */}
+            <div className={styles.inputGroup}>
+                <label className={styles.sectionLabel}>Categoría *</label>
+                <div className={styles.categoryGrid}>
+                    {CATEGORIAS.map(cat => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            className={`${styles.categorySlot} ${form.tipo_serv === cat.id ? styles.catActive : ''}`}
+                            onClick={() => handleCategorySelect(cat.id)}
+                        >
+                            <cat.icon size={18} />
+                            <span>{cat.label}</span>
+                        </button>
+                    ))}
+                </div>
+                {errors.tipo_serv && <span className={styles.errorText}>{errors.tipo_serv}</span>}
             </div>
+
+            <Input label="Nombre del Servicio *" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} />
             
             <div className={styles.row2}>
                 <Input label="Duración (min) *" type="number" name="duracion" value={form.duracion} onChange={handleChange} error={errors.duracion} startIcon={Clock} />
@@ -225,7 +257,9 @@ export const ServiciosList = () => {
                     >
                         <div className={styles.cardHeader}>
                             <div className={styles.iconWrapper}>
-                                <Scissors size={20} />
+                                {servicio.tipo_serv === 'Uñas' ? <Sparkles size={20}/> : 
+                                 servicio.tipo_serv === 'Maquillaje' ? <Brush size={20}/> : 
+                                 <Scissors size={20} />}
                             </div>
                             <div className={styles.headerInfo}>
                                 <h3>{servicio.nombre}</h3>

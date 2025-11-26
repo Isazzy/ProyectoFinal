@@ -21,7 +21,7 @@ import styles from './LandingPage.module.css';
 const PublicNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, logout, user, isEmpleado, isAdmin } = useAuth(); // Traemos datos de auth
+  const { isAuthenticated, logout, user, isEmpleado, isAdmin } = useAuth(); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,18 +36,18 @@ const PublicNavbar = () => {
       setMobileMenuOpen(false);
   };
 
-  // Enlaces comunes
+  // Enlaces comunes (Anclas dentro de la landing)
   const commonLinks = [
     { label: 'Inicio', href: '#inicio', type: 'anchor' },
     { label: 'Nosotros', href: '#nosotros', type: 'anchor' },
     { label: 'Servicios', href: '#servicios', type: 'anchor' },
   ];
 
-  // Enlaces para usuario logueado
+  // --- CONFIGURACIÓN DE ENLACES DE CLIENTE ---
   const userLinks = [
       { label: 'Agendar Turno', to: '/reservar', type: 'router' },
-      { label: 'Mis Turnos', to: '/mis-turnos', type: 'router' }, // Ruta a crear futuro
-      { label: 'Mi Perfil', to: '/perfil', type: 'router' },      // Ruta a crear futuro
+      { label: 'Mis Turnos', to: "/mis-turnos", type: 'router' }, // Apunta a src/pages/Cliente/MisTurnos.jsx
+      { label: 'Mi Perfil', to: '/perfilC', type: 'router' },      // Apunta a src/pages/Cliente/PerfilC.jsx
   ];
 
   const renderLink = (link) => {
@@ -395,7 +395,6 @@ const ServicesSection = () => {
                 </span>
               </div>
               
-              {/* Botón Reservar */}
               <Button
                 variant="outline"
                 fullWidth

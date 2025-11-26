@@ -194,7 +194,7 @@ class DetalleCompraReadSerializer(serializers.ModelSerializer):
 class CompraListSerializer(serializers.ModelSerializer):
     proveedor = serializers.StringRelatedField()
     # Empleado Nested para mostrar el nombre/datos del usuario que registró la compra
-    empleado = EmpleadoNestedSerializer(source='empleado.user', read_only=True)
+    empleado_nombre = serializers.StringRelatedField(source='empleado', read_only=True)
     caja = serializers.StringRelatedField()
     detalles = DetalleCompraReadSerializer(many=True, read_only=True, source='detalle_compra_set')
     compra_fecha = serializers.DateField(read_only=True)
@@ -204,7 +204,7 @@ class CompraListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 
             'proveedor', 
-            'empleado', 
+            'empleado_nombre', 
             'caja', 
             'compra_fecha', 'compra_hora',
             'compra_total', 

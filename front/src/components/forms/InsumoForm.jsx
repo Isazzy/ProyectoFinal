@@ -1,17 +1,33 @@
+// ========================================
+// src/pages/Inventario/InsumoForm.jsx
+// ========================================
 import React, { useState, useEffect } from 'react';
-import { X, Save, Upload, Link as LinkIcon, RefreshCw } from 'lucide-react'; 
+import { Save, Upload, Link as LinkIcon, RefreshCw, Plus, Check, X } from 'lucide-react'; 
 import { Button, Input } from '../../components/ui'; 
 import styles from '../../styles/Inventario.module.css';
 import { uploadToCloudinary } from '../../utils/cloudinary'; 
 
 export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'crear' }) => {
-  const { categorias, marcas, fetchDependencias, crearInsumo, actualizarInsumo, loading } = useInventarioHook;
+  const { 
+      categorias, marcas, fetchDependencias, 
+      crearInsumo, actualizarInsumo, 
+      crearCategoriaRapida, crearMarcaRapida,
+      loading 
+  } = useInventarioHook;
+  
   const isReadOnly = mode === 'ver';
 
+  // Estados
   const [uploadingImage, setUploadingImage] = useState(false);
   const [file, setFile] = useState(null); 
   const [preview, setPreview] = useState(null);
   const [imageMode, setImageMode] = useState('archivo');
+
+  // Estados Creación Rápida
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [addingMarca, setAddingMarca] = useState(false);
+  const [newMarcaName, setNewMarcaName] = useState("");
 
   const [form, setForm] = useState({
     insumo_nombre: '',
@@ -24,16 +40,16 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
     activo: true
   });
 
+  // Carga inicial
   useEffect(() => {
     if (!isReadOnly) fetchDependencias();
     
     if (insumoToEdit) {
-        // Mapeo seguro de IDs (si viene objeto o ID)
         let catValue = insumoToEdit.categoria_insumo;
-        if (typeof insumoToEdit.categoria_insumo === 'object') catValue = insumoToEdit.categoria_insumo.id;
+        if (typeof catValue === 'object' && catValue) catValue = catValue.id;
         
         let marcaValue = insumoToEdit.marca;
-        if (typeof insumoToEdit.marca === 'object' && insumoToEdit.marca) marcaValue = insumoToEdit.marca.id;
+        if (typeof marcaValue === 'object' && marcaValue) marcaValue = marcaValue.id;
 
         setForm({
             insumo_nombre: insumoToEdit.insumo_nombre || "",
@@ -48,7 +64,7 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
 
         if (insumoToEdit.insumo_imagen_url) {
             setPreview(insumoToEdit.insumo_imagen_url);
-            setImageMode('url'); 
+            setImageMode('url');
         }
     }
   }, [insumoToEdit, fetchDependencias, isReadOnly]);
@@ -57,8 +73,6 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
     if (isReadOnly) return;
     const { name, value, type, checked } = e.target;
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    
-    // Solo actualizar preview si estamos en modo URL
     if (name === 'insumo_imagen_url' && imageMode === 'url') setPreview(value);
   };
 
@@ -68,30 +82,38 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
     if (selectedFile) {
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
-      // Limpiamos la URL manual para evitar conflictos
       setForm(prev => ({ ...prev, insumo_imagen_url: '' })); 
     }
   };
 
-  // Cambiar modo limpia el estado del otro modo para evitar enviar basura
   const handleModeChange = (mode) => {
       setImageMode(mode);
       if (mode === 'archivo') {
-          // Si cambia a archivo, conservamos la URL solo si ya venía guardada (para no perderla al editar sin cambios)
-          // pero si estaba escribiendo una nueva, la lógica de file prevalecerá.
+         // Mantener lógica
       } else {
           setFile(null);
-          // Si cambia a URL, y no hay una escrita, limpiamos el preview del archivo
           if (!form.insumo_imagen_url) setPreview(null);
           else setPreview(form.insumo_imagen_url);
       }
+  };
+
+  // Handlers Creación Rápida
+  const handleCreateCat = async () => {
+      if(!newCatName.trim()) return;
+      const success = await crearCategoriaRapida(newCatName);
+      if(success) { setAddingCat(false); setNewCatName(""); }
+  };
+
+  const handleCreateMarca = async () => {
+      if(!newMarcaName.trim()) return;
+      const success = await crearMarcaRapida(newMarcaName);
+      if(success) { setAddingMarca(false); setNewMarcaName(""); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReadOnly) return;
 
-    // Validación simple
     if (!form.insumo_nombre || !form.insumo_unidad || !form.categoria_insumo || form.insumo_stock === '') {
         alert("Complete los campos obligatorios.");
         return;
@@ -99,44 +121,25 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
 
     try {
         let finalUrl = "";
-
-        // Lógica de Selección de Imagen
-        if (imageMode === 'archivo') {
-            if (file) {
-                // Caso 1: Nuevo archivo seleccionado -> Subir
-                setUploadingImage(true);
-                try {
-                    finalUrl = await uploadToCloudinary(file);
-                } catch (err) {
-                    alert("Error subiendo imagen");
-                    setUploadingImage(false);
-                    return;
-                }
+        if (imageMode === 'archivo' && file) {
+            setUploadingImage(true);
+            try {
+                finalUrl = await uploadToCloudinary(file);
+            } catch (err) {
+                alert("Error subiendo imagen");
                 setUploadingImage(false);
-            } else {
-                // Caso 2: No seleccionó archivo nuevo -> Mantener URL existente (si había)
-                finalUrl = form.insumo_imagen_url;
-            }
-        } else {
-            // Caso 3: Modo URL Manual
-            finalUrl = form.insumo_imagen_url;
-            // Validación básica de URL
-            if (finalUrl && !finalUrl.startsWith('http')) {
-                alert("La URL de la imagen debe comenzar con http:// o https://");
                 return;
             }
+            setUploadingImage(false);
+        } else {
+            finalUrl = form.insumo_imagen_url;
         }
 
-        // --- PREPARAR PAYLOAD LIMPIO ---
         const payload = {
             ...form,
-            // Asegurar números
             insumo_stock: parseFloat(form.insumo_stock),
             insumo_stock_minimo: parseFloat(form.insumo_stock_minimo || 0),
-            // Asegurar nulo si está vacío
             marca: form.marca ? form.marca : null, 
-            
-            // Asegurar string vacío si es null o undefined para evitar error de URLField
             insumo_imagen_url: finalUrl || "", 
             insumo_imagen: null 
         };
@@ -158,20 +161,9 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
     }
   };
 
-  const getTitle = () => {
-      if (mode === 'ver') return 'Detalle Insumo';
-      if (mode === 'editar') return 'Editar Insumo';
-      return 'Nuevo Insumo';
-  };
-
+  // --- RENDERIZADO: SOLO EL CONTENIDO DEL FORMULARIO ---
+  // Ya no renderizamos .modalOverlay ni .modalHeader aquí porque el padre (Modal) lo hace
   return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
-        <div className={styles.modalHeader}>
-          <h2>{getTitle()}</h2>
-          <button onClick={onClose} className={styles.closeBtn}><X size={24} /></button>
-        </div>
-
         <form onSubmit={handleSubmit} className={styles.formGrid}>
             {isReadOnly && preview && (
                 <div style={{gridColumn:'1/-1', textAlign:'center', marginBottom:10}}>
@@ -188,17 +180,29 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
                         {categorias.find(c => c.id == form.categoria_insumo)?.categoria_insumo_nombre || '-'}
                     </div>
                 ) : (
-                    <select name="categoria_insumo" value={form.categoria_insumo} onChange={handleChange} className={styles.selectInput} required>
-                        <option value="">-- Seleccionar --</option>
-                        {Array.isArray(categorias) && categorias.map(c => (
-                            <option key={c.id} value={c.id}>{c.categoria_insumo_nombre}</option>
-                        ))}
-                    </select>
+                    addingCat ? (
+                        <div style={{display:'flex', gap:5}}>
+                            <Input value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Nombre nueva categoría" autoFocus />
+                            <Button size="sm" onClick={handleCreateCat} icon={Check} type="button"/>
+                            <Button size="sm" variant="ghost" onClick={() => setAddingCat(false)} icon={X} type="button"/>
+                        </div>
+                    ) : (
+                        <div style={{display:'flex', gap:5}}>
+                            <select name="categoria_insumo" value={form.categoria_insumo} onChange={handleChange} className={styles.selectInput} required style={{flex:1}}>
+                                <option value="">-- Seleccionar --</option>
+                                {Array.isArray(categorias) && categorias.map(c => (
+                                    <option key={c.id} value={c.id}>{c.categoria_insumo_nombre}</option>
+                                ))}
+                            </select>
+                            <Button size="sm" variant="outline" onClick={() => setAddingCat(true)} icon={Plus} type="button" title="Crear categoría"/>
+                        </div>
+                    )
                 )}
             </div>
 
             <div className={styles.rowTwo}>
                 <Input label="Unidad *" name="insumo_unidad" value={form.insumo_unidad} onChange={handleChange} disabled={isReadOnly} required placeholder="Ej: ml, g, un" />
+                
                 <div className={styles.inputGroup}>
                     <label>Marca</label>
                     {isReadOnly ? (
@@ -206,12 +210,23 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
                             {marcas.find(m => m.id == form.marca)?.nombre || '-'}
                         </div>
                     ) : (
-                        <select name="marca" value={form.marca} onChange={handleChange} className={styles.selectInput}>
-                            <option value="">-- Ninguna --</option>
-                            {Array.isArray(marcas) && marcas.map(m => (
-                                <option key={m.id} value={m.id}>{m.nombre}</option>
-                            ))}
-                        </select>
+                        addingMarca ? (
+                            <div style={{display:'flex', gap:5}}>
+                                <Input value={newMarcaName} onChange={e => setNewMarcaName(e.target.value)} placeholder="Nombre marca" autoFocus />
+                                <Button size="sm" onClick={handleCreateMarca} icon={Check} type="button"/>
+                                <Button size="sm" variant="ghost" onClick={() => setAddingMarca(false)} icon={X} type="button"/>
+                            </div>
+                        ) : (
+                            <div style={{display:'flex', gap:5}}>
+                                <select name="marca" value={form.marca} onChange={handleChange} className={styles.selectInput} style={{flex:1}}>
+                                    <option value="">-- Ninguna --</option>
+                                    {Array.isArray(marcas) && marcas.map(m => (
+                                        <option key={m.id} value={m.id}>{m.nombre}</option>
+                                    ))}
+                                </select>
+                                <Button size="sm" variant="outline" onClick={() => setAddingMarca(true)} icon={Plus} type="button" title="Crear marca"/>
+                            </div>
+                        )
                     )}
                 </div>
             </div>
@@ -240,7 +255,6 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
                         <Input placeholder="https://ejemplo.com/imagen.jpg" name="insumo_imagen_url" value={form.insumo_imagen_url} onChange={handleChange} />
                     )}
 
-                    {/* Preview de carga */}
                     {!isReadOnly && preview && imageMode === 'archivo' && (
                          <div style={{marginTop: 10, textAlign:'center'}}>
                             <img src={preview} alt="Preview" style={{height: 100, borderRadius: 5, border: '1px solid #eee', objectFit: 'contain'}}/>
@@ -260,7 +274,5 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
                 )}
             </div>
         </form>
-      </div>
-    </div>
   );
 };

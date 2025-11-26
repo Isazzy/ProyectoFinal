@@ -5,22 +5,26 @@ import { useSwal } from './useSwal';
 export const useDependencias = () => {
   const [tipos, setTipos] = useState([]);
   const [marcas, setMarcas] = useState([]);
+  const [categorias, setCategorias] = useState([]); // Nuevo estado
   const [loading, setLoading] = useState(false);
-  const { showSuccess, showError } = useSwal();
+  const { showSuccess, showError, confirm } = useSwal();
 
   // --- CARGA ---
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [t, m] = await Promise.all([
+      // Cargamos los 3 catálogos en paralelo
+      const [t, m, c] = await Promise.all([
         inventarioApi.getTiposProducto(),
-        inventarioApi.getMarcas()
+        inventarioApi.getMarcas(),
+        inventarioApi.getCategorias()
       ]);
       setTipos(t.results || t);
       setMarcas(m.results || m);
+      setCategorias(c.results || c);
     } catch (error) {
       console.error(error);
-      showError('Error', 'No se pudieron cargar los catálogos');
+      showError('Error', 'No se pudo cargar la configuración.');
     } finally {
       setLoading(false);
     }
@@ -46,7 +50,7 @@ export const useDependencias = () => {
       setTipos(prev => prev.filter(item => item.id !== id));
       showSuccess('Eliminado', 'Tipo eliminado');
     } catch (error) {
-      showError('Error', 'No se pudo eliminar');
+      showError('Error', 'No se pudo eliminar. Verifique si está en uso.');
     }
   };
 
@@ -70,18 +74,45 @@ export const useDependencias = () => {
       setMarcas(prev => prev.filter(item => item.id !== id));
       showSuccess('Eliminado', 'Marca eliminada');
     } catch (error) {
-      showError('Error', 'No se pudo eliminar');
+      showError('Error', 'No se pudo eliminar. Verifique si está en uso.');
+    }
+  };
+
+  // --- CATEGORÍAS (NUEVO) ---
+  const guardarCategoria = async (data, id = null) => {
+    try {
+      if (id) await inventarioApi.actualizarCategoria(id, data);
+      else await inventarioApi.crearCategoria(data);
+      showSuccess('Éxito', 'Categoría guardada');
+      fetchAll();
+      return true;
+    } catch (error) {
+      showError('Error', 'No se pudo guardar la categoría');
+      return false;
+    }
+  };
+
+  const eliminarCategoria = async (id) => {
+    try {
+      await inventarioApi.eliminarCategoria(id);
+      setCategorias(prev => prev.filter(item => item.id !== id));
+      showSuccess('Eliminado', 'Categoría eliminada');
+    } catch (error) {
+      showError('Error', 'No se pudo eliminar. Verifique si está en uso.');
     }
   };
 
   return {
     tipos,
     marcas,
+    categorias, // Exportado
     loading,
     fetchAll,
     guardarTipo,
     eliminarTipo,
     guardarMarca,
-    eliminarMarca
+    eliminarMarca,
+    guardarCategoria, // Exportado
+    eliminarCategoria // Exportado
   };
 };

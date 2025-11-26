@@ -9,20 +9,10 @@ export const useInventario = () => {
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError, confirm } = useSwal();
 
-  // Helper para extraer mensaje de error
-  const getErrorMsg = (error, defaultMsg) => {
-      if (error.response && error.response.data) {
-          const data = error.response.data;
-          if (typeof data === 'string') return data;
-          if (Array.isArray(data)) return data[0];
-          if (typeof data === 'object') {
-              // Devuelve el primer error que encuentre (ej: "nombre: Este campo es requerido")
-              const key = Object.keys(data)[0];
-              const msg = Array.isArray(data[key]) ? data[key][0] : data[key];
-              return `${key}: ${msg}`;
-          }
-      }
-      return error.message || defaultMsg;
+  // Helper para errores
+  const getErrorMsg = (error) => {
+      if (error.response?.data?.detail) return error.response.data.detail;
+      return error.message || 'Error desconocido';
   };
 
   const fetchInsumos = useCallback(async () => {
@@ -32,7 +22,6 @@ export const useInventario = () => {
       setInsumos(data.results || data);
     } catch (error) {
       console.error(error);
-      // showError('Error', 'No se pudieron cargar los insumos'); // Opcional silenciar en carga inicial
     } finally {
       setLoading(false);
     }
@@ -59,8 +48,7 @@ export const useInventario = () => {
       fetchInsumos(); 
       return true;
     } catch (error) {
-      const msg = getErrorMsg(error, 'No se pudo crear el insumo');
-      showError('Error al crear', msg);
+      showError('Error', getErrorMsg(error));
       return false;
     } finally {
       setLoading(false);
@@ -75,8 +63,7 @@ export const useInventario = () => {
       fetchInsumos();
       return true;
     } catch (error) {
-      const msg = getErrorMsg(error, 'No se pudo actualizar el insumo');
-      showError('Error al actualizar', msg);
+      showError('Error', getErrorMsg(error));
       return false;
     } finally {
       setLoading(false);
@@ -92,21 +79,48 @@ export const useInventario = () => {
         showSuccess('Listo', nuevoEstado ? 'Insumo reactivado' : 'Insumo desactivado');
         return true;
     } catch (error) {
-        const msg = getErrorMsg(error, 'No se pudo cambiar el estado');
-        showError('Error', msg);
+        showError('Error', getErrorMsg(error));
         return false;
     }
   };
 
   const eliminarInsumo = async (id) => {
+    // Intenta borrar físicamente
     try {
         await inventarioApi.eliminarInsumo(id);
         setInsumos(prev => prev.filter(i => i.id !== id));
-        showSuccess('Eliminado', 'Insumo eliminado.');
+        showSuccess('Eliminado', 'Registro borrado permanentemente.');
+        return true;
     } catch (error) {
-        const msg = getErrorMsg(error, 'No se pudo eliminar');
-        showError('Error', msg);
+        // Si falla (ej: IntegrityError), sugerimos desactivar
+        showError('No se pudo borrar', 'El insumo tiene registros vinculados. Desactívelo en su lugar.');
+        return false;
     }
+  };
+
+  // --- CREACIÓN RÁPIDA DE DEPENDENCIAS ---
+  const crearCategoriaRapida = async (nombre) => {
+      try {
+          // Asumimos que existe inventarioApi.crearCategoria o usamos POST directo
+          // Si no existe en tu API, agrégalo similar a crearMarca
+          await inventarioApi.crearCategoria({ categoria_insumo_nombre: nombre }); 
+          await fetchDependencias(); // Recargar listas
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear la categoría");
+          return false;
+      }
+  };
+
+  const crearMarcaRapida = async (nombre) => {
+      try {
+          await inventarioApi.crearMarca({ nombre: nombre });
+          await fetchDependencias();
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear la marca");
+          return false;
+      }
   };
 
   return {
@@ -119,6 +133,8 @@ export const useInventario = () => {
     crearInsumo,
     actualizarInsumo,
     toggleEstadoInsumo, 
-    eliminarInsumo
+    eliminarInsumo,
+    crearCategoriaRapida,
+    crearMarcaRapida
   };
 };

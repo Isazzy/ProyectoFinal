@@ -1,24 +1,26 @@
 from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.db.models import Sum
-from django.utils import timezone
 from django.db.models import Sum, F
 from django.db.models.functions import TruncDate
-from .models import Detalle_Venta, Detalle_Venta_Servicio
-from datetime import timedelta
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework import permissions
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+from datetime import datetime, time, timedelta
 
+# Modelos
+from .models import Venta, Estado_Venta, Detalle_Venta, Detalle_Venta_Servicio
 
-
-from .models import Venta, Estado_Venta
+# Serializers
 from .serializers import (
     VentaListSerializer,
     VentaCreateSerializer,
-    VentaUpdateSerializer, # Ahora sí lo encontrará
+    VentaUpdateSerializer,
     EstadoVentaSerializer
 )
+
+# ---------------------------------------------------------
+#   VISTAS GENÉRICAS (CRUD)
+# ---------------------------------------------------------
 
 class VentaListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -31,9 +33,26 @@ class VentaListCreateView(generics.ListCreateAPIView):
             "detalle_venta_servicio_set__servicio"
         ).order_by("-venta_fecha_hora")
         
-        fecha = self.request.query_params.get('fecha')
-        if fecha:
-            qs = qs.filter(venta_fecha_hora__date=fecha)
+        # --- FILTRO DE FECHA CORREGIDO (SOLUCIÓN TIMEZONE) ---
+        fecha_str = self.request.query_params.get('fecha')
+        
+        if fecha_str:
+            # 1. Parseamos el string 'YYYY-MM-DD' a objeto date
+            fecha = parse_date(fecha_str)
+            
+            if fecha:
+                # 2. Creamos el rango de inicio (00:00) y fin (23:59:59.999)
+                # Usamos la fecha combinada con la hora mínima y máxima
+                inicio_dia = datetime.combine(fecha, time.min)
+                fin_dia = datetime.combine(fecha, time.max)
+
+                # 3. Hacemos que las fechas sean "conscientes" (Aware) de la zona horaria de Argentina
+                # Django convertirá esto a UTC automáticamente al consultar la BD
+                start_aware = timezone.make_aware(inicio_dia, timezone.get_current_timezone())
+                end_aware = timezone.make_aware(fin_dia, timezone.get_current_timezone())
+
+                # 4. Filtramos por rango exacto
+                qs = qs.filter(venta_fecha_hora__range=(start_aware, end_aware))
             
         return qs
 
@@ -59,17 +78,32 @@ class EstadoVentaListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+# ---------------------------------------------------------
+#   ENDPOINTS DE ESTADÍSTICAS
+# ---------------------------------------------------------
+
 @api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def resumen_ventas(request):
-    hoy = timezone.now().date()
+    # Usamos localtime para asegurar que 'hoy' sea hoy en Argentina, no en Londres (UTC)
+    hoy = timezone.localtime(timezone.now()).date()
     mes_actual = hoy.month
     anio_actual = hoy.year
     
+    # Para filtrar correctamente por __date en estadísticas, también es mejor usar rangos
+    # pero __date suele funcionar si la DB tiene las timezones cargadas. 
+    # Por seguridad usamos la misma lógica de rangos.
+    
+    inicio_hoy = timezone.make_aware(datetime.combine(hoy, time.min))
+    fin_hoy = timezone.make_aware(datetime.combine(hoy, time.max))
+
+    # Ventas de Hoy
     total_hoy = Venta.objects.filter(
-        venta_fecha_hora__date=hoy,
+        venta_fecha_hora__range=(inicio_hoy, fin_hoy),
         estado_venta__estado_venta_nombre='Pagado'
     ).aggregate(Sum('venta_total'))['venta_total__sum'] or 0
 
+    # Ventas del Mes
     total_mes = Venta.objects.filter(
         venta_fecha_hora__year=anio_actual,
         venta_fecha_hora__month=mes_actual,
@@ -78,24 +112,25 @@ def resumen_ventas(request):
 
     return Response({
         "hoy": total_hoy,
-        "mes": total_mes,
-        "semana": 0
+        "mes": total_mes
     })
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def stats_ingresos(request):
-    """
-    Devuelve los ingresos diarios separados por Servicios y Productos
-    para el gráfico de áreas.
-    """
-    # Rango: Últimos 90 días por defecto
-    dias = int(request.query_params.get('dias', 90))
-    fecha_inicio = timezone.now().date() - timedelta(days=dias)
+    # Rango: Últimos 90 días
+    dias_param = request.query_params.get('dias', 90)
+    try:
+        dias = int(dias_param)
+    except ValueError:
+        dias = 90
 
-    # 1. Calcular totales de Servicios por día
+    fecha_limite = timezone.now() - timedelta(days=dias)
+
+    # Nota: TruncDate usa la timezone configurada en settings si USE_TZ=True
+    
     servicios = Detalle_Venta_Servicio.objects.filter(
-        venta__venta_fecha_hora__date__gte=fecha_inicio,
+        venta__venta_fecha_hora__gte=fecha_limite,
         venta__estado_venta__estado_venta_nombre='Pagado'
     ).annotate(
         fecha=TruncDate('venta__venta_fecha_hora')
@@ -103,9 +138,8 @@ def stats_ingresos(request):
         total=Sum(F('precio') * F('cantidad') - F('descuento'))
     ).order_by('fecha')
 
-    # 2. Calcular totales de Productos por día
     productos = Detalle_Venta.objects.filter(
-        venta__venta_fecha_hora__date__gte=fecha_inicio,
+        venta__venta_fecha_hora__gte=fecha_limite,
         venta__estado_venta__estado_venta_nombre='Pagado'
     ).annotate(
         fecha=TruncDate('venta__venta_fecha_hora')
@@ -113,9 +147,8 @@ def stats_ingresos(request):
         total=Sum(F('detalle_venta_precio_unitario') * F('detalle_venta_cantidad') - F('detalle_venta_descuento'))
     ).order_by('fecha')
 
-    # 3. Combinar datos en un diccionario por fecha
     data_map = {}
-
+    
     for s in servicios:
         f = s['fecha'].strftime("%Y-%m-%d")
         if f not in data_map: data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
@@ -126,7 +159,6 @@ def stats_ingresos(request):
         if f not in data_map: data_map[f] = {'date': f, 'servicios': 0, 'productos': 0}
         data_map[f]['productos'] = p['total']
 
-    # Convertir a lista ordenada
     chart_data = sorted(data_map.values(), key=lambda x: x['date'])
     
     return Response(chart_data)
