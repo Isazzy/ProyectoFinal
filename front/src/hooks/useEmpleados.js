@@ -1,92 +1,131 @@
+// ========================================
+// src/hooks/useEmpleados.js
+// ========================================
 import { useState, useCallback } from 'react';
 import { empleadosApi } from '../api/empleadosApi';
 import { useSwal } from './useSwal';
 
 export const useEmpleados = () => {
   const [empleados, setEmpleados] = useState([]);
-  const [roles, setRoles] = useState([]); // Nuevo estado para roles
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const { showSuccess, showError, confirmDelete } = useSwal();
+  
+  // Usamos 'confirm' que es el estándar que definimos en tus otros hooks
+  const { showSuccess, showError, confirm } = useSwal();
 
+  // Helper para extraer mensaje de error limpio del backend
+  const getErrorMsg = (error) => {
+      if (error.response && error.response.data) {
+          const data = error.response.data;
+          if (data.detail) return data.detail;
+          
+          // Si es un objeto de errores por campo (ej: { username: ["Ya existe"] })
+          if (typeof data === 'object') {
+              const firstKey = Object.keys(data)[0];
+              const msg = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+              return `${firstKey}: ${msg}`;
+          }
+      }
+      return error.message || 'Ocurrió un error inesperado';
+  };
+
+  // --- CARGA DE DATOS ---
   const fetchEmpleados = useCallback(async (params = {}) => {
     setLoading(true);
     try {
       const data = await empleadosApi.getEmpleados(params);
       setEmpleados(data.results || data);
     } catch (err) {
-      setError(err.message);
-      showError('Error', 'No se pudieron cargar los empleados');
+      console.error(err);
+      // Opcional: No mostrar error bloqueante en la carga inicial
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, []);
 
-  // Nuevo: Obtener roles para el formulario
   const fetchRoles = useCallback(async () => {
     try {
       const data = await empleadosApi.getRoles();
-      setRoles(data.results || data); // Ajusta según tu respuesta de API
+      setRoles(data.results || data);
     } catch (err) {
       console.error("Error cargando roles", err);
     }
   }, []);
 
-  const crearEmpleado = useCallback(async (data) => {
+  // --- ACCIONES ---
+
+  const crearEmpleado = async (data) => {
     setLoading(true);
     try {
-      const nuevo = await empleadosApi.crearEmpleado(data);
-      setEmpleados(prev => [...prev, nuevo]);
-      showSuccess('¡Creado!', `El empleado ${data.first_name} fue creado.`);
-      return nuevo;
+      await empleadosApi.crearEmpleado(data);
+      
+      await showSuccess('¡Creado!', `El empleado ${data.first_name} ha sido registrado.`);
+      
+      // CRUCIAL: Recargar la lista desde el servidor para asegurar datos frescos
+      await fetchEmpleados(); 
+      
+      return true; // Éxito
     } catch (err) {
-      // Muestra errores del backend (ej: "username ya existe")
-      const msg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      const msg = getErrorMsg(err);
       showError('Error al crear', msg);
-      throw err;
+      return false; // Fallo
     } finally {
       setLoading(false);
     }
-  }, [showSuccess, showError]);
+  };
 
-  const actualizarEmpleado = useCallback(async (id, data) => {
+  const actualizarEmpleado = async (id, data) => {
     setLoading(true);
     try {
-      const actualizado = await empleadosApi.actualizarEmpleado(id, data);
-      setEmpleados(prev => prev.map(e => e.id === id ? actualizado : e));
-      showSuccess('¡Actualizado!', 'Datos del empleado actualizados.');
-      return actualizado;
-    } catch (err) {
-      showError('Error al actualizar', err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [showSuccess, showError]);
-
-  const eliminarEmpleado = useCallback(async (id, nombreCompleto) => {
-    const confirmed = await confirmDelete(nombreCompleto);
-    if (!confirmed) return false;
-
-    setLoading(true);
-    try {
-      await empleadosApi.eliminarEmpleado(id);
-      setEmpleados(prev => prev.filter(e => e.id !== id));
-      showSuccess('¡Eliminado!', 'El empleado ha sido eliminado.');
+      await empleadosApi.actualizarEmpleado(id, data);
+      
+      await showSuccess('¡Actualizado!', 'Datos del empleado modificados correctamente.');
+      
+      // CRUCIAL: Recargar la lista
+      await fetchEmpleados();
+      
       return true;
     } catch (err) {
-      showError('Error', err.message);
+      const msg = getErrorMsg(err);
+      showError('Error al actualizar', msg);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [confirmDelete, showSuccess, showError]);
+  };
+
+  const eliminarEmpleado = async (id, nombreCompleto) => {
+    // Usamos el confirm genérico con estilo peligro
+    const isConfirmed = await confirm({
+        title: '¿Eliminar Empleado?',
+        text: `Se eliminará el acceso al sistema de ${nombreCompleto}.`,
+        isDanger: true
+    });
+    
+    if (!isConfirmed) return false;
+
+    setLoading(true);
+    try {
+      await empleadosApi.eliminarEmpleado(id);
+      
+      // Para eliminar, podemos filtrar localmente (es seguro y rápido)
+      setEmpleados(prev => prev.filter(e => e.id !== id));
+      
+      showSuccess('¡Eliminado!', 'El empleado ha sido eliminado.');
+      return true;
+    } catch (err) {
+      const msg = getErrorMsg(err);
+      showError('Error al eliminar', msg);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     empleados,
     roles,
     loading,
-    error,
     fetchEmpleados,
     fetchRoles,
     crearEmpleado,

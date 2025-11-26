@@ -4,10 +4,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Phone } from 'lucide-react';
+import { User, Mail, Lock, Phone, ArrowRight, Sparkles, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSwal } from '../../hooks/useSwal';
-import { Button, Input, Card } from '../../components/ui';
+import { Button, Input } from '../../components/ui';
 import styles from '../../styles/Auth.module.css';
 
 export const Register = () => {
@@ -23,182 +23,234 @@ export const Register = () => {
     password: '',
     confirmPassword: '',
   });
+  
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // --- LÓGICA DE VALIDACIÓN ---
+  const validateField = (name, value) => {
+    let error = "";
+    
+    switch (name) {
+        case 'nombre':
+        case 'apellido':
+            if (!value.trim()) error = "Este campo es requerido.";
+            else if (value.length < 2) error = "Debe tener al menos 2 letras.";
+            break;
+        case 'email':
+            if (!value) error = "Requerido.";
+            else if (!/\S+@\S+\.\S+/.test(value)) error = "Formato de email inválido.";
+            break;
+        case 'telefono':
+            // Acepta solo números, mínimo 8
+            if (value && !/^\d{8,}$/.test(value.replace(/\D/g, ''))) {
+                error = "Ingrese un número válido (mín. 8 dígitos).";
+            }
+            break;
+        case 'password':
+            if (!value) error = "Requerida.";
+            else if (value.length < 8) error = "Mínimo 8 caracteres.";
+            break;
+        case 'confirmPassword':
+            if (!value) error = "Requerida.";
+            else if (value !== formData.password) error = "Las contraseñas no coinciden.";
+            break;
+        default:
+            break;
+    }
+    return error;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    
+    // Limpiar error al escribir
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    
+    // Validación especial en tiempo real para confirmación de password
+    if (name === 'confirmPassword' && value !== formData.password) {
+        // Opcional: Validar mientras escribe si quieres ser estricto
     }
   };
 
-  const validate = () => {
-    const newErrors = {};
-    
-    if (!formData.nombre.trim()) {
-      newErrors.nombre = 'El nombre es requerido';
-    }
-    
-    if (!formData.apellido.trim()) {
-      newErrors.apellido = 'El apellido es requerido';
-    }
-    
-    if (!formData.email) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-    
-    if (formData.telefono && !/^\d{10,}$/.test(formData.telefono.replace(/\D/g, ''))) {
-      newErrors.telefono = 'Teléfono inválido';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Mínimo 8 caracteres';
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    
+    // Validar todo el formulario
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+        const error = validateField(key, formData[key]);
+        if (error) newErrors[key] = error;
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+    }
 
     setLoading(true);
     try {
       const { confirmPassword, ...data } = formData;
       await register(data);
-      await showSuccess(
-        '¡Registro exitoso!',
-      );
+      
+      await showSuccess('¡Cuenta Creada!', 'Ya puedes iniciar sesión con tus credenciales.');
       navigate('/login');
+      
     } catch (error) {
-      showError('Error en registro', error.message || 'No se pudo completar el registro');
+      console.error(error);
+      // Extraer mensaje del backend si existe
+      const msg = error.response?.data?.detail || 
+                  error.response?.data?.email?.[0] || 
+                  'No se pudo completar el registro. Intente nuevamente.';
+      showError('Error en registro', msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={styles.authPage}>
-      <motion.div
-        className={styles.authCard}
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Card className={styles.cardInner}>
-          {/* Header */}
+    <div className={styles.container}>
+      
+      {/* IZQUIERDA: BRANDING */}
+      <div className={styles.brandSide}>
+        <div className={styles.brandOverlay}>
+          <div className={styles.brandContent}>
+             <div className={styles.logoWrapper}>
+                <Sparkles size={48} />
+             </div>
+             <h1>Únete a Nosotros</h1>
+             <p>Reserva tus turnos, gestiona tu perfil y disfruta de la mejor experiencia estética.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* DERECHA: FORMULARIO */}
+      <div className={styles.formSide}>
+        <motion.div 
+            className={styles.formWrapper}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+        >
           <div className={styles.header}>
-            <h1 className={styles.logo}>Mi Tiempo</h1>
-            <p className={styles.subtitle}>Crea tu cuenta</p>
+            <h2>Crear Cuenta</h2>
+            <p>Completa tus datos para comenzar.</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.row}>
-              <Input
-                label="Nombre"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Juan"
-                icon={User}
-                error={errors.nombre}
-                disabled={loading}
-              />
-              <Input
-                label="Apellido"
-                name="apellido"
-                value={formData.apellido}
-                onChange={handleChange}
-                placeholder="Pérez"
-                error={errors.apellido}
-                disabled={loading}
-              />
+            
+            {/* GRUPO IDENTIDAD */}
+            <div className={styles.formRow}>
+                <Input
+                    label="Nombre"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="Juan"
+                    error={errors.nombre}
+                    disabled={loading}
+                    icon={User}
+                />
+                <Input
+                    label="Apellido"
+                    name="apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="Pérez"
+                    error={errors.apellido}
+                    disabled={loading}
+                />
             </div>
 
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="tu@email.com"
-              icon={Mail}
-              error={errors.email}
-              disabled={loading}
-              autoComplete="email"
-            />
+            {/* GRUPO CONTACTO */}
+            <div className={styles.formRow}>
+                <Input
+                    label="Email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="tu@email.com"
+                    icon={Mail}
+                    error={errors.email}
+                    disabled={loading}
+                />
+                <Input
+                    label="Teléfono"
+                    type="tel"
+                    name="telefono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="11 2345 6789"
+                    icon={Phone}
+                    error={errors.telefono}
+                    disabled={loading}
+                />
+            </div>
 
-            <Input
-              label="Teléfono (opcional)"
-              type="tel"
-              name="telefono"
-              value={formData.telefono}
-              onChange={handleChange}
-              placeholder="1155554444"
-              icon={Phone}
-              error={errors.telefono}
-              disabled={loading}
-            />
-
-            <Input
-              label="Contraseña"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Mínimo 8 caracteres"
-              icon={Lock}
-              error={errors.password}
-              disabled={loading}
-              autoComplete="new-password"
-            />
-
-            <Input
-              label="Confirmar contraseña"
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Repite tu contraseña"
-              icon={Lock}
-              error={errors.confirmPassword}
-              disabled={loading}
-              autoComplete="new-password"
-            />
+            {/* GRUPO SEGURIDAD */}
+            <div className={styles.formRow}>
+                <Input
+                    label="Contraseña"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    icon={Lock}
+                    error={errors.password}
+                    disabled={loading}
+                    placeholder="Mín. 8 caracteres"
+                />
+                <Input
+                    label="Repetir Contraseña"
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    icon={CheckCircle}
+                    error={errors.confirmPassword}
+                    disabled={loading}
+                    placeholder="Confirma tu clave"
+                />
+            </div>
 
             <Button
               type="submit"
               fullWidth
+              size="lg"
               loading={loading}
               className={styles.submitButton}
+              icon={ArrowRight}
+              iconPosition="right"
             >
-              Crear cuenta
+              Registrarse
             </Button>
           </form>
 
-          {/* Footer */}
           <div className={styles.footer}>
-            <p className={styles.registerText}>
-              ¿Ya tienes cuenta?{' '}
+            <p>
+              ¿Ya tienes una cuenta?{' '}
               <Link to="/login" className={styles.link}>
-                Inicia sesión
+                Inicia sesión aquí
               </Link>
             </p>
           </div>
-        </Card>
-      </motion.div>
+        </motion.div>
+      </div>
+
     </div>
   );
 };

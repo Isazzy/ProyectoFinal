@@ -1,0 +1,130 @@
+/* =========================================
+   LAYOUT PRINCIPAL
+   ========================================= */
+.container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #ffffff;
+    overflow-x: hidden; /* Evitar scroll horizontal */
+}
+
+/* --- BRAND SIDE (Izquierda) --- */
+.brandSide {
+    flex: 1;
+    position: relative;
+    /* Imagen diferente para login/registro si quieres, o la misma */
+    background-image: url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80'); 
+    background-size: cover;
+    background-position: center;
+    display: none; /* Oculto en móvil */
+}
+
+@media (min-width: 1024px) {
+    .brandSide { display: block; }
+}
+
+.brandOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(155, 141, 197, 0.9) 0%, rgba(124, 58, 237, 0.8) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 40px;
+    text-align: center;
+}
+
+.brandContent h1 {
+    font-family: 'Great Vibes', cursive;
+    font-size: 4rem;
+    margin: 20px 0 10px 0;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.brandContent p {
+    font-size: 1.2rem;
+    font-weight: 300;
+    opacity: 0.95;
+    max-width: 450px;
+    line-height: 1.6;
+}
+
+.logoWrapper {
+    background: rgba(255,255,255,0.2);
+    padding: 20px;
+    border-radius: 50%;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* --- FORM SIDE (Derecha) --- */
+.formSide {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #fff;
+    overflow-y: auto; /* Permitir scroll si el form es alto */
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 480px; /* Un poco más ancho para el grid */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.header { text-align: center; margin-bottom: 10px; }
+
+.header h2 {
+    font-size: 2rem;
+    color: #1e293b;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
+}
+
+.header p { color: #64748b; font-size: 1rem; }
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* GRID PARA INPUTS (Nombre/Apellido, etc.) */
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* En móviles, el grid se convierte en columna */
+@media (max-width: 640px) {
+    .formRow { grid-template-columns: 1fr; gap: 15px; }
+}
+
+.passwordWrapper { display: flex; flex-direction: column; gap: 8px; }
+
+.forgotPassword { text-align: right; }
+.forgotPassword a { font-size: 0.85rem; color: #9B8DC5; text-decoration: none; font-weight: 500; }
+.forgotPassword a:hover { text-decoration: underline; }
+
+.submitButton { margin-top: 10px; font-size: 1rem; padding: 12px; }
+
+.footer { text-align: center; margin-top: 20px; font-size: 0.95rem; color: #64748b; }
+
+.link { color: #9B8DC5; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+.link:hover { color: #7c3aed; text-decoration: underline; }
+
+/* Estilo de Focus global para inputs */
+.form input:focus {
+    border-color: #9B8DC5;
+    box-shadow: 0 0 0 3px rgba(155, 141, 197, 0.15);
+}
