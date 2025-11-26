@@ -24,8 +24,8 @@ class Proveedor(models.Model):
 
 
 class Compra(models.Model):
-    proveedor=models.ForeignKey(Proveedor,on_delete=models.CASCADE)
-    empleado=models.ForeignKey(Empleado,on_delete=models.CASCADE)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT)
+    empleado=models.ForeignKey(Empleado,on_delete=models.PROTECT)
     caja=models.ForeignKey(Caja,on_delete=models.CASCADE)
     
     # 🌟 CAMPOS SEPARADOS: Reemplazo de DateTimeField
@@ -51,18 +51,20 @@ class Compra(models.Model):
     def save(self, *args, **kwargs):
         # Asigna la fecha y hora actuales si el objeto es nuevo
         if not self.pk:
-            now = timezone.now()
-            self.compra_fecha = now.date()
-            self.compra_hora = now.time()
-        
+            now = timezone.localtime(timezone.now())
+            
+            if not self.compra_fecha:
+                self.compra_fecha = now.date()
+            if not self.compra_hora:
+                self.compra_hora = now.time()
         super().save(*args, **kwargs)
     
-# ... (Detalle_Compra sigue igual) ...
+
     
 class Detalle_Compra(models.Model):
-    compra=models.ForeignKey(Compra, on_delete=models.CASCADE)
-    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE, null=True, blank=True)
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, null=True, blank=True)
+    compra=models.ForeignKey(Compra, on_delete=models.PROTECT)
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT, null=True, blank=True)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT, null=True, blank=True)
     detalle_compra_cantidad=models.DecimalField(max_digits=10, decimal_places=2)
     detalle_compra_precio_unitario=models.DecimalField(max_digits=10, decimal_places=2)
 

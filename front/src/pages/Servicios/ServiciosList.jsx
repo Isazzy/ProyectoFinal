@@ -1,20 +1,28 @@
-// ========================================
-// src/pages/Servicios/ServiciosList.jsx
-// ========================================
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Eye, Scissors, Search, Clock, DollarSign, RefreshCw, EyeOff } from 'lucide-react';
+import { 
+    Plus, Edit, Trash2, Eye, Scissors, Search, Clock, 
+    DollarSign, RefreshCw, EyeOff, Brush, Sparkles, RotateCcw 
+} from 'lucide-react';
 import { useServicios } from '../../hooks/useServicios';
+import { useSwal } from '../../hooks/useSwal';
 import { Card, Button, Badge, Input, Modal } from '../../components/ui';
 import { formatCurrency } from '../../utils/formatters';
 import styles from '../../styles/Servicios.module.css';
-import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager'; // Ajusta la ruta si es necesario
+import { InsumoRecetaManager } from '../../pages/Servicios/InsumoRecetaManager';
+
+// --- CONFIGURACIÓN DE CATEGORÍAS ---
+const CATEGORIAS = [
+    { id: 'Peluquería', label: 'Peluquería', icon: Scissors },
+    { id: 'Uñas', label: 'Uñas', icon: Sparkles },
+    { id: 'Maquillaje', label: 'Maquillaje', icon: Brush },
+];
 
 // --- SUB-COMPONENTE: FORMULARIO ---
 const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   const [form, setForm] = useState({
-    tipo_serv: servicio?.tipo_serv || "",
+    tipo_serv: servicio?.tipo_serv || "Peluquería",
     nombre: servicio?.nombre || "",
     duracion: servicio?.duracion?.toString() || "",
     precio: servicio?.precio?.toString() || "",
@@ -48,9 +56,13 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     }));
   };
 
+  const handleCategorySelect = (catId) => {
+      setForm(prev => ({ ...prev, tipo_serv: catId }));
+  };
+
   const validate = () => {
     const e = {};
-    if (!form.tipo_serv.trim()) e.tipo_serv = "Requerido";
+    if (!form.tipo_serv) e.tipo_serv = "Requerido";
     if (!form.nombre.trim()) e.nombre = "Requerido";
     if (!form.duracion || parseInt(form.duracion) <= 0) e.duracion = "Inválido";
     if (!form.precio || parseFloat(form.precio) <= 0) e.precio = "Inválido";
@@ -64,7 +76,7 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
     if (!validate()) return;
 
     const recetaPayload = receta.map(item => ({
-      insumo_id: item.insumo || item.id, // Aseguramos compatibilidad de ID
+      insumo_id: item.insumo || item.id, 
       cantidad_usada: parseFloat(item.cantidad_usada || item.cantidad)
     }));
 
@@ -77,9 +89,32 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
   };
 
   return (
-   <form onSubmit={handleSubmit} className={styles.formGrid}>
-  {/* Sección Principal */}
-  <div className={styles.formSection}>
+    <form onSubmit={handleSubmit} className={styles.formGrid}>
+        <div className={styles.formSection}>
+            <div className={styles.inputGroup}>
+                <label className={styles.sectionLabel}>Categoría *</label>
+                <div className={styles.categoryGrid}>
+                    {CATEGORIAS.map(cat => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            className={`${styles.categorySlot} ${form.tipo_serv === cat.id ? styles.catActive : ''}`}
+                            onClick={() => handleCategorySelect(cat.id)}
+                        >
+                            <cat.icon size={18} />
+                            <span>{cat.label}</span>
+                        </button>
+                    ))}
+                </div>
+                {errors.tipo_serv && <span className={styles.errorText}>{errors.tipo_serv}</span>}
+            </div>
+
+            <Input label="Nombre del Servicio *" name="nombre" value={form.nombre} onChange={handleChange} error={errors.nombre} />
+            
+            <div className={styles.row2}>
+                <Input label="Duración (min) *" type="number" name="duracion" value={form.duracion} onChange={handleChange} error={errors.duracion} startIcon={Clock} />
+                <Input label="Precio *" type="number" name="precio" value={form.precio} onChange={handleChange} error={errors.precio} startIcon={DollarSign} />
+            </div>
 
     {/* FILA 1 */}
     <div className={styles.row2}>
@@ -150,7 +185,6 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
 
   </div>
 
-        {/* Sección Disponibilidad */}
         <div className={styles.formSection}>
             <label className={styles.sectionLabel}>Días Disponibles</label>
             <div className={styles.daysGrid}>
@@ -164,7 +198,6 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
             {errors.dias_disponibles && <span className={styles.errorText}>{errors.dias_disponibles}</span>}
         </div>
 
-        {/* Sección Insumos (Receta) */}
         <div className={styles.formSection}>
              <InsumoRecetaManager 
                 recetaActual={receta} 
@@ -173,7 +206,6 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
             />
         </div>
 
-        {/* Footer y Activo */}
         <div className={styles.formFooter}>
             <div className={styles.switchGroup}>
                 <input type="checkbox" id="activoSwitch" name="activo" checked={form.activo} onChange={handleChange} />
@@ -195,22 +227,31 @@ const ServicioForm = ({ servicio, onSubmit, onCancel, loading }) => {
 // ===============================
 export const ServiciosList = () => {
   const navigate = useNavigate();
-  const { servicios, loading, fetchServicios, crearServicio, actualizarServicio, eliminarServicio } = useServicios();
+  const { 
+      servicios, loading, fetchServicios, 
+      crearServicio, actualizarServicio, 
+      eliminarServicio, reactivarServicio 
+  } = useServicios();
   
+  const { confirm } = useSwal();
+
   const [search, setSearch] = useState("");
-  const [filterActivo, setFilterActivo] = useState("todos"); // 'todos', 'activo', 'inactivo'
+  const [showInactive, setShowInactive] = useState(false); // Filtro Papelera
   const [modal, setModal] = useState({ open: false, servicio: null });
 
+  // 1. Carga Inicial y Recarga al cambiar filtro
   useEffect(() => {
-    fetchServicios();
-  }, [fetchServicios]);
+    fetchServicios({ activo: !showInactive });
+  }, [fetchServicios, showInactive]);
 
+  // 2. Filtro local para búsqueda
   const filteredServicios = servicios.filter(s => {
     const matchesSearch = s.nombre.toLowerCase().includes(search.toLowerCase()) || s.tipo_serv.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filterActivo === "todos" || (filterActivo === "activo" && s.activo) || (filterActivo === "inactivo" && !s.activo);
-    return matchesSearch && matchesFilter;
+    const matchesStatus = showInactive ? !s.activo : s.activo;
+    return matchesSearch && matchesStatus;
   });
 
+  // 3. Handler CREAR / EDITAR
   const handleSubmit = async (data) => {
     let success = false;
     if (modal.servicio) {
@@ -218,12 +259,44 @@ export const ServiciosList = () => {
     } else {
       success = await crearServicio(data);
     }
-    if (success) setModal({ open: false, servicio: null });
+    
+    if (success) {
+        setModal({ open: false, servicio: null });
+        // RECARGA AUTOMÁTICA: Refrescar la lista desde el servidor
+        fetchServicios({ activo: !showInactive });
+    }
   };
 
-  const handleDelete = async (servicio) => {
-      if(window.confirm(`¿Eliminar ${servicio.nombre}?`)) {
-         await eliminarServicio(servicio.id_serv);
+  // 4. Handler ACCIONES (Eliminar / Reactivar) - CORREGIDO
+  const handleAction = async (servicio) => {
+      let success = false;
+
+      if (servicio.activo) {
+          // ELIMINAR
+          if (await confirm({
+              title: '¿Eliminar Servicio?',
+              text: `Se eliminará "${servicio.nombre}". Si tiene turnos asociados, se archivará en la papelera.`,
+              icon: 'warning',
+              confirmButtonText: 'Sí, eliminar',
+              isDanger: true
+          })) {
+              success = await eliminarServicio(servicio.id_serv);
+          }
+      } else {
+          // RESTAURAR
+          if (await confirm({
+              title: 'Reactivar Servicio',
+              text: `¿Desea volver a habilitar "${servicio.nombre}" para nuevos turnos?`,
+              icon: 'info',
+              confirmButtonText: 'Sí, activar'
+          })) {
+              success = await reactivarServicio(servicio.id_serv);
+          }
+      }
+
+      // RECARGA AUTOMÁTICA SI LA ACCIÓN FUE EXITOSA
+      if (success) {
+          fetchServicios({ activo: !showInactive });
       }
   };
 
@@ -234,9 +307,13 @@ export const ServiciosList = () => {
       <header className={styles.header}>
         <div>
             <h1 className={styles.title}>Servicios</h1>
-            <p className={styles.subtitle}>Catálogo de tratamientos y precios</p>
+            <p className={styles.subtitle}>
+                {showInactive ? 'Papelera de Reciclaje' : 'Catálogo de tratamientos y precios'}
+            </p>
         </div>
-        <Button icon={Plus} onClick={() => setModal({ open: true, servicio: null })}>Nuevo Servicio</Button>
+        {!showInactive && (
+            <Button icon={Plus} onClick={() => setModal({ open: true, servicio: null })}>Nuevo Servicio</Button>
+        )}
       </header>
 
       {/* FILTROS */}
@@ -250,15 +327,19 @@ export const ServiciosList = () => {
             />
         </div>
         <div className={styles.filterTabs}>
-             {['todos', 'activo', 'inactivo'].map(filter => (
-                 <button 
-                    key={filter}
-                    className={`${styles.tabBtn} ${filterActivo === filter ? styles.tabActive : ''}`}
-                    onClick={() => setFilterActivo(filter)}
-                 >
-                     {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                 </button>
-             ))}
+             <button 
+                className={`${styles.tabBtn} ${!showInactive ? styles.tabActive : ''}`}
+                onClick={() => setShowInactive(false)}
+             >
+                 Activos
+             </button>
+             <button 
+                className={`${styles.tabBtn} ${showInactive ? styles.tabActive : ''}`}
+                onClick={() => setShowInactive(true)}
+                style={showInactive ? { color: 'var(--color-warning)', borderColor: 'var(--color-warning)' } : {}}
+             >
+                 <Trash2 size={14} style={{marginRight: 5}}/> Papelera
+             </button>
         </div>
       </div>
 
@@ -279,7 +360,9 @@ export const ServiciosList = () => {
                     >
                         <div className={styles.cardHeader}>
                             <div className={styles.iconWrapper}>
-                                <Scissors size={20} />
+                                {servicio.tipo_serv === 'Uñas' ? <Sparkles size={20}/> : 
+                                 servicio.tipo_serv === 'Maquillaje' ? <Brush size={20}/> : 
+                                 <Scissors size={20} />}
                             </div>
                             <div className={styles.headerInfo}>
                                 <h3>{servicio.nombre}</h3>
@@ -299,15 +382,28 @@ export const ServiciosList = () => {
                         </div>
 
                         <div className={styles.cardFooter}>
-                            <Button variant="ghost" size="sm" onClick={() => navigate(`/servicios/${servicio.id_serv}`)}>
-                                <Eye size={16} />
-                            </Button>
-                            <div className={styles.dividerVertical}></div>
-                            <Button variant="ghost" size="sm" onClick={() => setModal({ open: true, servicio })}>
-                                <Edit size={16} />
-                            </Button>
-                            <Button variant="ghost" size="sm" className={styles.dangerBtn} onClick={() => handleDelete(servicio)}>
-                                <Trash2 size={16} />
+                            {/* Solo mostrar visualización y edición si está activo */}
+                            {servicio.activo && (
+                                <>
+                                    <Button variant="ghost" size="sm" onClick={() => navigate(`/servicios/${servicio.id_serv}`)}>
+                                        <Eye size={16} />
+                                    </Button>
+                                    <div className={styles.dividerVertical}></div>
+                                    <Button variant="ghost" size="sm" onClick={() => setModal({ open: true, servicio })}>
+                                        <Edit size={16} />
+                                    </Button>
+                                </>
+                            )}
+                            
+                            {/* Botón de Acción Dinámico */}
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={servicio.activo ? styles.dangerBtn : styles.successBtn}
+                                onClick={() => handleAction(servicio)}
+                                title={servicio.activo ? "Eliminar" : "Restaurar"}
+                            >
+                                {servicio.activo ? <Trash2 size={16} /> : <RotateCcw size={16} />}
                             </Button>
                         </div>
                     </motion.div>
@@ -316,7 +412,7 @@ export const ServiciosList = () => {
           ) : (
             <div className={styles.emptyState}>
                 <Scissors size={48} />
-                <p>No se encontraron servicios.</p>
+                <p>{showInactive ? 'La papelera está vacía.' : 'No se encontraron servicios.'}</p>
             </div>
           )
       )}

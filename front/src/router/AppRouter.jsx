@@ -30,6 +30,8 @@ import { ComprasPage } from '../pages/Compras/ComprasPage';
 import { LandingPage } from '../pages/Public/LandingPage';
 import { BookingPage } from '../pages/Public/BookingPage';
 import { CompraDetail } from '../pages/Compras/CompraDetail';
+import { MisTurnos } from '../pages/Public/MisTurnos';
+import { PerfilC } from '../pages/Public/PerfilC';
 
 const LoadingScreen = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FAF9F7' }}>
@@ -80,6 +82,24 @@ export const AppRouter = () => {
         {/* === WEB PÚBLICA (Clientes) === */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/reservar" element={<BookingPage />} />
+        {/* VISTA CLIENTE LOGUEADO */}
+        <Route 
+            path="/mis-turnos" 
+            element={
+               
+                    
+                    <MisTurnos />
+               
+            } 
+        />
+        <Route 
+            path="/perfilC" 
+            element={
+                
+                    <PerfilC />
+                
+            } 
+        />
 
         {/* === AUTENTICACIÓN === */}
         <Route element={<AuthLayout />}>

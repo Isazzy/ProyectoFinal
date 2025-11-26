@@ -1,7 +1,7 @@
-from rest_framework import generics, permissions, status, views
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from django.db import transaction
@@ -12,7 +12,7 @@ from .serializers import (
     ServicioInsumoSerializer
 )
 
-# Permiso personalizado para escritura
+# Permiso personalizado
 class IsAdminOrEmpleado(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
@@ -35,13 +35,7 @@ class ServicioPagination(PageNumberPagination):
 class ServicioListCreateView(generics.ListCreateAPIView):
     pagination_class = ServicioPagination
     
-    # No definimos permission_classes aquí estáticamente para poder variarlos
-
     def get_permissions(self):
-        """
-        GET: Público (AllowAny) para que los clientes vean servicios.
-        POST: Solo Admin o Empleado puede crear.
-        """
         if self.request.method == 'POST':
             return [permissions.IsAuthenticated(), IsAdminOrEmpleado()]
         return [permissions.AllowAny()]
@@ -49,47 +43,42 @@ class ServicioListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = Servicio.objects.all().order_by('nombre')
         
-        # --- Filtros Query Params ---
+        # --- Filtros ---
         tipo = self.request.query_params.get('tipo')
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
-        activo = self.request.query_params.get('activo')
+        activo = self.request.query_params.get('activo') # Filtro clave para la papelera
         search = self.request.query_params.get('search')
 
         if tipo:
-            qs = qs.filter(tipo__icontains=tipo)
+            qs = qs.filter(tipo_serv__icontains=tipo)
         if min_price:
-            try:
-                qs = qs.filter(precio__gte=float(min_price))
-            except ValueError:
-                pass
+            try: qs = qs.filter(precio__gte=float(min_price))
+            except ValueError: pass
         if max_price:
-            try:
-                qs = qs.filter(precio__lte=float(max_price))
-            except ValueError:
-                pass
-        
-        # Filtro de activo manual (si se envía en url)
-        if activo is not None:
-            if str(activo).lower() in ['1','true','yes']:
-                qs = qs.filter(activo=True)
-            elif str(activo).lower() in ['0','false','no']:
-                qs = qs.filter(activo=False)
+            try: qs = qs.filter(precio__lte=float(max_price))
+            except ValueError: pass
         
         if search:
             qs = qs.filter(Q(nombre__icontains=search) | Q(descripcion__icontains=search))
 
-        # --- Regla de Visibilidad de Activos ---
-        user = self.request.user
-        
-        # Si es anónimo (público) o es un cliente (no staff/empleado), SOLO ve los activos
-        es_staff_o_empleado = False
-        if user and user.is_authenticated:
-             es_staff_o_empleado = user.is_staff or user.groups.filter(name__in=['Administrador','Empleado']).exists()
-        
-        if not es_staff_o_empleado:
-            qs = qs.filter(activo=True)
+        # --- Lógica de Activos/Inactivos ---
+        if activo is not None:
+            # Si el frontend pide explícitamente (ej: papelera)
+            if str(activo).lower() in ['1','true','yes']:
+                qs = qs.filter(activo=True)
+            elif str(activo).lower() in ['0','false','no']:
+                qs = qs.filter(activo=False)
+        else:
+            # Por defecto: ocultar inactivos a usuarios no administrativos
+            user = self.request.user
+            es_staff_o_empleado = False
+            if user and user.is_authenticated:
+                 es_staff_o_empleado = user.is_staff or user.groups.filter(name__in=['Administrador','Empleado']).exists()
             
+            if not es_staff_o_empleado:
+                qs = qs.filter(activo=True)
+                
         return qs
 
     def get_serializer_class(self):
@@ -99,16 +88,12 @@ class ServicioListCreateView(generics.ListCreateAPIView):
 
 
 # ---------------------------------------------------------
-#   DETALLE, ACTUALIZAR Y BORRAR
+#   DETALLE, ACTUALIZAR Y BORRAR (INTELIGENTE)
 # ---------------------------------------------------------
-class ServicioDetailView(generics.RetrieveUpdateAPIView):
+class ServicioDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Servicio.objects.all()
     
     def get_permissions(self):
-        """
-        GET: Público (AllowAny) para ver detalle.
-        PUT/PATCH: Solo Admin o Empleado.
-        """
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [permissions.IsAuthenticated(), IsAdminOrEmpleado()]
         return [permissions.AllowAny()]
@@ -118,8 +103,31 @@ class ServicioDetailView(generics.RetrieveUpdateAPIView):
             return ServicioCreateUpdateSerializer
         return ServicioDetailSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            # 1. Intentamos el borrado físico
+            # Como TurnoServicio tiene on_delete=PROTECT, esto fallará si hay turnos.
+            instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        except ProtectedError:
+            # 2. Si falla (hay Turnos o Ventas), hacemos Soft Delete
+            instance.activo = False
+            instance.save()
+            return Response(
+                {
+                    "message": "El servicio tiene turnos o ventas asociadas. Se ha desactivado para proteger el historial.",
+                    "action": "soft_delete",
+                    "id": instance.id
+                }, 
+                status=status.HTTP_200_OK
+            )
 
-# Toggle activo (route: /servicios/<pk>/activo/)
+
+# ---------------------------------------------------------
+#   TOGGLE ACTIVO (PATCH simple)
+# ---------------------------------------------------------
 @api_view(['PATCH'])
 @permission_classes([permissions.IsAuthenticated, IsAdminOrEmpleado])
 def toggle_activo(request, pk):
@@ -133,7 +141,7 @@ def toggle_activo(request, pk):
 
 
 # ----------------------------
-# ServicioInsumo (CRUD) - Solo uso interno
+# ServicioInsumo (CRUD)
 # ----------------------------
 class ServicioInsumoListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminOrEmpleado]
@@ -154,7 +162,7 @@ class ServicioInsumoDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 # ----------------------------
-# Endpoints relacionados a Inventario/Stock
+# Endpoints Stock Manual / Info
 # ----------------------------
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -165,7 +173,7 @@ def listar_insumos_disponibles(request):
         return Response({"detail": "App inventario no disponible"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     q = request.query_params.get('q')
-    qs = Insumo.objects.all()
+    qs = Insumo.objects.filter(activo=True) 
     if q:
         qs = qs.filter(insumo_nombre__icontains=q)
     qs = qs.filter(insumo_stock__gt=0).order_by('insumo_nombre')
@@ -179,7 +187,7 @@ def consumir_stock_manual(request):
     payload = request.data
     insumos = payload.get('insumos', [])
     if not isinstance(insumos, list) or not insumos:
-        return Response({"detail": "Enviar lista 'insumos' con insumo_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Enviar lista 'insumos'"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         from inventario.models import Insumo
     except Exception:
@@ -190,7 +198,7 @@ def consumir_stock_manual(request):
             insumo_id = item.get('insumo_id')
             cantidad = item.get('cantidad')
             if insumo_id is None or cantidad is None:
-                return Response({"detail": "Cada item debe contener insumo_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Datos incompletos"}, status=status.HTTP_400_BAD_REQUEST)
             insumo = get_object_or_404(Insumo, pk=insumo_id)
             if insumo.insumo_stock < float(cantidad):
                 return Response({"detail": f"Stock insuficiente para {insumo.insumo_nombre}"}, status=status.HTTP_400_BAD_REQUEST)

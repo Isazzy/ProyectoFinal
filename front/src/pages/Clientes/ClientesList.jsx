@@ -174,10 +174,7 @@ export const ClientesList = () => {
 
               {/* Footer: Stats y Acciones */}
               <div className={styles.cardFooter}>
-                <span className={styles.statsBadge}>
-                   {/* Campo ficticio 'turnos_count', el backend debería enviarlo con un annotate() */}
-                   {cliente.turnos_count || 0} Turnos
-                </span>
+               
                 
                 <div className={styles.actions}>
                   <Button size="sm" variant="ghost" icon={Edit} onClick={() => setModal({ open: true, cliente })} title="Editar" />

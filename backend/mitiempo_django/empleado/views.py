@@ -8,6 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.db.models import ProtectedError
 
 from .models import Empleado
 from .serializers import (
@@ -72,6 +73,14 @@ class EmpleadoUpdateView(generics.UpdateAPIView):
     serializer_class = EmpleadoUpdateSerializer
     permission_classes = [IsAuthenticated, IsAdministrador]
     lookup_field = "pk"
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"detail": "No se puede eliminar este empleado porque tiene registros (Ventas, Compras o Caja) asociados. Por favor, desactívelo en su lugar."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 # ----- Eliminar usuario/empleado (solo admin) -----

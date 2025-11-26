@@ -99,7 +99,8 @@ export const ComprasPage = () => {
                                     <td>
                                         <div className={styles.userCell}>
                                             <User size={14} />
-                                            {c.empleado?.first_name || c.empleado?.username || '-'}
+                                            {/* CORRECCIÓN: Usamos el string directo, ya que el backend lo envía formateado */}
+                                            {c.empleado_nombre || '-'}
                                         </div>
                                     </td>
                                     <td style={{textAlign: 'right'}}>

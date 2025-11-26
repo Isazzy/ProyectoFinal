@@ -1,3 +1,6 @@
+// ========================================
+// src/hooks/useCompras.js
+// ========================================
 import { useState, useCallback } from 'react';
 import { comprasApi } from '../api/comprasApi';
 import { inventarioApi } from '../api/inventarioApi'; 
@@ -17,25 +20,24 @@ export const useCompras = () => {
         }
         const data = error.response.data;
         
-        // Caso 1: Error simple { detail: "..." }
+        // Caso 1: Error simple { detail: "..." } (Usado para ProtectedError)
         if (data.detail) return data.detail;
         
         // Caso 2: Lista de errores ["Error 1"]
         if (Array.isArray(data)) return data[0];
         
-        // Caso 3: Objeto de errores de campo { proveedor: ["Requerido"], non_field_errors: ["..."] }
+        // Caso 3: Objeto de errores de campo
         if (typeof data === 'object') {
             const keys = Object.keys(data);
             if (keys.length > 0) {
                 const firstKey = keys[0];
                 const firstError = data[firstKey];
                 const errorTxt = Array.isArray(firstError) ? firstError[0] : firstError;
-                // Si es un error general (non_field_errors), solo mostramos el texto
                 return firstKey === 'non_field_errors' ? errorTxt : `${firstKey}: ${errorTxt}`;
             }
         }
         
-        return 'Error desconocido al procesar la solicitud.';
+        return 'Error: No se puede borrar este proveedor.';
     };
 
     // --- CRUD PROVEEDORES ---
@@ -52,8 +54,17 @@ export const useCompras = () => {
         try {
             if (id) await comprasApi.actualizarProveedor(id, data);
             else await comprasApi.crearProveedor(data);
-            showSuccess('Éxito', 'Proveedor guardado');
-            fetchProveedores();
+            
+            showSuccess('Éxito', 'Proveedor guardado correctamente');
+            
+            // ACTUALIZACIÓN REACTIVA:
+            // 1. Recargamos la lista de proveedores
+            await fetchProveedores();
+            
+            // 2. IMPORTANTE: Recargamos el historial de compras.
+            // Si editaste el nombre de un proveedor, esto actualiza la tabla de compras automáticamente.
+            fetchCompras(); 
+            
             return true;
         } catch (error) {
             const msg = getErrorMsg(error);
@@ -69,21 +80,21 @@ export const useCompras = () => {
             const data = await comprasApi.getCompras(params);
             setCompras(data.results || data);
             
-            // Cargar Insumos y Productos para la orden de compra
+            // Cargar catálogos para la orden de compra (si no se han cargado)
+            // Esto permite que el selector funcione rápido al abrir el modal
             const [insumosData, productosData] = await Promise.all([
                 inventarioApi.getInsumosParaSelect(),
                 inventarioApi.getProductos()
             ]);
             
-            // Unificamos para tener disponible en el estado si se necesita
-            // (Aunque el formulario hace su propia carga, es bueno tenerlo aquí)
             const insumos = insumosData.results || insumosData || [];
             const productos = productosData.results || productosData || [];
+            
+            // Combinamos para tener disponible en el estado global del hook
             setInsumosDisponibles([...insumos, ...productos]);
 
         } catch (error) {
             console.error(error);
-            // Opcional: showError('Error', 'No se pudieron cargar las compras');
         } finally {
             setLoading(false);
         }
@@ -107,13 +118,25 @@ export const useCompras = () => {
     };
     
     const eliminarProveedor = async (id) => {
-        if (await confirm({title: 'Eliminar Proveedor', text: 'Esto no se puede revertir.'})) {
+        // Confirmación de seguridad
+        if (await confirm({
+            title: '¿Eliminar Proveedor?', 
+            text: 'Esta acción es irreversible. Si el proveedor tiene compras asociadas, no se podrá eliminar.',
+            isDanger: true
+        })) {
             try {
                 await comprasApi.eliminarProveedor(id);
-                fetchProveedores();
+                
+                // Actualización optimista
+                setProveedores(prev => prev.filter(p => p.id !== id));
                 showSuccess('Eliminado', 'Proveedor removido.');
+                return true;
+
             } catch (error) {
-                showError('Error', getErrorMsg(error));
+                // Aquí se muestra el mensaje del backend ("No se puede eliminar... tiene compras")
+                const msg = getErrorMsg(error);
+                showError('No se pudo eliminar', msg);
+                return false;
             }
         }
     };

@@ -1,6 +1,3 @@
-// ========================================
-// src/pages/Compras/CompraForm.jsx
-// ========================================
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Package, DollarSign, Save, ShoppingCart, X, Tag, Calculator, Truck, CreditCard, Search } from 'lucide-react';
 import { useCompras } from '../../hooks/useCompras';
@@ -94,21 +91,30 @@ export const CompraForm = ({ onClose }) => {
                 inventarioApi.getProductos()
             ]);
 
-            const insumosNorm = (insumosData.results || insumosData).map(i => ({
-                id: i.id,
-                nombre: i.insumo_nombre,
-                unidad: i.insumo_unidad,
-                tipo: 'insumo',
-                key: `ins-${i.id}`
-            }));
+            // --- CORRECCIÓN REALIZADA AQUÍ ---
+            // Usamos 'i.activo' porque así se llama el campo en tus modelos Django
 
-            const productosNorm = (productosData.results || productosData).map(p => ({
-                id: p.id,
-                nombre: p.producto_nombre,
-                unidad: 'unid.',
-                tipo: 'producto',
-                key: `prod-${p.id}`
-            }));
+            const insumosNorm = (insumosData.results || insumosData)
+                .filter(i => i.activo === true) // Filtramos solo los activos
+                .map(i => ({
+                    id: i.id,
+                    nombre: i.insumo_nombre,
+                    unidad: i.insumo_unidad,
+                    tipo: 'insumo',
+                    key: `ins-${i.id}`,
+                    isActive: i.activo 
+                }));
+
+            const productosNorm = (productosData.results || productosData)
+                .filter(p => p.activo === true) // Filtramos solo los activos
+                .map(p => ({
+                    id: p.id,
+                    nombre: p.producto_nombre,
+                    unidad: 'unid.',
+                    tipo: 'producto',
+                    key: `prod-${p.id}`,
+                    isActive: p.activo
+                }));
 
             setAllItems([...insumosNorm, ...productosNorm]);
         } catch (error) {
@@ -123,7 +129,7 @@ export const CompraForm = ({ onClose }) => {
         cargarCatalogo();
     }, [fetchProveedores, cargarCatalogo]);
 
-    // Filtrado
+    // Filtrado visual (Buscador)
     const filteredItems = allItems.filter(i => 
         i.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 6);

@@ -122,10 +122,6 @@ export const VentaDetail = () => {
         </div>
         
         <div className={styles.actions}>
-            <Button variant="outline" icon={Printer} onClick={() => window.print()}>
-                Imprimir
-            </Button>
-            
             {!isActionDisabled && hasProducts && (
                 <Button variant="danger" icon={XCircle} onClick={handleAnular}>
                     Anular / Devolver

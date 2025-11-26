@@ -3,7 +3,8 @@ from .views import (
     CajaHistoryView, 
     CajaStatusView, 
     AbrirCajaView, 
-    CerrarCajaView
+    CerrarCajaView,
+    ReporteIngresosEgresos,
 )
 
 urlpatterns = [
@@ -15,7 +16,7 @@ urlpatterns = [
     
     # POST /api/caja/abrir/ (Abrir la caja)
     path('abrir/', AbrirCajaView.as_view(), name='caja-abrir'),
-    
+     path('reportes/ingresos-egresos/', ReporteIngresosEgresos.as_view(), name='reporte-ingresos-egresos'),
     # PATCH /api/caja/cerrar/ (Cerrar la caja abierta)
     path('cerrar/', CerrarCajaView.as_view(), name='caja-cerrar'),
 ]

@@ -7,22 +7,12 @@ export const useInventario = () => {
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { showSuccess, showError, confirm } = useSwal();
+  const { showSuccess, showError, showInfo } = useSwal(); // Asegúrate de tener showInfo disponible
 
-  // Helper para extraer mensaje de error
-  const getErrorMsg = (error, defaultMsg) => {
-      if (error.response && error.response.data) {
-          const data = error.response.data;
-          if (typeof data === 'string') return data;
-          if (Array.isArray(data)) return data[0];
-          if (typeof data === 'object') {
-              // Devuelve el primer error que encuentre (ej: "nombre: Este campo es requerido")
-              const key = Object.keys(data)[0];
-              const msg = Array.isArray(data[key]) ? data[key][0] : data[key];
-              return `${key}: ${msg}`;
-          }
-      }
-      return error.message || defaultMsg;
+  // Helper para errores
+  const getErrorMsg = (error) => {
+      if (error.response?.data?.detail) return error.response.data.detail;
+      return error.message || 'Error desconocido';
   };
 
   const fetchInsumos = useCallback(async () => {
@@ -32,7 +22,6 @@ export const useInventario = () => {
       setInsumos(data.results || data);
     } catch (error) {
       console.error(error);
-      // showError('Error', 'No se pudieron cargar los insumos'); // Opcional silenciar en carga inicial
     } finally {
       setLoading(false);
     }
@@ -59,8 +48,7 @@ export const useInventario = () => {
       fetchInsumos(); 
       return true;
     } catch (error) {
-      const msg = getErrorMsg(error, 'No se pudo crear el insumo');
-      showError('Error al crear', msg);
+      showError('Error', getErrorMsg(error));
       return false;
     } finally {
       setLoading(false);
@@ -75,8 +63,7 @@ export const useInventario = () => {
       fetchInsumos();
       return true;
     } catch (error) {
-      const msg = getErrorMsg(error, 'No se pudo actualizar el insumo');
-      showError('Error al actualizar', msg);
+      showError('Error', getErrorMsg(error));
       return false;
     } finally {
       setLoading(false);
@@ -92,21 +79,66 @@ export const useInventario = () => {
         showSuccess('Listo', nuevoEstado ? 'Insumo reactivado' : 'Insumo desactivado');
         return true;
     } catch (error) {
-        const msg = getErrorMsg(error, 'No se pudo cambiar el estado');
-        showError('Error', msg);
+        showError('Error', getErrorMsg(error));
         return false;
     }
   };
 
+  // --- LÓGICA DE ELIMINACIÓN CONDICIONAL ---
   const eliminarInsumo = async (id) => {
+    setLoading(true);
     try {
-        await inventarioApi.eliminarInsumo(id);
-        setInsumos(prev => prev.filter(i => i.id !== id));
-        showSuccess('Eliminado', 'Insumo eliminado.');
+        // La API ahora devuelve 'response' completo
+        const response = await inventarioApi.eliminarInsumo(id);
+        
+        const data = response.data;
+        const status = response.status;
+
+        // CASO 1: Soft Delete (Backend devuelve 200 y action: 'soft_delete')
+        if (status === 200 && data?.action === 'soft_delete') {
+            setInsumos(prev => prev.map(i => 
+                i.id === id ? { ...i, activo: false } : i
+            ));
+            // Mensaje informativo distinto al de éxito normal
+            showSuccess('Atención', data.message || 'El insumo tiene registros asociados, se ha desactivado.');
+        } 
+        // CASO 2: Hard Delete (Backend devuelve 204 No Content)
+        else {
+            setInsumos(prev => prev.filter(i => i.id !== id));
+            showSuccess('Eliminado', 'Insumo eliminado permanentemente.');
+        }
+        return true;
+
     } catch (error) {
-        const msg = getErrorMsg(error, 'No se pudo eliminar');
-        showError('Error', msg);
+        console.error("Error eliminando:", error);
+        showError('Error', getErrorMsg(error));
+        return false;
+    } finally {
+        setLoading(false);
     }
+  };
+
+  // --- CREACIÓN RÁPIDA DE DEPENDENCIAS ---
+  const crearCategoriaRapida = async (nombre) => {
+      try {
+          await inventarioApi.crearCategoria({ categoria_insumo_nombre: nombre }); 
+          await fetchDependencias(); 
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear la categoría");
+          return false;
+      }
+  };
+
+  const crearMarcaRapida = async (nombre) => {
+      try {
+          await inventarioApi.crearMarca({ nombre: nombre });
+          await fetchDependencias();
+          return true;
+      } catch (e) {
+          showError("Error", "No se pudo crear la marca");
+          return false;
+      }
   };
 
   return {
@@ -119,6 +151,8 @@ export const useInventario = () => {
     crearInsumo,
     actualizarInsumo,
     toggleEstadoInsumo, 
-    eliminarInsumo
+    eliminarInsumo,
+    crearCategoriaRapida,
+    crearMarcaRapida
   };
 };

@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     IngresoCreateListView, 
     EgresoCreateListView, 
-    MovimientoConsolidadoListView # Importar la nueva vista
+    MovimientoConsolidadoListView,
+   
 )
 
 urlpatterns = [
@@ -16,4 +17,7 @@ urlpatterns = [
 
     # POST /api/movimiento-caja/egresos/
     path('egresos/', EgresoCreateListView.as_view(), name='egreso-list-create'),
+
+   
+
 ]
