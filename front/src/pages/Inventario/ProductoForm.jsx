@@ -2,14 +2,18 @@
 // src/pages/Inventario/ProductoForm.jsx
 // ========================================
 import React, { useState, useEffect } from 'react';
-import { X, Save, Upload, Link as LinkIcon, RefreshCw, Calculator } from 'lucide-react';
+import { X, Save, Upload, Link as LinkIcon, RefreshCw, Calculator, Plus, Check } from 'lucide-react';
 import { Button, Input } from '../../components/ui/';
 import styles from '../../styles/Inventario.module.css';
 import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode = 'crear' }) => {
-  // mode: 'crear' | 'editar' | 'ver'
-  const { tipos, marcas, fetchDependencias, crearProducto, actualizarProducto, loading } = useProductosHook;
+  const { 
+      tipos, marcas, fetchDependencias, 
+      crearProducto, actualizarProducto, 
+      crearTipoRapido, crearMarcaRapida,
+      loading 
+  } = useProductosHook;
   
   const [uploadingImage, setUploadingImage] = useState(false);
   const [file, setFile] = useState(null);
@@ -17,9 +21,16 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
   const [imageMode, setImageMode] = useState('archivo');
   const isReadOnly = mode === 'ver';
 
+  // Estados para creación rápida
+  const [addingTipo, setAddingTipo] = useState(false);
+  const [newTipoName, setNewTipoName] = useState("");
+  
+  const [addingMarca, setAddingMarca] = useState(false);
+  const [newMarcaName, setNewMarcaName] = useState("");
+
   // Estados para la Calculadora de Precio (Auxiliar)
   const [costoRef, setCostoRef] = useState('');
-  const [margenRef, setMargenRef] = useState(50); // Margen por defecto 50%
+  const [margenRef, setMargenRef] = useState(50); 
 
   const [form, setForm] = useState({
     producto_nombre: '',
@@ -86,15 +97,25 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     }
   };
 
+  // Handlers Creación Rápida
+  const handleCreateTipo = async () => {
+      if(!newTipoName.trim()) return;
+      const success = await crearTipoRapido(newTipoName);
+      if(success) { setAddingTipo(false); setNewTipoName(""); }
+  };
+
+  const handleCreateMarca = async () => {
+      if(!newMarcaName.trim()) return;
+      const success = await crearMarcaRapida(newMarcaName);
+      if(success) { setAddingMarca(false); setNewMarcaName(""); }
+  };
+
   // Lógica de la Calculadora Auxiliar
   const aplicarCalculo = () => {
     if (!costoRef) return;
     const costo = parseFloat(costoRef);
     const margen = parseFloat(margenRef) / 100;
-    // Precio Venta = Costo * (1 + %Margen)
     const precioVenta = costo * (1 + margen);
-    
-    // Redondeamos hacia arriba para evitar centavos extraños
     setForm(prev => ({ ...prev, producto_precio: Math.ceil(precioVenta) }));
   };
 
@@ -110,7 +131,6 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
     try {
         let finalUrl = form.producto_imagen_url;
 
-        // 1. Subir imagen si es archivo local
         if (imageMode === 'archivo' && file) {
             setUploadingImage(true);
             try {
@@ -123,13 +143,12 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
             setUploadingImage(false);
         }
 
-        // 2. Payload
         const payload = {
             ...form,
             producto_precio: parseFloat(form.producto_precio),
             stock: parseFloat(form.stock || 0),
             stock_minimo: parseFloat(form.stock_minimo || 0),
-            producto_imagen_url: finalUrl,
+            producto_imagen_url: finalUrl || "",
             producto_imagen: null,
         };
         
@@ -166,14 +185,12 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
 
         <form onSubmit={handleSubmit} className={styles.formGrid} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
             
-            {/* --- IMAGEN EN MODO VER --- */}
             {isReadOnly && preview && (
                 <div style={{ textAlign: 'center', marginBottom: 10 }}>
                     <img src={preview} alt="Producto" style={{ height: 150, borderRadius: 8, objectFit: 'contain', border: '1px solid #eee' }} />
                 </div>
             )}
 
-            {/* --- AYUDA DE CÁLCULO DE PRECIO (Solo al crear) --- */}
             {!isReadOnly && mode === 'crear' && (
                 <div style={{background: '#f0f9ff', padding: 12, borderRadius: 8, border: '1px solid #bae6fd'}}>
                     <div style={{display:'flex', alignItems:'center', gap: 5, marginBottom: 8, color: '#0284c7', fontSize: '0.9rem', fontWeight: 600}}>
@@ -236,7 +253,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 )}
             </div>
 
-            {/* Fila 3: Selectores */}
+            {/* Fila 3: Selectores con ADDON */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {isReadOnly ? (
                     <>
@@ -245,23 +262,48 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                     </>
                 ) : (
                     <>
+                        {/* SELECTOR TIPO */}
                         <div className={styles.inputGroup}>
                             <label>Tipo Producto *</label>
-                            <select name="tipo_producto" value={form.tipo_producto} onChange={handleChange} className={styles.selectInput}>
-                                <option value="">Seleccionar</option>
-                                {Array.isArray(tipos) && tipos.map(t => (
-                                    <option key={t.id} value={t.id}>{t.tipo_producto_nombre}</option>
-                                ))}
-                            </select>
+                            {addingTipo ? (
+                                <div style={{display:'flex', gap:5}}>
+                                    <Input value={newTipoName} onChange={e => setNewTipoName(e.target.value)} placeholder="Nuevo Tipo" autoFocus />
+                                    <Button size="sm" onClick={handleCreateTipo} icon={Check} type="button"/>
+                                    <Button size="sm" variant="ghost" onClick={() => setAddingTipo(false)} icon={X} type="button"/>
+                                </div>
+                            ) : (
+                                <div style={{display:'flex', gap:5}}>
+                                    <select name="tipo_producto" value={form.tipo_producto} onChange={handleChange} className={styles.selectInput} style={{flex:1}}>
+                                        <option value="">Seleccionar</option>
+                                        {Array.isArray(tipos) && tipos.map(t => (
+                                            <option key={t.id} value={t.id}>{t.tipo_producto_nombre}</option>
+                                        ))}
+                                    </select>
+                                    <Button size="sm" variant="outline" onClick={() => setAddingTipo(true)} icon={Plus} type="button" title="Crear Tipo"/>
+                                </div>
+                            )}
                         </div>
+
+                        {/* SELECTOR MARCA */}
                         <div className={styles.inputGroup}>
                             <label>Marca</label>
-                            <select name="marca" value={form.marca} onChange={handleChange} className={styles.selectInput}>
-                                <option value="">Ninguna</option>
-                                {Array.isArray(marcas) && marcas.map(m => (
-                                    <option key={m.id} value={m.id}>{m.nombre}</option>
-                                ))}
-                            </select>
+                            {addingMarca ? (
+                                <div style={{display:'flex', gap:5}}>
+                                    <Input value={newMarcaName} onChange={e => setNewMarcaName(e.target.value)} placeholder="Nueva Marca" autoFocus />
+                                    <Button size="sm" onClick={handleCreateMarca} icon={Check} type="button"/>
+                                    <Button size="sm" variant="ghost" onClick={() => setAddingMarca(false)} icon={X} type="button"/>
+                                </div>
+                            ) : (
+                                <div style={{display:'flex', gap:5}}>
+                                    <select name="marca" value={form.marca} onChange={handleChange} className={styles.selectInput} style={{flex:1}}>
+                                        <option value="">Ninguna</option>
+                                        {Array.isArray(marcas) && marcas.map(m => (
+                                            <option key={m.id} value={m.id}>{m.nombre}</option>
+                                        ))}
+                                    </select>
+                                    <Button size="sm" variant="outline" onClick={() => setAddingMarca(true)} icon={Plus} type="button" title="Crear Marca"/>
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
@@ -279,7 +321,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 )}
             </div>
 
-            {/* Estado y Fechas (Solo Ver) */}
+            {/* Estado y Fechas */}
             {isReadOnly && (
                 <div style={{ marginTop: 10, fontSize: '0.85rem', color: '#666', display:'flex', justifyContent:'space-between' }}>
                     <span>Estado: <strong>{form.activo ? 'Activo' : 'Inactivo'}</strong></span>
@@ -289,7 +331,6 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 </div>
             )}
 
-            {/* Checkbox Activo (Solo Editar/Crear) */}
             {!isReadOnly && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} style={{ width: 18, height: 18 }} />
@@ -300,7 +341,7 @@ export const ProductoForm = ({ productoToEdit, onClose, useProductosHook, mode =
                 </div>
             )}
 
-            {/* Sección Imagen (Solo Editar/Crear) */}
+            {/* Sección Imagen */}
             {!isReadOnly && (
                 <div className={styles.imageSection} style={{ borderTop: '1px solid #eee', paddingTop: 10 }}>
                     <label style={{ fontWeight: 600 }}>Imagen del Producto</label>

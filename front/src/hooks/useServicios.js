@@ -1,7 +1,4 @@
-// ========================================
-// src/hooks/useServicios.js
-// ========================================
-import { useState, useCallback } from 'react';
+ import { useState, useCallback } from 'react';
 import { serviciosApi } from '../api/serviciosApi';
 import { useSwal } from './useSwal';
 
@@ -9,13 +6,12 @@ export const useServicios = () => {
   const [servicios, setServicios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { showSuccess, showError, confirmDelete } = useSwal();
+  const { showSuccess, showError } = useSwal();
 
   const fetchServicios = useCallback(async (params = {}) => {
     setLoading(true);
     try {
       const data = await serviciosApi.getServicios(params);
-      // Django REST pagination suele devolver { results: [...] } o directo el array
       setServicios(data.results || data);
       return data;
     } catch (err) {
@@ -26,55 +22,80 @@ export const useServicios = () => {
     }
   }, [showError]);
 
-  const crearServicio = useCallback(async (data) => {
+  const crearServicio = async (data) => {
     setLoading(true);
     try {
       const nuevo = await serviciosApi.crearServicio(data);
+      // Actualización optimista local
       setServicios(prev => [...prev, nuevo]);
       showSuccess('¡Servicio creado!', `${data.nombre} fue agregado exitosamente`);
-      return nuevo;
+      return true; // RETORNO DE ÉXITO (Importante para la vista)
     } catch (err) {
-      showError('Error', err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [showSuccess, showError]);
-
-  const actualizarServicio = useCallback(async (id_serv, data) => {
-    setLoading(true);
-    try {
-      const actualizado = await serviciosApi.actualizarServicio(id_serv, data);
-      // Actualizamos el estado local buscando por id_serv
-      setServicios(prev => prev.map(s => s.id_serv === id_serv ? actualizado : s));
-      showSuccess('¡Servicio actualizado!');
-      return actualizado;
-    } catch (err) {
-      showError('Error', err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [showSuccess, showError]);
-
-  const eliminarServicio = useCallback(async (id_serv, nombre = '') => {
-    const confirmed = await confirmDelete(nombre || 'este servicio');
-    if (!confirmed) return false;
-
-    setLoading(true);
-    try {
-      await serviciosApi.eliminarServicio(id_serv);
-      // Eliminamos del estado local buscando por id_serv
-      setServicios(prev => prev.filter(s => s.id_serv !== id_serv));
-      showSuccess('¡Eliminado!', 'El servicio fue eliminado');
-      return true;
-    } catch (err) {
-      showError('Error', err.message);
+      showError('Error', err.response?.data?.detail || err.message);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [confirmDelete, showSuccess, showError]);
+  };
+
+  const actualizarServicio = async (id_serv, data) => {
+    setLoading(true);
+    try {
+      const actualizado = await serviciosApi.actualizarServicio(id_serv, data);
+      setServicios(prev => prev.map(s => s.id_serv === id_serv ? actualizado : s));
+      showSuccess('¡Servicio actualizado!');
+      return true; // RETORNO DE ÉXITO
+    } catch (err) {
+      showError('Error', err.response?.data?.detail || err.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- LÓGICA DE BORRADO INTELIGENTE ---
+  const eliminarServicio = async (id_serv) => {
+    setLoading(true);
+    try {
+      const response = await serviciosApi.eliminarServicio(id_serv);
+      // Manejo robusto: Axios puede devolver data directa o el objeto response
+      const data = response.data !== undefined ? response.data : response;
+
+      if (data && data.action === 'soft_delete') {
+          // Soft Delete: Backend devolvió 200 OK con mensaje
+          setServicios(prev => prev.map(s => 
+              s.id_serv === id_serv ? { ...s, activo: false } : s
+          ));
+          showSuccess('Atención', data.message);
+      } else {
+          // Hard Delete: Backend devolvió 204 No Content
+          setServicios(prev => prev.filter(s => s.id_serv !== id_serv));
+          showSuccess('Eliminado', 'El servicio fue eliminado permanentemente.');
+      }
+      return true; // RETORNO DE ÉXITO
+    } catch (err) {
+      showError('Error', err.response?.data?.detail || "No se pudo eliminar el servicio");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- LÓGICA DE REACTIVACIÓN ---
+  const reactivarServicio = async (id_serv) => {
+      try {
+          await serviciosApi.patchServicio(id_serv, { activo: true });
+          // Actualización optimista
+          setServicios(prev => prev.map(s => 
+              s.id_serv === id_serv ? { ...s, activo: true } : s
+          ));
+          showSuccess('Listo', 'Servicio reactivado correctamente');
+          return true; // RETORNO DE ÉXITO
+      } catch (err) {
+          showError('Error', err.response?.data?.detail || "No se pudo reactivar");
+          return false;
+      }
+  };
 
   return {
     servicios,
@@ -84,6 +105,7 @@ export const useServicios = () => {
     crearServicio,
     actualizarServicio,
     eliminarServicio,
-    setServicios, // expuesto por si necesitas manipulación manual externa
+    reactivarServicio,
+    setServicios,
   };
 };

@@ -10,20 +10,34 @@ export const useEmpleados = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // Usamos 'confirm' que es el estándar que definimos en tus otros hooks
+  // Usamos 'confirm' estándar del hook
   const { showSuccess, showError, confirm } = useSwal();
 
-  // Helper para extraer mensaje de error limpio del backend
+  // --- HELPER DE ERRORES ---
+  // Parsea la respuesta de error de Django para mostrar mensajes claros
   const getErrorMsg = (error) => {
+      // CORRECCIÓN: Interceptar error 500 explícitamente
+      if (error.response && error.response.status === 500) {
+          return "No se puede borrar usuarios con registros vinculados.";
+      }
+
       if (error.response && error.response.data) {
           const data = error.response.data;
+          
+          // Caso 1: Error general simple
           if (data.detail) return data.detail;
           
-          // Si es un objeto de errores por campo (ej: { username: ["Ya existe"] })
+          // Caso 2: Lista de errores
+          if (Array.isArray(data)) return data[0];
+          
+          // Caso 3: Errores de validación por campo (ej: { username: ["Ya existe"] })
           if (typeof data === 'object') {
-              const firstKey = Object.keys(data)[0];
-              const msg = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
-              return `${firstKey}: ${msg}`;
+              const keys = Object.keys(data);
+              if (keys.length > 0) {
+                  const firstKey = keys[0];
+                  const msg = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+                  return firstKey === 'non_field_errors' ? msg : `${firstKey}: ${msg}`;
+              }
           }
       }
       return error.message || 'Ocurrió un error inesperado';
@@ -37,7 +51,7 @@ export const useEmpleados = () => {
       setEmpleados(data.results || data);
     } catch (err) {
       console.error(err);
-      // Opcional: No mostrar error bloqueante en la carga inicial
+      // No mostramos error bloqueante en la carga inicial para no interrumpir la UI
     } finally {
       setLoading(false);
     }
@@ -58,17 +72,16 @@ export const useEmpleados = () => {
     setLoading(true);
     try {
       await empleadosApi.crearEmpleado(data);
+      await showSuccess('Creado', `El empleado ${data.first_name} ha sido registrado.`);
       
-      await showSuccess('¡Creado!', `El empleado ${data.first_name} ha sido registrado.`);
-      
-      // CRUCIAL: Recargar la lista desde el servidor para asegurar datos frescos
+      // CRUCIAL: Recargar la lista desde el servidor para tener datos frescos (IDs, fechas, etc.)
       await fetchEmpleados(); 
       
-      return true; // Éxito
+      return true; // Retorna éxito para cerrar el modal
     } catch (err) {
       const msg = getErrorMsg(err);
       showError('Error al crear', msg);
-      return false; // Fallo
+      return false; // Retorna fallo para mantener el modal abierto
     } finally {
       setLoading(false);
     }
@@ -78,8 +91,7 @@ export const useEmpleados = () => {
     setLoading(true);
     try {
       await empleadosApi.actualizarEmpleado(id, data);
-      
-      await showSuccess('¡Actualizado!', 'Datos del empleado modificados correctamente.');
+      await showSuccess('Actualizado', 'Datos del empleado modificados correctamente.');
       
       // CRUCIAL: Recargar la lista
       await fetchEmpleados();
@@ -95,11 +107,11 @@ export const useEmpleados = () => {
   };
 
   const eliminarEmpleado = async (id, nombreCompleto) => {
-    // Usamos el confirm genérico con estilo peligro
     const isConfirmed = await confirm({
         title: '¿Eliminar Empleado?',
-        text: `Se eliminará el acceso al sistema de ${nombreCompleto}.`,
-        isDanger: true
+        text: `Se eliminará el acceso de ${nombreCompleto}.`,
+        isDanger: true,
+        confirmText: 'Sí, eliminar'
     });
     
     if (!isConfirmed) return false;
@@ -108,14 +120,15 @@ export const useEmpleados = () => {
     try {
       await empleadosApi.eliminarEmpleado(id);
       
-      // Para eliminar, podemos filtrar localmente (es seguro y rápido)
+      // Actualización optimista: filtramos localmente porque borrar es destructivo y simple
       setEmpleados(prev => prev.filter(e => e.id !== id));
       
-      showSuccess('¡Eliminado!', 'El empleado ha sido eliminado.');
+      showSuccess('Eliminado', 'El empleado ha sido eliminado.');
       return true;
     } catch (err) {
+      // Aquí capturamos el error 400/500 del backend (Integridad Referencial)
       const msg = getErrorMsg(err);
-      showError('Error al eliminar', msg);
+      showError('Error', msg);
       return false;
     } finally {
       setLoading(false);

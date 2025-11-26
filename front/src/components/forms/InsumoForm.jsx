@@ -240,7 +240,7 @@ export const InsumoForm = ({ insumoToEdit, onClose, useInventarioHook, mode = 'c
                 <div className={styles.imageSection} style={{gridColumn: '1 / -1', marginTop: 10, borderTop: '1px solid #eee', paddingTop: 10}}>
                     <label style={{display:'block', marginBottom: 5, fontWeight: 500}}>Imagen</label>
                     <div style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
-                        <Button type="button" variant={imageMode === 'archivo' ? 'primary' : 'outline'} onClick={() => handleModeChange('archivo')} size="sm"> <Upload size={14}/> Archivo </Button>
+                        
                         <Button type="button" variant={imageMode === 'url' ? 'primary' : 'outline'} onClick={() => handleModeChange('url')} size="sm"> <LinkIcon size={14}/> URL </Button>
                     </div>
                     

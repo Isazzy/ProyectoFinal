@@ -9,8 +9,8 @@ export const inventarioApi = {
     return response.data;
   },
   getInsumosParaSelect: async (params = {}) => {
-     // Helper para cargar listas sin paginación excesiva
-     const response = await api.get(`${MODULE_URL}/insumos/`, { params: { ...params, page_size: 1000 } });
+     const defaultParams = { page_size: 1000, is_active: true, ...params };
+     const response = await api.get(`${MODULE_URL}/insumos/`, { params: defaultParams });
      return response.data;
   },
   crearInsumo: async (data) => {
@@ -27,12 +27,13 @@ export const inventarioApi = {
   },
   eliminarInsumo: async (id) => {
     const response = await api.delete(`${MODULE_URL}/insumos/${id}/`);
-    return response.data;
+    return response; // Devolvemos response completo
   },
   
   // --- PRODUCTOS ---
   getProductos: async (params = {}) => {
-    const response = await api.get(`${MODULE_URL}/productos/`, { params });
+    const defaultParams = { is_active: true, ...params };
+    const response = await api.get(`${MODULE_URL}/productos/`, { params: defaultParams });
     return response.data;
   },
   crearProducto: async (data) => {
@@ -49,10 +50,10 @@ export const inventarioApi = {
   },
   eliminarProducto: async (id) => {
      const response = await api.delete(`${MODULE_URL}/productos/${id}/`);
-     return response.data;
+     return response; // Devolvemos response completo
   },
 
-  // --- DEPENDENCIAS / CONFIGURACIÓN ---
+  // --- DEPENDENCIAS ---
 
   // 1. Tipos de Producto
   getTiposProducto: async () => {
@@ -67,9 +68,13 @@ export const inventarioApi = {
     const response = await api.put(`${MODULE_URL}/tipos-producto/${id}/`, data);
     return response.data;
   },
+  patchTipoProducto: async (id, data) => { // PATCH para restaurar
+    const response = await api.patch(`${MODULE_URL}/tipos-producto/${id}/`, data);
+    return response.data;
+  },
   eliminarTipoProducto: async (id) => {
     const response = await api.delete(`${MODULE_URL}/tipos-producto/${id}/`);
-    return response.data;
+    return response; 
   },
 
   // 2. Marcas
@@ -85,12 +90,16 @@ export const inventarioApi = {
     const response = await api.put(`${MODULE_URL}/marcas/${id}/`, data);
     return response.data;
   },
-  eliminarMarca: async (id) => {
-    const response = await api.delete(`${MODULE_URL}/marcas/${id}/`);
+  patchMarca: async (id, data) => { // PATCH para restaurar
+    const response = await api.patch(`${MODULE_URL}/marcas/${id}/`, data);
     return response.data;
   },
+  eliminarMarca: async (id) => {
+    const response = await api.delete(`${MODULE_URL}/marcas/${id}/`);
+    return response;
+  },
 
-  // 3. Categorías de Insumo (NUEVO)
+  // 3. Categorías
   getCategorias: async () => {
     const response = await api.get(`${MODULE_URL}/categorias-insumo/`);
     return response.data; 
@@ -103,12 +112,16 @@ export const inventarioApi = {
     const response = await api.put(`${MODULE_URL}/categorias-insumo/${id}/`, data);
     return response.data;
   },
-  eliminarCategoria: async (id) => {
-    const response = await api.delete(`${MODULE_URL}/categorias-insumo/${id}/`);
+  patchCategoria: async (id, data) => { // PATCH para restaurar
+    const response = await api.patch(`${MODULE_URL}/categorias-insumo/${id}/`, data);
     return response.data;
   },
+  eliminarCategoria: async (id) => {
+    const response = await api.delete(`${MODULE_URL}/categorias-insumo/${id}/`);
+    return response;
+  },
   
-  // Movimiento Stock (Insumos)
+  // Stock
   actualizarStock: async (id, cantidad, tipo = 'ingreso') => {
     const response = await api.post(`${MODULE_URL}/insumos/${id}/movimiento/`, {
       cantidad, tipo

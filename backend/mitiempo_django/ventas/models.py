@@ -19,8 +19,8 @@ class Estado_Venta(models.Model):
 
 
 class Venta(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True)
-    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, null=True, blank=True)
+    empleado = models.ForeignKey(Empleado, on_delete=models.PROTECT)
     caja = models.ForeignKey(Caja, on_delete=models.SET_NULL, null=True, blank=True)
     turno = models.ForeignKey(Turno, on_delete=models.SET_NULL, null=True, blank=True)
     estado_venta = models.ForeignKey(Estado_Venta, on_delete=models.CASCADE)
@@ -45,8 +45,8 @@ class Venta(models.Model):
 
 
 class Detalle_Venta(models.Model):
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    venta = models.ForeignKey(Venta, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    venta = models.ForeignKey(Venta, on_delete=models.PROTECT)
     
     detalle_venta_cantidad = models.IntegerField()
     detalle_venta_precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
@@ -65,8 +65,8 @@ class Detalle_Venta(models.Model):
 
 
 class Detalle_Venta_Servicio(models.Model):
-    venta = models.ForeignKey(Venta, on_delete=models.CASCADE)
-    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
+    venta = models.ForeignKey(Venta, on_delete=models.PROTECT)
+    servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT)
     
     cantidad = models.IntegerField(default=1)
     precio = models.DecimalField(max_digits=10, decimal_places=2)

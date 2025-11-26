@@ -59,12 +59,12 @@ class Compra(models.Model):
                 self.compra_hora = now.time()
         super().save(*args, **kwargs)
     
-# ... (Detalle_Compra sigue igual) ...
+
     
 class Detalle_Compra(models.Model):
-    compra=models.ForeignKey(Compra, on_delete=models.CASCADE)
-    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE, null=True, blank=True)
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, null=True, blank=True)
+    compra=models.ForeignKey(Compra, on_delete=models.PROTECT)
+    insumo = models.ForeignKey(Insumo, on_delete=models.PROTECT, null=True, blank=True)
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT, null=True, blank=True)
     detalle_compra_cantidad=models.DecimalField(max_digits=10, decimal_places=2)
     detalle_compra_precio_unitario=models.DecimalField(max_digits=10, decimal_places=2)
 

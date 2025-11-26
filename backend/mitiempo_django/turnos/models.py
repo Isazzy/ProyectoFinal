@@ -30,7 +30,7 @@ class Turno(models.Model):
     ]
     cliente = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='turnos_como_cliente',
         db_column='id_cli'
     )
@@ -159,7 +159,7 @@ class Turno(models.Model):
 class TurnoServicio(models.Model):
     id_turno_servicio = models.AutoField(primary_key=True)
     turno = models.ForeignKey(Turno, on_delete=models.CASCADE, db_column='id_turno', related_name='servicios_asignados')
-    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE, db_column='id_serv')
+    servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT, db_column='id_serv')
     duracion_servicio = models.PositiveIntegerField(default=30)
 
     class Meta:

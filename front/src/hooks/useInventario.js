@@ -7,7 +7,7 @@ export const useInventario = () => {
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { showSuccess, showError, confirm } = useSwal();
+  const { showSuccess, showError, showInfo } = useSwal(); // Asegúrate de tener showInfo disponible
 
   // Helper para errores
   const getErrorMsg = (error) => {
@@ -84,27 +84,45 @@ export const useInventario = () => {
     }
   };
 
+  // --- LÓGICA DE ELIMINACIÓN CONDICIONAL ---
   const eliminarInsumo = async (id) => {
-    // Intenta borrar físicamente
+    setLoading(true);
     try {
-        await inventarioApi.eliminarInsumo(id);
-        setInsumos(prev => prev.filter(i => i.id !== id));
-        showSuccess('Eliminado', 'Registro borrado permanentemente.');
+        // La API ahora devuelve 'response' completo
+        const response = await inventarioApi.eliminarInsumo(id);
+        
+        const data = response.data;
+        const status = response.status;
+
+        // CASO 1: Soft Delete (Backend devuelve 200 y action: 'soft_delete')
+        if (status === 200 && data?.action === 'soft_delete') {
+            setInsumos(prev => prev.map(i => 
+                i.id === id ? { ...i, activo: false } : i
+            ));
+            // Mensaje informativo distinto al de éxito normal
+            showSuccess('Atención', data.message || 'El insumo tiene registros asociados, se ha desactivado.');
+        } 
+        // CASO 2: Hard Delete (Backend devuelve 204 No Content)
+        else {
+            setInsumos(prev => prev.filter(i => i.id !== id));
+            showSuccess('Eliminado', 'Insumo eliminado permanentemente.');
+        }
         return true;
+
     } catch (error) {
-        // Si falla (ej: IntegrityError), sugerimos desactivar
-        showError('No se pudo borrar', 'El insumo tiene registros vinculados. Desactívelo en su lugar.');
+        console.error("Error eliminando:", error);
+        showError('Error', getErrorMsg(error));
         return false;
+    } finally {
+        setLoading(false);
     }
   };
 
   // --- CREACIÓN RÁPIDA DE DEPENDENCIAS ---
   const crearCategoriaRapida = async (nombre) => {
       try {
-          // Asumimos que existe inventarioApi.crearCategoria o usamos POST directo
-          // Si no existe en tu API, agrégalo similar a crearMarca
           await inventarioApi.crearCategoria({ categoria_insumo_nombre: nombre }); 
-          await fetchDependencias(); // Recargar listas
+          await fetchDependencias(); 
           return true;
       } catch (e) {
           showError("Error", "No se pudo crear la categoría");

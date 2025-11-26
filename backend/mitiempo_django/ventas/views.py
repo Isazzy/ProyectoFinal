@@ -162,3 +162,61 @@ def stats_ingresos(request):
     chart_data = sorted(data_map.values(), key=lambda x: x['date'])
     
     return Response(chart_data)
+
+
+#################################
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def dashboard_kpis(request):
+    hoy = timezone.localtime(timezone.now()).date()
+    inicio_mes = hoy.replace(day=1)
+    
+    # 1. Ventas del Mes Globales (Solo Pagadas)
+    ventas_mes_qs = Venta.objects.filter(
+        venta_fecha_hora__date__gte=inicio_mes,
+        estado_venta__estado_venta_nombre='Pagado'
+    )
+    
+    total_ingresos_mes = ventas_mes_qs.aggregate(Sum('venta_total'))['venta_total__sum'] or 0
+    cantidad_ventas_mes = ventas_mes_qs.count()
+    ticket_promedio = total_ingresos_mes / cantidad_ventas_mes if cantidad_ventas_mes > 0 else 0
+
+    # 2. DESGLOSE: EFECTIVO VS TRANSFERENCIA
+    pagos_desglose = ventas_mes_qs.values('venta_medio_pago').annotate(
+        total=Sum('venta_total')
+    )
+
+    # Transformado al formato que tu frontend necesita
+    desglose_lista = [
+        {
+            "metodoPago": p["venta_medio_pago"],
+            "total": p["total"]
+        }
+        for p in pagos_desglose
+    ]
+
+    # 3. RANKINGS
+    top_servicios = Detalle_Venta_Servicio.objects.filter(
+        venta__in=ventas_mes_qs
+    ).values('servicio__nombre').annotate(
+        total_vendidos=Sum('cantidad')
+    ).order_by('-total_vendidos')[:5]
+
+    top_productos = Detalle_Venta.objects.filter(
+        venta__in=ventas_mes_qs
+    ).values('producto__producto_nombre').annotate(
+        total_vendidos=Sum('detalle_venta_cantidad')
+    ).order_by('-total_vendidos')[:5]
+
+    return Response({
+        "finanzas": {
+            "ingresos_mes": total_ingresos_mes,
+            "ventas_cantidad": cantidad_ventas_mes,
+            "ticket_promedio": ticket_promedio,
+            "desglose_pagos": desglose_lista  # ✔️ corregido
+        },
+        "ranking": {
+            "servicios": list(top_servicios),
+            "productos": list(top_productos)
+        }
+    })

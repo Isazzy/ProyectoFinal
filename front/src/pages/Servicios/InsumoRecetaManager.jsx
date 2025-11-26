@@ -16,7 +16,10 @@ export const InsumoRecetaManager = ({ recetaActual, setRecetaActual, error }) =>
       try {
         setLoading(true);
         const data = await serviciosApi.getInsumosDisponibles(); 
-        setDisponibles(data);
+        const listaCompleta = Array.isArray(data) ? data : (data.results || []);
+        const soloActivos = listaCompleta.filter(item => item.is_active !== false);
+        
+        setDisponibles(soloActivos);
       } catch (err) {
         console.error("Error cargando insumos:", err);
       } finally {

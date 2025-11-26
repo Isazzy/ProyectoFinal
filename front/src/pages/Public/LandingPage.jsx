@@ -204,7 +204,7 @@ const HeroSection = () => {
         >
           <div className={styles.statItem}>
             <Award size={32} />
-            <span className={styles.statNumber}>15+</span>
+            <span className={styles.statNumber}>10+</span>
             <span className={styles.statLabel}>Años de Experiencia</span>
           </div>
           <div className={styles.statItem}>
@@ -214,8 +214,8 @@ const HeroSection = () => {
           </div>
           <div className={styles.statItem}>
             <Star size={32} />
-            <span className={styles.statNumber}>4.9</span>
-            <span className={styles.statLabel}>Calificación Promedio</span>
+            <span className={styles.statNumber}>10+</span>
+            <span className={styles.statLabel}>Servicios personalizados para un mejor cuidado</span>
           </div>
         </motion.div>
       </div>
@@ -290,7 +290,7 @@ const AboutSection = () => {
               y calidez para brindarte una experiencia única.
             </p>
             <p>
-              Con más de 15 años de trayectoria, nos especializamos en tratamientos
+              Con más de 10 años de trayectoria, nos especializamos en tratamientos
               de belleza personalizados que realzan tu esencia natural. Nuestro equipo
               de profesionales está comprometido con tu satisfacción y bienestar.
             </p>
@@ -421,37 +421,6 @@ const ServicesSection = () => {
 // ========================================
 // CTA SECTION
 // ========================================
-const CtaSection = () => {
-  const navigate = useNavigate();
-
-  return (
-    <section id="turnos" className={styles.cta}>
-      <div className={styles.ctaContent}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2>¿Lista para tu transformación?</h2>
-          <p>
-            Agenda tu cita hoy y descubre por qué somos el centro de estética
-            preferido de miles de clientes.
-          </p>
-          <div className={styles.ctaButtons}>
-            <Button size="lg" icon={Calendar} onClick={() => navigate('/reservar')}>
-              Reservar Ahora
-            </Button>
-            <Button size="lg" variant="outline" icon={Phone}>
-              <a href="tel:+54123456789" style={{ color: 'inherit', textDecoration: 'none' }}>
-                Llamar
-              </a>
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
 
 // ========================================
 // FOOTER
@@ -481,15 +450,15 @@ const Footer = () => {
           <ul>
             <li>
               <Phone size={16} />
-              <a href="tel:+54123456789">+54 123 456 789</a>
+              <a href="tel:+54123456789">+54 9 387 529-8723</a>
             </li>
             <li>
               <Mail size={16} />
-              <a href="mailto:info@mitiempo.com">info@mitiempo.com</a>
+              <a href="mailto:mitiempo@gmail.com">mitiempo@gmail.com</a>
             </li>
             <li>
               <MapPin size={16} />
-              <span>Av. Principal 123, Ciudad</span>
+              <span> O'Higgins 1234 - Salta</span>
             </li>
           </ul>
         </div>
@@ -497,7 +466,7 @@ const Footer = () => {
         <div className={styles.footerSection}>
           <h4>Horarios</h4>
           <ul>
-            <li>Lunes a Viernes: 9:00 - 20:00</li>
+            <li>Lunes a Viernes: 8:00 - 21:00</li>
             <li>Sábados: 9:00 - 18:00</li>
             <li>Domingos: Cerrado</li>
           </ul>
@@ -515,7 +484,7 @@ const Footer = () => {
       </div>
 
       <div className={styles.footerBottom}>
-        <p>&copy; 2024 Mi Tiempo. Todos los derechos reservados.</p>
+        <p>&copy;</p>
       </div>
     </footer>
   );
@@ -531,7 +500,7 @@ export const LandingPage = () => {
       <HeroSection />
       <AboutSection />
       <ServicesSection />
-      <CtaSection />
+      
       <Footer />
     </div>
   );
